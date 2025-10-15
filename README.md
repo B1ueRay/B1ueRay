@@ -1,4 +1,4 @@
-- 👋 Hi, I’m @B1ueRay
+- 👋 Hi, I’m Igor
 - 👀 I’m interested in IT
 - 🌱 I’m currently learning in DNU
 - 💞️ I’m looking to collaborate on QA engineering
