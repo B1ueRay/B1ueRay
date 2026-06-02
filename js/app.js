@@ -3,88 +3,69 @@
 // ── PAINTINGS DATA ────────────────────────────────────────────────────────────
 const PAINTINGS = [
   {
-    id: 1, artist: 'Igor Borshch', year: 2023, price: 45000,
-    category: 'landscape', technique: 'oil', size: '80 × 100 cm', badge: 'new',
-    titles: { uk: 'Захід над морем', ru: 'Закат над морем', en: 'Sunset over the Sea', es: 'Puesta de Sol sobre el Mar' },
-    descs: { uk: 'Теплі відтінки сонця, що сідає, над спокійною морською гладдю. Картина передає відчуття спокою та нескінченності.', ru: 'Тёплые оттенки заходящего солнца над спокойной морской гладью. Картина передаёт ощущение покоя и бесконечности.', en: 'Warm hues of the setting sun over a calm sea. The painting conveys a sense of peace and infinity.', es: 'Cálidos tonos del sol poniente sobre un mar sereno. La pintura transmite una sensación de paz e infinidad.' },
-    gradient: 'linear-gradient(160deg,#FF6B35 0%,#F7931E 25%,#FFD700 45%,#FF4500 65%,#1A1A2E 100%)',
+    id: 1, artist: 'Igor Borshch', year: 2024, price: 300,
+    category: 'portrait', technique: 'oil', size: '30 × 40 cm', badge: null,
+    image: 'images/painting1.jpg',
+    titles: { uk: 'Чорне мереживо', ru: 'Чёрное кружево', en: 'Black Lace', es: 'Encaje Negro' },
+    descs: {
+      uk: 'Витончена монохромна робота. Жіноче тіло передано з неймовірною точністю — кожен штрих підкреслює вишуканість форми на тлі об\'ємних квіткових деталей.',
+      ru: 'Изысканная монохромная работа. Женское тело передано с невероятной точностью — каждый мазок подчёркивает изящество формы на фоне объёмных цветочных деталей.',
+      en: 'An exquisite monochrome work. The female figure is rendered with incredible precision — every brushstroke emphasizes the elegance of form against sculptural floral details.',
+      es: 'Una exquisita obra monocromática. La figura femenina se representa con una precisión increíble: cada pincelada enfatiza la elegancia de la forma sobre detalles florales escultóricos.',
+    },
+    gradient: 'linear-gradient(160deg,#F0F0F0 0%,#C8C8C8 25%,#888 50%,#333 75%,#111 100%)',
   },
   {
-    id: 2, artist: 'Maria Stepanenko', year: 2022, price: 38000,
-    category: 'landscape', technique: 'oil', size: '60 × 80 cm', badge: null,
-    titles: { uk: 'Зимовий ліс', ru: 'Зимний лес', en: 'Winter Forest', es: 'Bosque de Invierno' },
-    descs: { uk: 'Безмовність зимового лісу в срібних і синіх тонах. Кожна деталь передає морозну свіжість.', ru: 'Безмолвие зимнего леса в серебристых и синих тонах. Каждая деталь передаёт морозную свежесть.', en: 'The silence of a winter forest in silver and blue tones. Every detail conveys frosty freshness.', es: 'El silencio del bosque invernal en tonos plateados y azules. Cada detalle transmite la frescura helada.' },
-    gradient: 'linear-gradient(180deg,#B8D4E8 0%,#7AA8C7 30%,#E8F4FF 55%,#C8DFF0 70%,#2C4A6E 100%)',
+    id: 2, artist: 'Igor Borshch', year: 2024, price: 100,
+    category: 'portrait', technique: 'oil', size: '40 × 30 cm', badge: null,
+    image: 'images/painting2.jpg',
+    titles: { uk: 'Вогонь і тінь', ru: 'Огонь и тень', en: 'Fire and Shadow', es: 'Fuego y Sombra' },
+    descs: {
+      uk: 'Експресивна фігуративна робота у теплій охристо-коричневій гамі. Енергійні мазки створюють відчуття руху та внутрішньої сили.',
+      ru: 'Экспрессивная фигуративная работа в тёплой охристо-коричневой гамме. Энергичные мазки создают ощущение движения и внутренней силы.',
+      en: 'An expressive figurative work in warm ochre and brown tones. Energetic brushstrokes create a sense of movement and inner power.',
+      es: 'Una expresiva obra figurativa en tonos cálidos ocres y marrones. Las enérgicas pinceladas crean una sensación de movimiento y fuerza interior.',
+    },
+    gradient: 'linear-gradient(160deg,#8B3A0A 0%,#C05A20 25%,#D4820A 50%,#2A2A35 75%,#111 100%)',
   },
   {
-    id: 3, artist: 'Alexey Gromov', year: 2024, price: 62000,
-    category: 'urban', technique: 'acrylic', size: '100 × 120 cm', badge: 'new',
-    titles: { uk: 'Міський пейзаж', ru: 'Городской пейзаж', en: 'Urban Landscape', es: 'Paisaje Urbano' },
-    descs: { uk: 'Динамічне нічне місто, відображене в мокрих вулицях. Суміш фіолетового та оранжевого створює неповторну атмосферу.', ru: 'Динамичный ночной город, отражённый в мокрых улицах. Смешение фиолетового и оранжевого создаёт неповторимую атмосферу.', en: 'A dynamic night city reflected in wet streets. The blend of purple and orange creates a unique atmosphere.', es: 'Una ciudad nocturna dinámica reflejada en calles mojadas. La mezcla de púrpura y naranja crea una atmósfera única.' },
-    gradient: 'linear-gradient(135deg,#1a1a2e 0%,#16213e 30%,#8B5CF6 55%,#F97316 75%,#1a1a2e 100%)',
+    id: 3, artist: 'Igor Borshch', year: 2024, price: 100,
+    category: 'portrait', technique: 'oil', size: '35 × 25 cm', badge: null,
+    image: 'images/painting3.jpg',
+    titles: { uk: 'На підборах', ru: 'На каблуках', en: 'On Heels', es: 'Sobre Tacones' },
+    descs: {
+      uk: 'Динамічна монохромна композиція. Жіноча фігура у вільному падінні — відчуття невагомості та виклику передано через широкі, сміливі мазки.',
+      ru: 'Динамичная монохромная композиция. Женская фигура в свободном падении — ощущение невесомости и вызова передано через широкие, смелые мазки.',
+      en: 'A dynamic monochrome composition. The female figure in free fall — a sense of weightlessness and defiance conveyed through bold, sweeping brushstrokes.',
+      es: 'Una composición monocromática dinámica. La figura femenina en caída libre: la sensación de ingravidez y desafío se transmite con pinceladas amplias y atrevidas.',
+    },
+    gradient: 'linear-gradient(160deg,#D8D8D8 0%,#A0A0A0 30%,#555 60%,#1A1A1A 85%,#0A0A0A 100%)',
   },
   {
-    id: 4, artist: 'Igor Borshch', year: 2023, price: 29000,
-    category: 'abstract', technique: 'mixed', size: '70 × 70 cm', badge: null,
-    titles: { uk: 'Абстракція №1', ru: 'Абстракция №1', en: 'Abstraction #1', es: 'Abstracción №1' },
-    descs: { uk: 'Енергійна абстрактна композиція. Сміливі кольорові переходи та динамічні лінії створюють відчуття руху.', ru: 'Энергичная абстрактная композиция. Смелые цветовые переходы и динамичные линии создают ощущение движения.', en: 'An energetic abstract composition. Bold color transitions and dynamic lines create a sense of movement.', es: 'Una composición abstracta enérgica. Las audaces transiciones de color y las líneas dinámicas crean una sensación de movimiento.' },
-    gradient: 'linear-gradient(45deg,#FF006E 0%,#8338EC 25%,#3A86FF 50%,#06D6A0 75%,#FFB703 100%)',
+    id: 4, artist: 'Igor Borshch', year: 2024, price: 150,
+    category: 'portrait', technique: 'oil', size: '70 × 50 cm', badge: 'new',
+    image: 'images/painting4.jpg',
+    titles: { uk: 'Дика свобода', ru: 'Дикая свобода', en: 'Wild Freedom', es: 'Libertad Salvaje' },
+    descs: {
+      uk: 'Повнофігурний портрет жінки у шкіряному вбранні. Руки, підняті вгору, поза і впевненість — символ свободи та сили духу.',
+      ru: 'Полнофигурный портрет женщины в кожаном наряде. Поднятые руки, поза и уверенность — символ свободы и силы духа.',
+      en: 'A full-figure portrait of a woman in leather attire. Arms raised, posture and confidence — a symbol of freedom and strength of spirit.',
+      es: 'Un retrato de figura completa de una mujer con atuendo de cuero. Brazos levantados, postura y confianza: un símbolo de libertad y fortaleza espiritual.',
+    },
+    gradient: 'linear-gradient(160deg,#E8DDD0 0%,#C4B5A0 25%,#8B7355 50%,#5C4A35 75%,#2A1F15 100%)',
   },
   {
-    id: 5, artist: 'Maria Stepanenko', year: 2022, price: 24000, oldPrice: 32000,
-    category: 'still_life', technique: 'oil', size: '50 × 60 cm', badge: 'sale',
-    titles: { uk: 'Польові квіти', ru: 'Полевые цветы', en: 'Field Flowers', es: 'Flores del Campo' },
-    descs: { uk: 'Ніжний букет польових квітів на світлому фоні. Картина несе в собі літню легкість та радість.', ru: 'Нежный букет полевых цветов на светлом фоне. Картина несёт в себе летнюю лёгкость и радость.', en: 'A delicate bouquet of wildflowers on a light background. The painting carries summer lightness and joy.', es: 'Un delicado ramo de flores silvestres sobre fondo claro. La pintura irradia ligereza y alegría estival.' },
-    gradient: 'linear-gradient(160deg,#98FB98 0%,#7FFF00 20%,#FFD700 45%,#FF69B4 65%,#9370DB 85%,#98FB98 100%)',
-  },
-  {
-    id: 6, artist: 'Alexey Gromov', year: 2021, price: 55000,
-    category: 'portrait', technique: 'oil', size: '60 × 80 cm', badge: null,
-    titles: { uk: 'Портрет незнайомки', ru: 'Портрет незнакомки', en: 'Portrait of a Stranger', es: 'Retrato de una Desconocida' },
-    descs: { uk: 'Загадковий портрет молодої жінки. Теплі охристі тони та м\'яке світлотіні надають роботі класичну елегантність.', ru: 'Загадочный портрет молодой женщины. Тёплые охристые тона и мягкая светотень придают работе классическую элегантность.', en: 'A mysterious portrait of a young woman. Warm ochre tones and soft chiaroscuro give the work classical elegance.', es: 'Un misterioso retrato de una joven. Los cálidos tonos ocres y el suave claroscuro otorgan elegancia clásica a la obra.' },
-    gradient: 'linear-gradient(160deg,#D4A96A 0%,#C08040 25%,#8B5E3C 50%,#5C3D20 75%,#2A1A0A 100%)',
-  },
-  {
-    id: 7, artist: 'Maria Stepanenko', year: 2024, price: 47000,
-    category: 'landscape', technique: 'watercolor', size: '75 × 90 cm', badge: 'new',
-    titles: { uk: 'Гірський світанок', ru: 'Горный рассвет', en: 'Mountain Dawn', es: 'Amanecer en las Montañas' },
-    descs: { uk: 'Перші промені сонця над гірськими вершинами. Акварельні переходи передають ніжність раннього ранку.', ru: 'Первые лучи солнца над горными вершинами. Акварельные переходы передают нежность раннего утра.', en: 'First rays of sun over mountain peaks. Watercolor transitions convey the tenderness of early morning.', es: 'Los primeros rayos de sol sobre las cimas de las montañas. Las transiciones acuarela transmiten la ternura del amanecer.' },
-    gradient: 'linear-gradient(160deg,#FF8C69 0%,#FFA07A 20%,#87CEEB 50%,#4A90D9 70%,#2C5F8A 90%,#1A3A5C 100%)',
-  },
-  {
-    id: 8, artist: 'Igor Borshch', year: 2023, price: 41000,
-    category: 'urban', technique: 'oil', size: '80 × 100 cm', badge: null,
-    titles: { uk: 'Нічна тиша', ru: 'Ночная тишина', en: 'Night Silence', es: 'Silencio Nocturno' },
-    descs: { uk: 'Нічна вулиця після дощу. Відображення ліхтарів у калюжах створює магічну атмосферу спокою.', ru: 'Ночная улица после дождя. Отражения фонарей в лужах создают магическую атмосферу покоя.', en: 'A night street after rain. Reflections of streetlamps in puddles create a magical atmosphere of peace.', es: 'Una calle nocturna tras la lluvia. Los reflejos de las farolas en los charcos crean una mágica atmósfera de paz.' },
-    gradient: 'linear-gradient(160deg,#0D0D1A 0%,#1A1A3E 30%,#2E4482 50%,#FFD700 55%,#1A1A3E 65%,#0D0D1A 100%)',
-  },
-  {
-    id: 9, artist: 'Maria Stepanenko', year: 2022, price: 33000,
-    category: 'landscape', technique: 'oil', size: '70 × 80 cm', badge: null,
-    titles: { uk: 'Весняний сад', ru: 'Весенний сад', en: 'Spring Garden', es: 'Jardín de Primavera' },
-    descs: { uk: 'Квітуючий вишневий сад у перші дні весни. Ніжні рожеві та білі відтінки передають пробудження природи.', ru: 'Цветущий вишнёвый сад в первые дни весны. Нежные розовые и белые оттенки передают пробуждение природы.', en: 'A blooming cherry orchard in the first days of spring. Delicate pink and white tones convey nature\'s awakening.', es: 'Un floreciente huerto de cerezos en los primeros días de primavera. Los delicados tonos rosas y blancos transmiten el despertar de la naturaleza.' },
-    gradient: 'linear-gradient(160deg,#FFB7C5 0%,#FF91A4 20%,#FFC8A2 40%,#98FB98 65%,#90EE90 85%,#3CB371 100%)',
-  },
-  {
-    id: 10, artist: 'Alexey Gromov', year: 2023, price: 36000,
-    category: 'landscape', technique: 'acrylic', size: '90 × 110 cm', badge: null,
-    titles: { uk: 'Осінній парк', ru: 'Осенний парк', en: 'Autumn Park', es: 'Parque de Otoño' },
-    descs: { uk: 'Золота осінь у міському парку. Мідні та бронзові відтінки створюють атмосферу задумливості.', ru: 'Золотая осень в городском парку. Медные и бронзовые оттенки создают атмосферу задумчивости.', en: 'Golden autumn in a city park. Copper and bronze tones create an atmosphere of thoughtfulness.', es: 'Otoño dorado en un parque urbano. Los tonos cobrizos y bronce crean una atmósfera de contemplación.' },
-    gradient: 'linear-gradient(160deg,#D2691E 0%,#CD853F 20%,#DAA520 40%,#8B4513 60%,#2F1B0D 80%,#1A0F08 100%)',
-  },
-  {
-    id: 11, artist: 'Igor Borshch', year: 2024, price: 52000,
-    category: 'landscape', technique: 'oil', size: '100 × 80 cm', badge: 'new',
-    titles: { uk: 'Море вранці', ru: 'Море утром', en: 'Morning Sea', es: 'Mar por la Mañana' },
-    descs: { uk: 'Ранкове море у бірюзових та лазурних тонах. Спокій та чистота ранньої години.', ru: 'Утреннее море в бирюзовых и лазурных тонах. Спокойствие и чистота раннего часа.', en: 'The morning sea in turquoise and azure tones. The calm and clarity of the early hour.', es: 'El mar matutino en tonos turquesa y azul. La calma y la claridad de la hora temprana.' },
-    gradient: 'linear-gradient(160deg,#87CEEB 0%,#00CED1 25%,#20B2AA 45%,#008B8B 65%,#F5DEB3 85%,#DEB887 100%)',
-  },
-  {
-    id: 12, artist: 'Maria Stepanenko', year: 2021, price: 0,
-    category: 'still_life', technique: 'oil', size: '40 × 50 cm', badge: 'sold',
-    titles: { uk: 'Червоний мак', ru: 'Красный мак', en: 'Red Poppy', es: 'Amapola Roja' },
-    descs: { uk: 'Одинокий червоний мак на темному фоні. Мінімалістична, але виразна робота.', ru: 'Одиночный красный мак на тёмном фоне. Минималистичная, но выразительная работа.', en: 'A solitary red poppy on a dark background. Minimalist yet expressive work.', es: 'Una solitaria amapola roja sobre fondo oscuro. Obra minimalista pero expresiva.' },
-    gradient: 'linear-gradient(160deg,#1A0A0A 0%,#2D0808 30%,#CC0000 55%,#FF2222 68%,#2D0808 80%,#1A0A0A 100%)',
+    id: 5, artist: 'Igor Borshch', year: 2024, price: 200,
+    category: 'portrait', technique: 'oil', size: '70 × 50 cm', badge: null,
+    image: 'images/painting5.jpg',
+    titles: { uk: 'Момент спокою', ru: 'Миг покоя', en: 'Moment of Peace', es: 'Momento de Paz' },
+    descs: {
+      uk: 'Жінка біля води у чорному купальнику. Темний фон підкреслює теплоту шкіри та бірюзовий відблиск ванни — момент розслаблення і самоти.',
+      ru: 'Женщина у воды в чёрном купальнике. Тёмный фон подчёркивает теплоту кожи и бирюзовый отблеск ванны — момент расслабления и уединения.',
+      en: 'A woman by the water in a black swimsuit. The dark background highlights the warmth of the skin and the turquoise glow of the bath — a moment of relaxation and solitude.',
+      es: 'Una mujer junto al agua con bañador negro. El fondo oscuro realza la calidez de la piel y el brillo turquesa del baño: un momento de relajación y soledad.',
+    },
+    gradient: 'linear-gradient(160deg,#0A1520 0%,#1A2535 30%,#C07840 55%,#5FB8B0 80%,#0A1520 100%)',
   },
 ];
 
@@ -94,7 +75,7 @@ function ptitle(p) { return pt(p, 'title'); }
 function pdesc(p) { return pt(p, 'desc'); }
 function ptech(p) { return t('tech', p.technique) || p.technique; }
 function pcat(p) { return t('cat', p.category) || p.category; }
-function fmt(n) { return new Intl.NumberFormat('uk-UA').format(n) + ' ₴'; }
+function fmt(n) { return new Intl.NumberFormat('de-DE').format(n) + ' €'; }
 
 function artEl(p, extraStyle) {
   if (p.image) return `<img src="${p.image}" class="card-art" style="object-fit:cover;width:100%;height:100%${extraStyle ? ';' + extraStyle : ''}">`;
@@ -273,7 +254,7 @@ function initIndex() {
 }
 
 // ── GALLERY PAGE ─────────────────────────────────────────────────────────────
-let galleryState = { category: 'all', maxPrice: 100000, sort: 'default' };
+let galleryState = { category: 'all', maxPrice: 500, sort: 'default' };
 
 function initGallery() {
   const grid = document.getElementById('paintings-grid');
@@ -375,7 +356,7 @@ function initCart() {
   }
 
   function updateSummary(count, total) {
-    const delivery = total > 0 ? 500 : 0;
+    const delivery = total > 0 ? 10 : 0;
     const countEl = document.getElementById('summary-count');
     if (countEl) countEl.textContent = count + ' ' + wordsCount(count);
     const subEl = document.getElementById('summary-subtotal');
