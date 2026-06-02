@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ArtSpace — Галерея и продажа картин</title>
-  <meta name="description" content="Уникальные авторские картины от украинских художников. Масло, акварель, акрил. Доставка по всей Украине.">
+  <title>ArtSpace — Галерея і продаж картин</title>
+  <meta name="description" content="Унікальні авторські картини від українських художників. Олія, акварель, акрил. Доставка по всій Україні.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -17,18 +17,28 @@
   <div class="container header-inner">
     <a href="index.html" class="logo">Art<span>Space</span></a>
     <nav class="nav">
-      <a href="index.html" class="nav-link">Главная</a>
-      <a href="gallery.html" class="nav-link">Галерея</a>
-      <a href="about.html" class="nav-link">О нас</a>
-      <a href="contact.html" class="nav-link">Контакты</a>
+      <a href="index.html" class="nav-link" data-i18n="nav.home">Головна</a>
+      <a href="gallery.html" class="nav-link" data-i18n="nav.gallery">Галерея</a>
+      <a href="about.html" class="nav-link" data-i18n="nav.about">Про нас</a>
+      <a href="contact.html" class="nav-link" data-i18n="nav.contacts">Контакти</a>
     </nav>
     <div class="header-actions">
-      <a href="cart.html" class="cart-btn">
-        🛒 Корзина <span class="cart-count">0</span>
-      </a>
-      <button class="burger" aria-label="Меню">
-        <span></span><span></span><span></span>
-      </button>
+      <!-- Lang switcher -->
+      <div class="lang-switcher">
+        <button class="lang-current" id="lang-toggle">
+          <span class="lang-flag">🇺🇦</span>
+          <span class="lang-code">UA</span>
+          <span class="lang-arrow">▾</span>
+        </button>
+        <div class="lang-dropdown" id="lang-dropdown">
+          <button class="lang-opt" data-lang="uk">🇺🇦 Українська</button>
+          <button class="lang-opt" data-lang="ru">🇷🇺 Русский</button>
+          <button class="lang-opt" data-lang="en">🇬🇧 English</button>
+          <button class="lang-opt" data-lang="es">🇪🇸 Español</button>
+        </div>
+      </div>
+      <a href="cart.html" class="cart-btn">🛒 <span data-i18n="cart_btn">Кошик</span> <span class="cart-count">0</span></a>
+      <button class="burger" aria-label="Меню"><span></span><span></span><span></span></button>
     </div>
   </div>
 </header>
@@ -36,34 +46,25 @@
 <!-- HERO -->
 <section class="hero">
   <div class="hero-content">
-    <div class="hero-badge">✦ Авторские работы</div>
-    <h1 class="hero-title">Искусство, которое <em>живёт</em> в вашем доме</h1>
-    <p class="hero-desc">Коллекция уникальных картин от украинских художников. Каждая работа — это история, эмоция и частица души мастера.</p>
+    <div class="hero-badge" data-i18n-html="hero.badge">✦ Авторські роботи</div>
+    <h1 class="hero-title" data-i18n-html="hero.title">Мистецтво, яке <em>живе</em> у вашому домі</h1>
+    <p class="hero-desc" data-i18n="hero.desc">Колекція унікальних картин від українських художників.</p>
     <div class="hero-actions">
-      <a href="gallery.html" class="btn btn-primary">Смотреть галерею</a>
-      <a href="about.html" class="btn btn-outline">О нас</a>
+      <a href="gallery.html" class="btn btn-primary" data-i18n="hero.btn_gallery">Дивитись галерею</a>
+      <a href="about.html" class="btn btn-outline" data-i18n="hero.btn_about">Про нас</a>
     </div>
     <div class="hero-stats">
-      <div>
-        <p class="stat-value">120+</p>
-        <p class="stat-label">Работ в коллекции</p>
-      </div>
-      <div>
-        <p class="stat-value">8</p>
-        <p class="stat-label">Художников</p>
-      </div>
-      <div>
-        <p class="stat-value">340+</p>
-        <p class="stat-label">Довольных покупателей</p>
-      </div>
+      <div><p class="stat-value">120+</p><p class="stat-label" data-i18n="hero.stat_works">Робіт у колекції</p></div>
+      <div><p class="stat-value">8</p><p class="stat-label" data-i18n="hero.stat_artists">Художників</p></div>
+      <div><p class="stat-value">340+</p><p class="stat-label" data-i18n="hero.stat_buyers">Задоволених покупців</p></div>
     </div>
   </div>
   <div class="hero-visual">
     <div class="hero-painting-art"></div>
     <div class="hero-tag">
       <div class="hero-tag-info">
-        <h4>Закат над морем</h4>
-        <p>Игорь Борщ · 2023 · Масло на холсте</p>
+        <h4 data-i18n="hero.tag_title">Захід над морем</h4>
+        <p data-i18n="hero.tag_meta">Ігор Борщ · 2023 · Олія на полотні</p>
       </div>
       <span class="hero-tag-price">45 000 ₴</span>
     </div>
@@ -74,12 +75,12 @@
 <section class="featured">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Избранные работы</h2>
-      <p class="section-subtitle">Свежие поступления и самые популярные картины нашей галереи</p>
+      <h2 class="section-title" data-i18n="featured.title">Вибрані роботи</h2>
+      <p class="section-subtitle" data-i18n="featured.subtitle">Свіжі надходження та найпопулярніші картини нашої галереї</p>
     </div>
     <div class="featured-grid" id="featured-grid"></div>
-    <div style="text-align:center; margin-top:48px;">
-      <a href="gallery.html" class="btn btn-outline">Смотреть все работы →</a>
+    <div style="text-align:center;margin-top:48px;">
+      <a href="gallery.html" class="btn btn-outline" data-i18n="featured.btn_all">Дивитись усі роботи →</a>
     </div>
   </div>
 </section>
@@ -87,42 +88,42 @@
 <!-- ABOUT BANNER -->
 <section class="about-banner">
   <div class="container">
-    <h2>Каждая картина — живая история</h2>
-    <p>Мы сотрудничаем с украинскими художниками, чтобы донести их творчество до вашего дома. Все работы — оригинальные, с сертификатом подлинности.</p>
+    <h2 data-i18n="banner.title">Кожна картина — жива історія</h2>
+    <p data-i18n="banner.desc">Ми співпрацюємо з українськими художниками...</p>
     <div class="about-actions">
-      <a href="gallery.html" class="btn btn-ghost">Открыть галерею</a>
-      <a href="contact.html" class="btn btn-ghost">Связаться с нами</a>
+      <a href="gallery.html" class="btn btn-ghost" data-i18n="banner.btn_gallery">Відкрити галерею</a>
+      <a href="contact.html" class="btn btn-ghost" data-i18n="banner.btn_contact">Зв'язатися з нами</a>
     </div>
   </div>
 </section>
 
 <!-- HOW IT WORKS -->
-<section style="padding:96px 0; background:var(--bg2);">
+<section style="padding:96px 0;background:var(--bg2);">
   <div class="container">
     <div class="section-header">
-      <h2 class="section-title">Как это работает</h2>
-      <p class="section-subtitle">Купить картину просто — от выбора до доставки за несколько шагов</p>
+      <h2 class="section-title" data-i18n="how.title">Як це працює</h2>
+      <p class="section-subtitle" data-i18n="how.subtitle">Купити картину просто...</p>
     </div>
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:32px;">
-      <div style="text-align:center; padding:32px 24px;">
-        <div style="font-size:40px; margin-bottom:16px;">🔍</div>
-        <h3 style="font-size:20px; margin-bottom:10px;">Выберите</h3>
-        <p style="color:var(--text-muted); font-size:15px; line-height:1.6;">Просматривайте коллекцию, фильтруйте по стилю, цене и технике</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:32px;">
+      <div style="text-align:center;padding:32px 24px;">
+        <div style="font-size:40px;margin-bottom:16px;">🔍</div>
+        <h3 style="font-size:20px;margin-bottom:10px;" data-i18n="how.s1t">Оберіть</h3>
+        <p style="color:var(--text-muted);font-size:15px;line-height:1.6;" data-i18n="how.s1d">Переглядайте колекцію...</p>
       </div>
-      <div style="text-align:center; padding:32px 24px;">
-        <div style="font-size:40px; margin-bottom:16px;">🛒</div>
-        <h3 style="font-size:20px; margin-bottom:10px;">Добавьте в корзину</h3>
-        <p style="color:var(--text-muted); font-size:15px; line-height:1.6;">Нажмите «В корзину» и оформите заказ в один клик</p>
+      <div style="text-align:center;padding:32px 24px;">
+        <div style="font-size:40px;margin-bottom:16px;">🛒</div>
+        <h3 style="font-size:20px;margin-bottom:10px;" data-i18n="how.s2t">Додайте до кошика</h3>
+        <p style="color:var(--text-muted);font-size:15px;line-height:1.6;" data-i18n="how.s2d">Натисніть «До кошика»...</p>
       </div>
-      <div style="text-align:center; padding:32px 24px;">
-        <div style="font-size:40px; margin-bottom:16px;">📞</div>
-        <h3 style="font-size:20px; margin-bottom:10px;">Подтвердите</h3>
-        <p style="color:var(--text-muted); font-size:15px; line-height:1.6;">Мы свяжемся с вами для подтверждения и уточнения деталей</p>
+      <div style="text-align:center;padding:32px 24px;">
+        <div style="font-size:40px;margin-bottom:16px;">📞</div>
+        <h3 style="font-size:20px;margin-bottom:10px;" data-i18n="how.s3t">Підтвердіть</h3>
+        <p style="color:var(--text-muted);font-size:15px;line-height:1.6;" data-i18n="how.s3d">Ми зв'яжемося з вами...</p>
       </div>
-      <div style="text-align:center; padding:32px 24px;">
-        <div style="font-size:40px; margin-bottom:16px;">🚚</div>
-        <h3 style="font-size:20px; margin-bottom:10px;">Получите</h3>
-        <p style="color:var(--text-muted); font-size:15px; line-height:1.6;">Доставка по всей Украине. Упаковка гарантирует сохранность</p>
+      <div style="text-align:center;padding:32px 24px;">
+        <div style="font-size:40px;margin-bottom:16px;">🚚</div>
+        <h3 style="font-size:20px;margin-bottom:10px;" data-i18n="how.s4t">Отримайте</h3>
+        <p style="color:var(--text-muted);font-size:15px;line-height:1.6;" data-i18n="how.s4d">Доставка по всій Україні.</p>
       </div>
     </div>
   </div>
@@ -134,7 +135,7 @@
     <div class="footer-grid">
       <div>
         <p class="footer-logo">Art<span>Space</span></p>
-        <p class="footer-tagline">Галерея авторских картин.<br>Искусство в каждый дом.</p>
+        <p class="footer-tagline" data-i18n="footer.tagline">Галерея авторських картин.</p>
         <div class="footer-social">
           <a href="#" title="Instagram">📸</a>
           <a href="#" title="Facebook">📘</a>
@@ -142,33 +143,34 @@
         </div>
       </div>
       <div class="footer-col">
-        <h4>Галерея</h4>
-        <a href="gallery.html">Все работы</a>
-        <a href="gallery.html">Пейзажи</a>
-        <a href="gallery.html">Портреты</a>
-        <a href="gallery.html">Абстракция</a>
+        <h4 data-i18n="footer.col_gallery">Галерея</h4>
+        <a href="gallery.html" data-i18n="footer.all_works">Усі роботи</a>
+        <a href="gallery.html" data-i18n="footer.landscapes">Пейзажі</a>
+        <a href="gallery.html" data-i18n="footer.portraits">Портрети</a>
+        <a href="gallery.html" data-i18n="footer.abstract">Абстракція</a>
       </div>
       <div class="footer-col">
-        <h4>Информация</h4>
-        <a href="about.html">О нас</a>
-        <a href="#">Доставка</a>
-        <a href="#">Возврат</a>
-        <a href="#">Сертификаты</a>
+        <h4 data-i18n="footer.col_info">Інформація</h4>
+        <a href="about.html" data-i18n="footer.about">Про нас</a>
+        <a href="#" data-i18n="footer.delivery">Доставка</a>
+        <a href="#" data-i18n="footer.returns">Повернення</a>
+        <a href="#" data-i18n="footer.certs">Сертифікати</a>
       </div>
       <div class="footer-col">
-        <h4>Контакты</h4>
-        <a href="contact.html">Написать нам</a>
+        <h4 data-i18n="footer.col_contacts">Контакти</h4>
+        <a href="contact.html" data-i18n="footer.write">Написати нам</a>
         <a href="mailto:igor.borshch.03@gmail.com">Email</a>
         <a href="#">Instagram @mr.borshch</a>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2024 ArtSpace. Все права защищены.</span>
-      <span>Сделано с ❤️ в Украине</span>
+      <span data-i18n="footer.copy">© 2024 ArtSpace. Всі права захищені.</span>
+      <span data-i18n="footer.made">Зроблено з ❤️ в Україні</span>
     </div>
   </div>
 </footer>
 
+<script src="js/i18n.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

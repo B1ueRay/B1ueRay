@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Контакты — ArtSpace</title>
+  <title>Контакти — ArtSpace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -16,23 +16,36 @@
   <div class="container header-inner">
     <a href="index.html" class="logo">Art<span>Space</span></a>
     <nav class="nav">
-      <a href="index.html" class="nav-link">Главная</a>
-      <a href="gallery.html" class="nav-link">Галерея</a>
-      <a href="about.html" class="nav-link">О нас</a>
-      <a href="contact.html" class="nav-link">Контакты</a>
+      <a href="index.html" class="nav-link" data-i18n="nav.home">Головна</a>
+      <a href="gallery.html" class="nav-link" data-i18n="nav.gallery">Галерея</a>
+      <a href="about.html" class="nav-link" data-i18n="nav.about">Про нас</a>
+      <a href="contact.html" class="nav-link" data-i18n="nav.contacts">Контакти</a>
     </nav>
     <div class="header-actions">
-      <a href="cart.html" class="cart-btn">🛒 Корзина <span class="cart-count">0</span></a>
+      <div class="lang-switcher">
+        <button class="lang-current" id="lang-toggle">
+          <span class="lang-flag">🇺🇦</span>
+          <span class="lang-code">UA</span>
+          <span class="lang-arrow">▾</span>
+        </button>
+        <div class="lang-dropdown" id="lang-dropdown">
+          <button class="lang-opt" data-lang="uk">🇺🇦 Українська</button>
+          <button class="lang-opt" data-lang="ru">🇷🇺 Русский</button>
+          <button class="lang-opt" data-lang="en">🇬🇧 English</button>
+          <button class="lang-opt" data-lang="es">🇪🇸 Español</button>
+        </div>
+      </div>
+      <a href="cart.html" class="cart-btn">🛒 <span data-i18n="cart_btn">Кошик</span> <span class="cart-count">0</span></a>
       <button class="burger" aria-label="Меню"><span></span><span></span><span></span></button>
     </div>
   </div>
 </header>
 
 <!-- PAGE HEADER -->
-<section style="padding:calc(var(--header-h) + 48px) 0 48px; background:var(--bg2); border-bottom:1px solid var(--border);">
+<section style="padding:calc(var(--header-h) + 48px) 0 48px;background:var(--bg2);border-bottom:1px solid var(--border);">
   <div class="container">
-    <h1 style="font-size:clamp(28px,4vw,48px); margin-bottom:8px;">Связаться с нами</h1>
-    <p style="color:var(--text-muted);">Ответим на все вопросы о картинах, доставке и заказах</p>
+    <h1 style="font-size:clamp(28px,4vw,48px);margin-bottom:8px;" data-i18n="contact.hero_t">Зв'язатися з нами</h1>
+    <p style="color:var(--text-muted);" data-i18n="contact.hero_d">Відповімо на всі питання про картини, доставку та замовлення</p>
   </div>
 </section>
 
@@ -43,14 +56,13 @@
 
       <!-- Info -->
       <div class="contact-info">
-        <h2>Будем рады помочь</h2>
-        <p>Если вы хотите узнать больше о картине, заказать персональную консультацию по выбору или договориться о комиссии — напишите нам. Обычно отвечаем в течение 24 часов.</p>
-
+        <h2 data-i18n="contact.info_t">Будемо раді допомогти</h2>
+        <p data-i18n="contact.info_d">Якщо ви хочете дізнатися більше...</p>
         <div class="contact-links">
           <a href="mailto:igor.borshch.03@gmail.com" class="contact-link">
             <div class="contact-link-icon">✉️</div>
             <div>
-              <p class="contact-link-label">Email</p>
+              <p class="contact-link-label" data-i18n="contact.email_l">Email</p>
               <p class="contact-link-value">igor.borshch.03@gmail.com</p>
             </div>
           </a>
@@ -64,15 +76,15 @@
           <div class="contact-link">
             <div class="contact-link-icon">🕐</div>
             <div>
-              <p class="contact-link-label">Часы работы</p>
-              <p class="contact-link-value">Пн–Пт: 10:00 – 19:00</p>
+              <p class="contact-link-label" data-i18n="contact.hours_l">Години роботи</p>
+              <p class="contact-link-value" data-i18n="contact.hours_v">Пн–Пт: 10:00 – 19:00</p>
             </div>
           </div>
           <div class="contact-link">
             <div class="contact-link-icon">📍</div>
             <div>
-              <p class="contact-link-label">Местонахождение</p>
-              <p class="contact-link-value">Днепр, Украина</p>
+              <p class="contact-link-label" data-i18n="contact.location_l">Місцезнаходження</p>
+              <p class="contact-link-value" data-i18n="contact.location_v">Дніпро, Україна</p>
             </div>
           </div>
         </div>
@@ -80,27 +92,27 @@
 
       <!-- Form -->
       <div class="contact-form-wrap">
-        <h3>Написать сообщение</h3>
+        <h3 data-i18n="contact.form_t">Написати повідомлення</h3>
         <form id="contact-form">
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
             <div class="form-group">
-              <label>Ваше имя</label>
-              <input type="text" placeholder="Имя" required>
+              <label data-i18n="contact.name_l">Ваше ім'я</label>
+              <input type="text" data-i18n-ph="contact.name_ph" placeholder="Ім'я" required>
             </div>
             <div class="form-group">
-              <label>Email</label>
-              <input type="email" placeholder="email@example.com" required>
+              <label data-i18n="contact.email_l">Email</label>
+              <input type="email" data-i18n-ph="contact.email_ph" placeholder="email@example.com" required>
             </div>
           </div>
           <div class="form-group">
-            <label>Тема</label>
-            <input type="text" placeholder="О чём хотите написать?" required>
+            <label data-i18n="contact.subject_l">Тема</label>
+            <input type="text" data-i18n-ph="contact.subject_ph" placeholder="Про що хочете написати?" required>
           </div>
           <div class="form-group">
-            <label>Сообщение</label>
-            <textarea placeholder="Ваш вопрос или пожелание..." required></textarea>
+            <label data-i18n="contact.msg_l">Повідомлення</label>
+            <textarea data-i18n-ph="contact.msg_ph" placeholder="Ваше запитання або побажання..." required></textarea>
           </div>
-          <button type="submit" class="btn btn-primary form-submit">Отправить сообщение</button>
+          <button type="submit" class="btn btn-primary form-submit" data-i18n="contact.submit">Надіслати повідомлення</button>
         </form>
       </div>
 
@@ -114,7 +126,7 @@
     <div class="footer-grid">
       <div>
         <p class="footer-logo">Art<span>Space</span></p>
-        <p class="footer-tagline">Галерея авторских картин.<br>Искусство в каждый дом.</p>
+        <p class="footer-tagline" data-i18n="footer.tagline">Галерея авторських картин.</p>
         <div class="footer-social">
           <a href="#" title="Instagram">📸</a>
           <a href="#" title="Facebook">📘</a>
@@ -122,33 +134,34 @@
         </div>
       </div>
       <div class="footer-col">
-        <h4>Галерея</h4>
-        <a href="gallery.html">Все работы</a>
-        <a href="gallery.html">Пейзажи</a>
-        <a href="gallery.html">Портреты</a>
-        <a href="gallery.html">Абстракция</a>
+        <h4 data-i18n="footer.col_gallery">Галерея</h4>
+        <a href="gallery.html" data-i18n="footer.all_works">Усі роботи</a>
+        <a href="gallery.html" data-i18n="footer.landscapes">Пейзажі</a>
+        <a href="gallery.html" data-i18n="footer.portraits">Портрети</a>
+        <a href="gallery.html" data-i18n="footer.abstract">Абстракція</a>
       </div>
       <div class="footer-col">
-        <h4>Информация</h4>
-        <a href="about.html">О нас</a>
-        <a href="#">Доставка</a>
-        <a href="#">Возврат</a>
-        <a href="#">Сертификаты</a>
+        <h4 data-i18n="footer.col_info">Інформація</h4>
+        <a href="about.html" data-i18n="footer.about">Про нас</a>
+        <a href="#" data-i18n="footer.delivery">Доставка</a>
+        <a href="#" data-i18n="footer.returns">Повернення</a>
+        <a href="#" data-i18n="footer.certs">Сертифікати</a>
       </div>
       <div class="footer-col">
-        <h4>Контакты</h4>
-        <a href="contact.html">Написать нам</a>
+        <h4 data-i18n="footer.col_contacts">Контакти</h4>
+        <a href="contact.html" data-i18n="footer.write">Написати нам</a>
         <a href="mailto:igor.borshch.03@gmail.com">Email</a>
         <a href="#">Instagram @mr.borshch</a>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2024 ArtSpace. Все права защищены.</span>
-      <span>Сделано с ❤️ в Украине</span>
+      <span data-i18n="footer.copy">© 2024 ArtSpace.</span>
+      <span data-i18n="footer.made">Зроблено з ❤️ в Україні</span>
     </div>
   </div>
 </footer>
 
+<script src="js/i18n.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
