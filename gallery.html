@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Галерея — ArtSpace</title>
+  <meta name="description" content="Полная коллекция авторских картин. Фильтрация по стилю, технике и цене.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">Art<span>Space</span></a>
+    <nav class="nav">
+      <a href="index.html" class="nav-link">Главная</a>
+      <a href="gallery.html" class="nav-link">Галерея</a>
+      <a href="about.html" class="nav-link">О нас</a>
+      <a href="contact.html" class="nav-link">Контакты</a>
+    </nav>
+    <div class="header-actions">
+      <a href="cart.html" class="cart-btn">🛒 Корзина <span class="cart-count">0</span></a>
+      <button class="burger" aria-label="Меню"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<!-- GALLERY HERO -->
+<div class="gallery-hero">
+  <div class="container">
+    <h1>Галерея картин</h1>
+    <p>Уникальные авторские работы украинских художников</p>
+  </div>
+</div>
+
+<!-- GALLERY LAYOUT -->
+<section class="gallery-layout">
+  <div class="container">
+    <div class="gallery-inner">
+
+      <!-- FILTERS -->
+      <aside class="filters" id="filters">
+        <div class="filter-section">
+          <p class="filter-title">Категория</p>
+          <div class="filter-options" id="cat-filters"></div>
+        </div>
+        <div class="filter-section">
+          <p class="filter-title">Максимальная цена</p>
+          <div class="price-range">
+            <input type="range" id="price-range" min="0" max="100000" value="100000" step="1000">
+            <div class="price-range-vals">
+              <span>0 ₴</span>
+              <span id="price-val">100 000 ₴</span>
+            </div>
+          </div>
+        </div>
+        <div class="filter-section">
+          <p class="filter-title">Техника</p>
+          <div class="filter-options">
+            <label class="filter-option active"><input type="radio" name="tech" value="все"> Все</label>
+            <label class="filter-option"><input type="radio" name="tech" value="масло"> Масло</label>
+            <label class="filter-option"><input type="radio" name="tech" value="акрил"> Акрил</label>
+            <label class="filter-option"><input type="radio" name="tech" value="акварель"> Акварель</label>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN -->
+      <div>
+        <div class="gallery-toolbar">
+          <span class="gallery-count" id="gallery-count">Загрузка...</span>
+          <select class="sort-select" id="sort-select">
+            <option value="default">По умолчанию</option>
+            <option value="new">Сначала новые</option>
+            <option value="price-asc">Цена: по возрастанию</option>
+            <option value="price-desc">Цена: по убыванию</option>
+          </select>
+        </div>
+        <div class="paintings-grid" id="paintings-grid"></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <p class="footer-logo">Art<span>Space</span></p>
+        <p class="footer-tagline">Галерея авторских картин.<br>Искусство в каждый дом.</p>
+        <div class="footer-social">
+          <a href="#" title="Instagram">📸</a>
+          <a href="#" title="Facebook">📘</a>
+          <a href="#" title="Telegram">✈️</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Галерея</h4>
+        <a href="gallery.html">Все работы</a>
+        <a href="gallery.html">Пейзажи</a>
+        <a href="gallery.html">Портреты</a>
+        <a href="gallery.html">Абстракция</a>
+      </div>
+      <div class="footer-col">
+        <h4>Информация</h4>
+        <a href="about.html">О нас</a>
+        <a href="#">Доставка</a>
+        <a href="#">Возврат</a>
+        <a href="#">Сертификаты</a>
+      </div>
+      <div class="footer-col">
+        <h4>Контакты</h4>
+        <a href="contact.html">Написать нам</a>
+        <a href="mailto:igor.borshch.03@gmail.com">Email</a>
+        <a href="#">Instagram @mr.borshch</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2024 ArtSpace. Все права защищены.</span>
+      <span>Сделано с ❤️ в Украине</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>

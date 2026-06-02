@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArtSpace — Галерея и продажа картин</title>
+  <meta name="description" content="Уникальные авторские картины от украинских художников. Масло, акварель, акрил. Доставка по всей Украине.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">Art<span>Space</span></a>
+    <nav class="nav">
+      <a href="index.html" class="nav-link">Главная</a>
+      <a href="gallery.html" class="nav-link">Галерея</a>
+      <a href="about.html" class="nav-link">О нас</a>
+      <a href="contact.html" class="nav-link">Контакты</a>
+    </nav>
+    <div class="header-actions">
+      <a href="cart.html" class="cart-btn">
+        🛒 Корзина <span class="cart-count">0</span>
+      </a>
+      <button class="burger" aria-label="Меню">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">✦ Авторские работы</div>
+    <h1 class="hero-title">Искусство, которое <em>живёт</em> в вашем доме</h1>
+    <p class="hero-desc">Коллекция уникальных картин от украинских художников. Каждая работа — это история, эмоция и частица души мастера.</p>
+    <div class="hero-actions">
+      <a href="gallery.html" class="btn btn-primary">Смотреть галерею</a>
+      <a href="about.html" class="btn btn-outline">О нас</a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <p class="stat-value">120+</p>
+        <p class="stat-label">Работ в коллекции</p>
+      </div>
+      <div>
+        <p class="stat-value">8</p>
+        <p class="stat-label">Художников</p>
+      </div>
+      <div>
+        <p class="stat-value">340+</p>
+        <p class="stat-label">Довольных покупателей</p>
+      </div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-painting-art"></div>
+    <div class="hero-tag">
+      <div class="hero-tag-info">
+        <h4>Закат над морем</h4>
+        <p>Игорь Борщ · 2023 · Масло на холсте</p>
+      </div>
+      <span class="hero-tag-price">45 000 ₴</span>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED -->
+<section class="featured">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Избранные работы</h2>
+      <p class="section-subtitle">Свежие поступления и самые популярные картины нашей галереи</p>
+    </div>
+    <div class="featured-grid" id="featured-grid"></div>
+    <div style="text-align:center; margin-top:48px;">
+      <a href="gallery.html" class="btn btn-outline">Смотреть все работы →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT BANNER -->
+<section class="about-banner">
+  <div class="container">
+    <h2>Каждая картина — живая история</h2>
+    <p>Мы сотрудничаем с украинскими художниками, чтобы донести их творчество до вашего дома. Все работы — оригинальные, с сертификатом подлинности.</p>
+    <div class="about-actions">
+      <a href="gallery.html" class="btn btn-ghost">Открыть галерею</a>
+      <a href="contact.html" class="btn btn-ghost">Связаться с нами</a>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section style="padding:96px 0; background:var(--bg2);">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Как это работает</h2>
+      <p class="section-subtitle">Купить картину просто — от выбора до доставки за несколько шагов</p>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:32px;">
+      <div style="text-align:center; padding:32px 24px;">
+        <div style="font-size:40px; margin-bottom:16px;">🔍</div>
+        <h3 style="font-size:20px; margin-bottom:10px;">Выберите</h3>
+        <p style="color:var(--text-muted); font-size:15px; line-height:1.6;">Просматривайте коллекцию, фильтруйте по стилю, цене и технике</p>
+      </div>
+      <div style="text-align:center; padding:32px 24px;">
+        <div style="font-size:40px; margin-bottom:16px;">🛒</div>
+        <h3 style="font-size:20px; margin-bottom:10px;">Добавьте в корзину</h3>
+        <p style="color:var(--text-muted); font-size:15px; line-height:1.6;">Нажмите «В корзину» и оформите заказ в один клик</p>
+      </div>
+      <div style="text-align:center; padding:32px 24px;">
+        <div style="font-size:40px; margin-bottom:16px;">📞</div>
+        <h3 style="font-size:20px; margin-bottom:10px;">Подтвердите</h3>
+        <p style="color:var(--text-muted); font-size:15px; line-height:1.6;">Мы свяжемся с вами для подтверждения и уточнения деталей</p>
+      </div>
+      <div style="text-align:center; padding:32px 24px;">
+        <div style="font-size:40px; margin-bottom:16px;">🚚</div>
+        <h3 style="font-size:20px; margin-bottom:10px;">Получите</h3>
+        <p style="color:var(--text-muted); font-size:15px; line-height:1.6;">Доставка по всей Украине. Упаковка гарантирует сохранность</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <p class="footer-logo">Art<span>Space</span></p>
+        <p class="footer-tagline">Галерея авторских картин.<br>Искусство в каждый дом.</p>
+        <div class="footer-social">
+          <a href="#" title="Instagram">📸</a>
+          <a href="#" title="Facebook">📘</a>
+          <a href="#" title="Telegram">✈️</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Галерея</h4>
+        <a href="gallery.html">Все работы</a>
+        <a href="gallery.html">Пейзажи</a>
+        <a href="gallery.html">Портреты</a>
+        <a href="gallery.html">Абстракция</a>
+      </div>
+      <div class="footer-col">
+        <h4>Информация</h4>
+        <a href="about.html">О нас</a>
+        <a href="#">Доставка</a>
+        <a href="#">Возврат</a>
+        <a href="#">Сертификаты</a>
+      </div>
+      <div class="footer-col">
+        <h4>Контакты</h4>
+        <a href="contact.html">Написать нам</a>
+        <a href="mailto:igor.borshch.03@gmail.com">Email</a>
+        <a href="#">Instagram @mr.borshch</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2024 ArtSpace. Все права защищены.</span>
+      <span>Сделано с ❤️ в Украине</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Корзина — ArtSpace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">Art<span>Space</span></a>
+    <nav class="nav">
+      <a href="index.html" class="nav-link">Главная</a>
+      <a href="gallery.html" class="nav-link">Галерея</a>
+      <a href="about.html" class="nav-link">О нас</a>
+      <a href="contact.html" class="nav-link">Контакты</a>
+    </nav>
+    <div class="header-actions">
+      <a href="cart.html" class="cart-btn">🛒 Корзина <span class="cart-count">0</span></a>
+      <button class="burger" aria-label="Меню"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<!-- CART PAGE -->
+<main class="cart-page">
+  <div class="container">
+    <div class="cart-header-row">
+      <h1>Корзина</h1>
+      <button class="cart-clear-btn" id="cart-clear">Очистить корзину</button>
+    </div>
+
+    <div class="cart-layout">
+      <!-- Items -->
+      <div id="cart-items"></div>
+
+      <!-- Summary -->
+      <aside class="order-summary">
+        <h2>Ваш заказ</h2>
+        <div class="summary-rows">
+          <div class="summary-row">
+            <span class="label">Работ</span>
+            <span id="summary-count">0</span>
+          </div>
+          <div class="summary-row">
+            <span class="label">Сумма</span>
+            <span id="summary-subtotal">0 ₴</span>
+          </div>
+          <div class="summary-row">
+            <span class="label">Доставка</span>
+            <span id="summary-delivery">500 ₴</span>
+          </div>
+          <div class="summary-row total">
+            <span class="label">Итого</span>
+            <span id="summary-total">0 ₴</span>
+          </div>
+        </div>
+        <button class="btn btn-primary checkout-btn" id="checkout-btn">Оформить заказ</button>
+        <p class="secure-note">🔒 Безопасная оплата</p>
+        <p style="font-size:12px; color:var(--text-muted); text-align:center; margin-top:8px;">После оформления заказа мы свяжемся с вами для подтверждения</p>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <span>© 2024 ArtSpace. Все права защищены.</span>
+      <a href="index.html" style="color:var(--accent-light)">← На главную</a>
+    </div>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>
