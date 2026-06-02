@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Про нас — ArtSpace</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">Art<span>Space</span></a>
+    <nav class="nav">
+      <a href="index.html" class="nav-link" data-i18n="nav.home">Головна</a>
+      <a href="gallery.html" class="nav-link" data-i18n="nav.gallery">Галерея</a>
+      <a href="about.html" class="nav-link" data-i18n="nav.about">Про нас</a>
+      <a href="contact.html" class="nav-link" data-i18n="nav.contacts">Контакти</a>
+    </nav>
+    <div class="header-actions">
+      <div class="lang-switcher">
+        <button class="lang-current" id="lang-toggle">
+          <span class="lang-flag">🇺🇦</span>
+          <span class="lang-code">UA</span>
+          <span class="lang-arrow">▾</span>
+        </button>
+        <div class="lang-dropdown" id="lang-dropdown">
+          <button class="lang-opt" data-lang="uk">🇺🇦 Українська</button>
+          <button class="lang-opt" data-lang="ru">🇷🇺 Русский</button>
+          <button class="lang-opt" data-lang="en">🇬🇧 English</button>
+          <button class="lang-opt" data-lang="es">🇪🇸 Español</button>
+        </div>
+      </div>
+      <a href="cart.html" class="cart-btn">🛒 <span data-i18n="cart_btn">Кошик</span> <span class="cart-count">0</span></a>
+      <button class="burger" aria-label="Меню"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section style="padding:calc(var(--header-h) + 64px) 0 64px;background:var(--bg2);border-bottom:1px solid var(--border);">
+  <div class="container" style="max-width:760px;text-align:center;">
+    <h1 style="font-size:clamp(32px,5vw,54px);margin-bottom:16px;" data-i18n-html="about.hero_t">Про галерею <span style="color:var(--accent)">ArtSpace</span></h1>
+    <p style="font-size:18px;color:var(--text-muted);line-height:1.7;" data-i18n="about.hero_d">Ми об'єднуємо українських художників і цінителів мистецтва.</p>
+  </div>
+</section>
+
+<!-- MISSION -->
+<section style="padding:80px 0;">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;">
+      <div>
+        <p style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;" data-i18n="about.mission_label">Наша місія</p>
+        <h2 style="font-size:clamp(26px,3.5vw,40px);margin-bottom:20px;" data-i18n="about.mission_t">Мистецтво має бути доступним</h2>
+        <p style="color:var(--text-muted);line-height:1.8;margin-bottom:16px;font-size:16px;" data-i18n="about.mission_p1">ArtSpace — це онлайн-галерея...</p>
+        <p style="color:var(--text-muted);line-height:1.8;font-size:16px;" data-i18n="about.mission_p2">Кожна робота в нашій галереї...</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="background:var(--bg2);padding:28px;border-radius:var(--radius-lg);text-align:center;">
+          <p style="font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--accent);margin-bottom:4px;" data-i18n="about.stat_founded">2020</p>
+          <p style="font-size:14px;color:var(--text-muted);" data-i18n="about.stat_founded_l">Рік заснування</p>
+        </div>
+        <div style="background:var(--bg2);padding:28px;border-radius:var(--radius-lg);text-align:center;">
+          <p style="font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--accent);margin-bottom:4px;" data-i18n="about.stat_artists">8</p>
+          <p style="font-size:14px;color:var(--text-muted);" data-i18n="about.stat_artists_l">Художників</p>
+        </div>
+        <div style="background:var(--bg2);padding:28px;border-radius:var(--radius-lg);text-align:center;">
+          <p style="font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--accent);margin-bottom:4px;" data-i18n="about.stat_sold">120+</p>
+          <p style="font-size:14px;color:var(--text-muted);" data-i18n="about.stat_sold_l">Продано робіт</p>
+        </div>
+        <div style="background:var(--bg2);padding:28px;border-radius:var(--radius-lg);text-align:center;">
+          <p style="font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--accent);margin-bottom:4px;" data-i18n="about.stat_buyers">340+</p>
+          <p style="font-size:14px;color:var(--text-muted);" data-i18n="about.stat_buyers_l">Покупців</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARTISTS -->
+<section style="padding:80px 0;background:var(--bg2);">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title" data-i18n="about.artists_t">Наші художники</h2>
+      <p class="section-subtitle" data-i18n="about.artists_d">Талановиті майстри, чиї роботи представлені в галереї</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;">
+      <div style="background:var(--white);border-radius:var(--radius-lg);padding:32px;text-align:center;box-shadow:0 2px 12px var(--shadow);">
+        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#FF6B35,#8B4513);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:28px;">🎨</div>
+        <h3 style="font-size:20px;margin-bottom:4px;" data-i18n="about.a1_name">Ігор Борщ</h3>
+        <p style="font-size:13px;color:var(--accent);font-weight:600;margin-bottom:12px;" data-i18n="about.a1_spec">Пейзажист · Абстракціоніст</p>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.7;" data-i18n="about.a1_bio">Випускник ДНУ...</p>
+      </div>
+      <div style="background:var(--white);border-radius:var(--radius-lg);padding:32px;text-align:center;box-shadow:0 2px 12px var(--shadow);">
+        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#FFB7C5,#9370DB);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:28px;">🖌️</div>
+        <h3 style="font-size:20px;margin-bottom:4px;" data-i18n="about.a2_name">Марія Степаненко</h3>
+        <p style="font-size:13px;color:var(--accent);font-weight:600;margin-bottom:12px;" data-i18n="about.a2_spec">Натюрморт · Пейзаж</p>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.7;" data-i18n="about.a2_bio">Майстер ніжних акварельних пейзажів...</p>
+      </div>
+      <div style="background:var(--white);border-radius:var(--radius-lg);padding:32px;text-align:center;box-shadow:0 2px 12px var(--shadow);">
+        <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#8B5CF6,#F97316);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:28px;">✏️</div>
+        <h3 style="font-size:20px;margin-bottom:4px;" data-i18n="about.a3_name">Олексій Громов</h3>
+        <p style="font-size:13px;color:var(--accent);font-weight:600;margin-bottom:12px;" data-i18n="about.a3_spec">Портрет · Міський пейзаж</p>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.7;" data-i18n="about.a3_bio">Академічний художник...</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section style="padding:80px 0;">
+  <div class="container">
+    <div class="section-header" style="text-align:center;">
+      <h2 class="section-title" data-i18n="about.why_t">Чому обирають нас</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:28px;">
+      <div style="padding:24px;border:1.5px solid var(--border);border-radius:var(--radius-lg);">
+        <div style="font-size:32px;margin-bottom:14px;">📜</div>
+        <h3 style="font-size:17px;margin-bottom:8px;" data-i18n="about.w1t">Сертифікат автентичності</h3>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.6;" data-i18n="about.w1d">Кожна робота постачається з персональним сертифікатом художника</p>
+      </div>
+      <div style="padding:24px;border:1.5px solid var(--border);border-radius:var(--radius-lg);">
+        <div style="font-size:32px;margin-bottom:14px;">📦</div>
+        <h3 style="font-size:17px;margin-bottom:8px;" data-i18n="about.w2t">Професійна упаковка</h3>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.6;" data-i18n="about.w2d">Спеціальна упаковка захищає картину під час транспортування</p>
+      </div>
+      <div style="padding:24px;border:1.5px solid var(--border);border-radius:var(--radius-lg);">
+        <div style="font-size:32px;margin-bottom:14px;">🇺🇦</div>
+        <h3 style="font-size:17px;margin-bottom:8px;" data-i18n="about.w3t">Українські художники</h3>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.6;" data-i18n="about.w3d">Підтримуємо вітчизняне мистецтво та культуру</p>
+      </div>
+      <div style="padding:24px;border:1.5px solid var(--border);border-radius:var(--radius-lg);">
+        <div style="font-size:32px;margin-bottom:14px;">💬</div>
+        <h3 style="font-size:17px;margin-bottom:8px;" data-i18n="about.w4t">Особиста консультація</h3>
+        <p style="font-size:14px;color:var(--text-muted);line-height:1.6;" data-i18n="about.w4d">Допоможемо обрати картину, яка підійде саме вашому простору</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <p class="footer-logo">Art<span>Space</span></p>
+        <p class="footer-tagline" data-i18n="footer.tagline">Галерея авторських картин.</p>
+        <div class="footer-social">
+          <a href="#" title="Instagram">📸</a>
+          <a href="#" title="Facebook">📘</a>
+          <a href="#" title="Telegram">✈️</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4 data-i18n="footer.col_gallery">Галерея</h4>
+        <a href="gallery.html" data-i18n="footer.all_works">Усі роботи</a>
+        <a href="gallery.html" data-i18n="footer.landscapes">Пейзажі</a>
+        <a href="gallery.html" data-i18n="footer.portraits">Портрети</a>
+        <a href="gallery.html" data-i18n="footer.abstract">Абстракція</a>
+      </div>
+      <div class="footer-col">
+        <h4 data-i18n="footer.col_info">Інформація</h4>
+        <a href="about.html" data-i18n="footer.about">Про нас</a>
+        <a href="#" data-i18n="footer.delivery">Доставка</a>
+        <a href="#" data-i18n="footer.returns">Повернення</a>
+        <a href="#" data-i18n="footer.certs">Сертифікати</a>
+      </div>
+      <div class="footer-col">
+        <h4 data-i18n="footer.col_contacts">Контакти</h4>
+        <a href="contact.html" data-i18n="footer.write">Написати нам</a>
+        <a href="mailto:igor.borshch.03@gmail.com">Email</a>
+        <a href="#">Instagram @mr.borshch</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span data-i18n="footer.copy">© 2024 ArtSpace.</span>
+      <span data-i18n="footer.made">Зроблено з ❤️ в Україні</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/i18n.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
