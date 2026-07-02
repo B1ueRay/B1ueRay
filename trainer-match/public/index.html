@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FitMatch — тренери та клієнти</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ── AUTH SCREEN ── -->
+  <div id="auth-screen">
+    <div class="auth-box">
+      <div class="auth-lang-row" id="auth-lang-row"></div>
+      <div class="auth-title">Fit<span style="color:var(--accent)">Match</span> 💪</div>
+      <div class="auth-tagline" id="auth-tagline"></div>
+      <div class="auth-error" id="auth-error"></div>
+
+      <form id="auth-form">
+        <div class="field" id="field-name">
+          <label id="label-name"></label>
+          <input type="text" id="input-name" autocomplete="name" />
+        </div>
+        <div class="field">
+          <label id="label-email"></label>
+          <input type="email" id="input-email" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label id="label-password"></label>
+          <input type="password" id="input-password" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn-primary" id="auth-submit-btn"></button>
+      </form>
+      <div class="auth-switch" id="auth-switch"></div>
+    </div>
+  </div>
+
+  <!-- ── MAIN APP ── -->
+  <div id="main-screen" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
+    <header>
+      <div class="logo">Fit<span>Match</span> 💪</div>
+      <div class="header-right">
+        <select class="lang-select" id="lang-select"></select>
+        <button class="icon-btn" id="logout-btn"></button>
+      </div>
+    </header>
+
+    <div class="role-tabs">
+      <button class="tab" id="role-client-tab"></button>
+      <button class="tab" id="role-trainer-tab"></button>
+    </div>
+
+    <div class="sub-tabs">
+      <button class="tab" id="sub-search-tab"></button>
+      <button class="tab" id="sub-applications-tab"></button>
+    </div>
+
+    <main id="main-content"></main>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script src="i18n.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
