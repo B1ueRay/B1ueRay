@@ -1,0 +1,68 @@
+name: velora
+x-app-env: &app-env
+  DATABASE_URL: postgresql://velora:${POSTGRES_PASSWORD:-velora_local_only}@db:5432/velora
+  BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Copy .env.example to .env and set BETTER_AUTH_SECRET}
+  BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+  NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+  MEDIA_SIGNING_SECRET: ${MEDIA_SIGNING_SECRET:?Set MEDIA_SIGNING_SECRET in .env}
+  PAYMENT_WEBHOOK_SECRET: ${PAYMENT_WEBHOOK_SECRET:?Set PAYMENT_WEBHOOK_SECRET in .env}
+  DEMO_MODE: ${DEMO_MODE:-true}
+  STORAGE_PATH: /app/.storage
+  REDIS_URL: redis://redis:6379
+  BLOCKED_COUNTRIES: ${BLOCKED_COUNTRIES:-}
+  TRUST_COUNTRY_HEADER: ${TRUST_COUNTRY_HEADER:-false}
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: velora
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-velora_local_only}
+      POSTGRES_DB: velora
+    ports: ["127.0.0.1:${POSTGRES_PORT:-5432}:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U velora -d velora"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: ["redis_data:/data"]
+  init:
+    build:
+      context: .
+      target: tools
+    environment: *app-env
+    command: ["sh", "-c", "npm run db:migrate && npm run db:seed"]
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes: ["media_data:/app/.storage"]
+  web:
+    build:
+      context: .
+      target: runner
+    environment: *app-env
+    ports: ["${WEB_PORT:-3000}:3000"]
+    depends_on:
+      init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+    volumes: ["media_data:/app/.storage"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+volumes:
+  postgres_data:
+  redis_data:
+  media_data:

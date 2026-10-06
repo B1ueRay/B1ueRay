@@ -1,0 +1,678 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  CREATOR_MANAGER
+  MODERATOR
+  ADMIN
+}
+
+enum Visibility {
+  PUBLIC
+  SUBSCRIBER
+  PPV
+}
+
+enum ModerationState {
+  DRAFT
+  REVIEW
+  APPROVED
+  REJECTED
+  HIDDEN
+  REMOVED
+}
+
+enum GenerationState {
+  QUEUED
+  PROCESSING
+  MODERATION
+  REVIEW
+  APPROVED
+  REJECTED
+  FAILED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  VOICE
+}
+
+enum ReportState {
+  OPEN
+  UNDER_REVIEW
+  ACTIONED
+  DISMISSED
+}
+
+enum AgeState {
+  UNVERIFIED
+  SELF_DECLARED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model User {
+  id            String                 @id @default(cuid())
+  name          String
+  email         String                 @unique
+  emailVerified Boolean                @default(false)
+  image         String?
+  role          Role                   @default(USER)
+  status        String                 @default("ACTIVE")
+  deletedAt     DateTime?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  profile       UserProfile?
+  settings      UserSettings?
+  age           AgeVerificationStatus?
+  subscriptions Subscription[]
+  purchases     Purchase[]
+  favorites     Favorite[]
+  conversations Conversation[]
+  messages      Message[]
+  notifications Notification[]
+  payments      Payment[]
+  ledger        WalletLedgerEntry[]
+  tips          Tip[]
+  requests      ContentRequest[]
+  reports       Report[]
+  acceptances   LegalAcceptance[]
+
+  @@index([role, status])
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+model UserProfile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio           String   @default("")
+  preferredName String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model UserSettings {
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analyticsConsent    Boolean   @default(false)
+  memoryEnabled       Boolean   @default(true)
+  emailNotifications  Boolean   @default(false)
+  deletionRequestedAt DateTime?
+  updatedAt           DateTime  @updatedAt
+}
+
+model AgeVerificationStatus {
+  id         String    @id @default(cuid())
+  userId     String    @unique
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  state      AgeState  @default(UNVERIFIED)
+  declaredAt DateTime?
+  verifiedAt DateTime?
+  provider   String?
+  reference  String?
+  updatedAt  DateTime  @updatedAt
+}
+
+model Creator {
+  id            String             @id @default(cuid())
+  slug          String             @unique
+  name          String
+  age           Int
+  bio           String
+  category      String
+  tags          String[]
+  languages     String[]
+  avatar        String
+  cover         String
+  accent        String
+  fictional     Boolean            @default(true)
+  aiDisclosure  String             @default("Fictional AI virtual creator. All representations are adults aged 21+.")
+  featured      Boolean            @default(false)
+  popularity    Int                @default(0)
+  moderation    ModerationState    @default(APPROVED)
+  managerId     String?
+  deletedAt     DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  persona       CreatorPersona?
+  settings      CreatorSettings?
+  plans         SubscriptionPlan[]
+  posts         CreatorPost[]
+  media         CreatorMedia[]
+  subscriptions Subscription[]
+  favorites     Favorite[]
+  conversations Conversation[]
+  jobs          GenerationJob[]
+
+  @@index([moderation, featured, popularity])
+  @@index([category])
+}
+
+model CreatorPersona {
+  id                 String   @id @default(cuid())
+  creatorId          String   @unique
+  creator            Creator  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  personality        String
+  communicationStyle String
+  background         String
+  interests          String[]
+  tone               String
+  languages          String[]
+  relationshipConfig Json
+  memoryConfig       Json
+  prohibitedTopics   String[]
+  boundaries         String
+  monetizationConfig Json
+  updatedAt          DateTime @updatedAt
+}
+
+model CreatorSettings {
+  id                   String   @id @default(cuid())
+  creatorId            String   @unique
+  creator              Creator  @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  chatAccess           String   @default("FREE")
+  paidMessagePrice     Int      @default(1299)
+  requestStartingPrice Int      @default(2999)
+  tipMin               Int      @default(100)
+  tipMax               Int      @default(50000)
+  updatedAt            DateTime @updatedAt
+}
+
+model CreatorMedia {
+  id                String          @id @default(cuid())
+  creatorId         String
+  creator           Creator         @relation(fields: [creatorId], references: [id])
+  type              MediaType       @default(IMAGE)
+  storageKey        String
+  mimeType          String          @default("image/svg+xml")
+  size              Int
+  title             String
+  tags              String[]
+  moderation        ModerationState @default(REVIEW)
+  aiGenerated       Boolean         @default(true)
+  generationAssetId String?         @unique
+  ownerId           String?
+  deletedAt         DateTime?
+  createdAt         DateTime        @default(now())
+  postMedia         PostMedia[]
+
+  @@index([creatorId, moderation, type])
+}
+
+model CreatorPost {
+  id          String          @id @default(cuid())
+  creatorId   String
+  creator     Creator         @relation(fields: [creatorId], references: [id])
+  title       String
+  body        String
+  visibility  Visibility      @default(PUBLIC)
+  price       Int             @default(0)
+  currency    String          @default("EUR")
+  moderation  ModerationState @default(DRAFT)
+  publishedAt DateTime?
+  scheduledAt DateTime?
+  deletedAt   DateTime?
+  aiGenerated Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  media       PostMedia[]
+  purchases   Purchase[]
+
+  @@index([moderation, publishedAt])
+  @@index([creatorId, visibility])
+}
+
+model PostMedia {
+  id      String       @id @default(cuid())
+  postId  String
+  post    CreatorPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  mediaId String
+  media   CreatorMedia @relation(fields: [mediaId], references: [id])
+  order   Int          @default(0)
+
+  @@unique([postId, mediaId])
+}
+
+model SubscriptionPlan {
+  id            String         @id @default(cuid())
+  creatorId     String
+  creator       Creator        @relation(fields: [creatorId], references: [id])
+  name          String         @default("Inner circle")
+  price         Int
+  currency      String         @default("EUR")
+  active        Boolean        @default(true)
+  interval      String         @default("MONTH")
+  createdAt     DateTime       @default(now())
+  subscriptions Subscription[]
+
+  @@index([creatorId, active])
+}
+
+model Subscription {
+  id                String           @id @default(cuid())
+  userId            String
+  user              User             @relation(fields: [userId], references: [id])
+  creatorId         String
+  creator           Creator          @relation(fields: [creatorId], references: [id])
+  planId            String
+  plan              SubscriptionPlan @relation(fields: [planId], references: [id])
+  status            String           @default("ACTIVE")
+  currentPeriodEnd  DateTime
+  cancelAtPeriodEnd Boolean          @default(false)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@unique([userId, creatorId])
+  @@index([status, currentPeriodEnd])
+}
+
+model Purchase {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  postId    String
+  post      CreatorPost @relation(fields: [postId], references: [id])
+  paymentId String      @unique
+  status    String      @default("PAID")
+  amount    Int
+  createdAt DateTime    @default(now())
+
+  @@unique([userId, postId])
+}
+
+model Tip {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  creatorId String
+  paymentId String   @unique
+  amount    Int
+  status    String   @default("PAID")
+  createdAt DateTime @default(now())
+
+  @@index([creatorId, createdAt])
+}
+
+model Conversation {
+  id           String                    @id @default(cuid())
+  userId       String
+  user         User                      @relation(fields: [userId], references: [id])
+  creatorId    String
+  creator      Creator                   @relation(fields: [creatorId], references: [id])
+  memory       Json                      @default("{}")
+  summary      String?
+  deletedAt    DateTime?
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  messages     Message[]
+  participants ConversationParticipant[]
+
+  @@unique([userId, creatorId])
+}
+
+model ConversationParticipant {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  joinedAt       DateTime     @default(now())
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String              @id @default(cuid())
+  conversationId String
+  conversation   Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String?
+  user           User?               @relation(fields: [userId], references: [id])
+  sender         String
+  type           String              @default("TEXT")
+  body           String
+  preview        String?
+  price          Int                 @default(0)
+  moderation     ModerationState     @default(APPROVED)
+  usageTokens    Int                 @default(0)
+  provider       String?
+  deletedAt      DateTime?
+  createdAt      DateTime            @default(now())
+  attachments    MessageAttachment[]
+  unlocks        PaidMessageUnlock[]
+
+  @@index([conversationId, createdAt])
+}
+
+model MessageAttachment {
+  id        String    @id @default(cuid())
+  messageId String
+  message   Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  mediaId   String
+  type      MediaType
+  createdAt DateTime  @default(now())
+}
+
+model PaidMessageUnlock {
+  id        String   @id @default(cuid())
+  userId    String
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  paymentId String   @unique
+  status    String   @default("PAID")
+  createdAt DateTime @default(now())
+
+  @@unique([userId, messageId])
+}
+
+model ContentRequest {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id])
+  creatorId        String
+  brief            String
+  type             MediaType @default(IMAGE)
+  amount           Int
+  paymentId        String    @unique
+  status           String    @default("OPEN")
+  fulfilledMediaId String?
+  completedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([creatorId, status])
+  @@index([fulfilledMediaId, userId, status])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  creatorId String
+  creator   Creator  @relation(fields: [creatorId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([userId, creatorId])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  href      String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt, createdAt])
+}
+
+model Payment {
+  id             String              @id @default(cuid())
+  userId         String
+  user           User                @relation(fields: [userId], references: [id])
+  creatorId      String
+  kind           String
+  targetId       String
+  amount         Int
+  currency       String              @default("EUR")
+  status         String              @default("PENDING")
+  provider       String              @default("mock")
+  providerRef    String?             @unique
+  idempotencyKey String              @unique
+  metadata       Json                @default("{}")
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  ledger         WalletLedgerEntry[]
+
+  @@index([userId, status, createdAt])
+  @@index([creatorId, kind, status])
+}
+
+model PaymentEvent {
+  id              String   @id @default(cuid())
+  providerEventId String   @unique
+  paymentId       String
+  type            String
+  payload         Json
+  processedAt     DateTime @default(now())
+}
+
+model WalletLedgerEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  paymentId String
+  payment   Payment  @relation(fields: [paymentId], references: [id])
+  creatorId String
+  kind      String
+  amount    Int
+  currency  String   @default("EUR")
+  createdAt DateTime @default(now())
+
+  @@unique([paymentId, kind])
+  @@index([creatorId, createdAt])
+}
+
+model Report {
+  id         String           @id @default(cuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id])
+  targetType String
+  targetId   String
+  reason     String
+  detail     String
+  status     ReportState      @default(OPEN)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  cases      ModerationCase[]
+
+  @@index([status, createdAt])
+}
+
+model ModerationCase {
+  id             String             @id @default(cuid())
+  reportId       String?
+  report         Report?            @relation(fields: [reportId], references: [id])
+  targetType     String
+  targetId       String
+  status         ReportState        @default(OPEN)
+  providerResult Json?
+  createdAt      DateTime           @default(now())
+  actions        ModerationAction[]
+}
+
+model ModerationAction {
+  id         String         @id @default(cuid())
+  caseId     String
+  case       ModerationCase @relation(fields: [caseId], references: [id])
+  operatorId String
+  action     String
+  reason     String
+  createdAt  DateTime       @default(now())
+}
+
+model GenerationJob {
+  id               String            @id @default(cuid())
+  creatorId        String
+  creator          Creator           @relation(fields: [creatorId], references: [id])
+  operatorId       String
+  type             MediaType
+  status           GenerationState   @default(QUEUED)
+  provider         String            @default("mock")
+  model            String            @default("safe-placeholder-v1")
+  requestMetadata  Json              @default("{}")
+  costMetadata     Json              @default("{}")
+  moderationResult Json?
+  error            String?
+  startedAt        DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  prompt           GenerationPrompt?
+  assets           GenerationAsset[]
+
+  @@index([status, createdAt])
+}
+
+model GenerationPrompt {
+  id             String        @id @default(cuid())
+  jobId          String        @unique
+  job            GenerationJob @relation(fields: [jobId], references: [id])
+  prompt         String
+  negativePrompt String?
+  seed           Int?
+  createdAt      DateTime      @default(now())
+}
+
+model GenerationAsset {
+  id         String          @id @default(cuid())
+  jobId      String
+  job        GenerationJob   @relation(fields: [jobId], references: [id])
+  storageKey String
+  mimeType   String
+  size       Int
+  moderation ModerationState @default(REVIEW)
+  metadata   Json            @default("{}")
+  createdAt  DateTime        @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  operatorId String
+  action     String
+  targetType String
+  targetId   String
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([targetType, targetId])
+}
+
+model BlockedUser {
+  id            String   @id @default(cuid())
+  userId        String
+  blockedUserId String
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, blockedUserId])
+}
+
+model ConsentRecord {
+  id                     String    @id @default(cuid())
+  creatorId              String
+  subjectId              String
+  authorizationReference String
+  verifiedBy             String
+  scope                  String
+  expiresAt              DateTime?
+  revokedAt              DateTime?
+  createdAt              DateTime  @default(now())
+
+  @@index([creatorId])
+}
+
+model LegalDocument {
+  id          String            @id @default(cuid())
+  slug        String
+  version     String
+  title       String
+  body        String
+  active      Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  acceptances LegalAcceptance[]
+
+  @@unique([slug, version])
+}
+
+model LegalAcceptance {
+  id         String        @id @default(cuid())
+  userId     String
+  user       User          @relation(fields: [userId], references: [id])
+  documentId String
+  document   LegalDocument @relation(fields: [documentId], references: [id])
+  acceptedAt DateTime      @default(now())
+
+  @@unique([userId, documentId])
+}
+
+model SiteConfiguration {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  name      String
+  creatorId String?
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([name, createdAt])
+}
+
+model RateLimit {
+  key       String   @id
+  count     Int
+  expiresAt DateTime
+}

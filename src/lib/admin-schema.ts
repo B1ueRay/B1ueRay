@@ -1,0 +1,85 @@
+import { z } from "zod";
+const id = z.string().min(1).max(100);
+export const adminSchema = z.discriminatedUnion("action", [
+  z.object({
+    action: z.literal("generate"),
+    creatorId: id,
+    type: z.enum(["IMAGE", "VIDEO", "VOICE"]),
+    brief: z.string().trim().min(10).max(2000),
+    negativePrompt: z.string().max(1000).optional(),
+  }),
+  z.object({
+    action: z.literal("reviewGeneration"),
+    jobId: id,
+    approve: z.boolean(),
+  }),
+  z.object({
+    action: z.literal("createPost"),
+    creatorId: id,
+    mediaId: id,
+    title: z.string().trim().min(3).max(150),
+    body: z.string().trim().min(10).max(4000),
+    visibility: z.enum(["PUBLIC", "SUBSCRIBER", "PPV"]),
+    price: z.number().int().min(0).max(100000),
+    publish: z.boolean(),
+    scheduledAt: z.string().optional(),
+  }),
+  z.object({
+    action: z.literal("creator"),
+    creatorId: id,
+    name: z.string().trim().min(2).max(100),
+    bio: z.string().trim().min(10).max(500),
+    category: z.string().trim().min(2).max(50),
+    tags: z.array(z.string().min(1).max(50)).max(20),
+    languages: z.array(z.string().min(2).max(30)).min(1).max(10),
+    price: z.number().int().min(100).max(100000),
+    tipMin: z.number().int().min(1).max(100000),
+    tipMax: z.number().int().min(1).max(1000000),
+    featured: z.boolean(),
+    chatAccess: z.enum(["FREE", "SUBSCRIBER"]),
+    paidMessagePrice: z.number().int().min(1).max(100000),
+    requestStartingPrice: z.number().int().min(100).max(100000),
+  }),
+  z.object({
+    action: z.literal("userStatus"),
+    userId: id,
+    status: z.enum(["ACTIVE", "SUSPENDED", "BANNED"]),
+    reason: z.string().min(5).max(1000),
+  }),
+  z.object({
+    action: z.literal("content"),
+    postId: id,
+    state: z.enum(["APPROVED", "HIDDEN", "REMOVED"]),
+    reason: z.string().min(5).max(1000),
+  }),
+  z.object({
+    action: z.literal("report"),
+    reportId: id,
+    status: z.enum(["UNDER_REVIEW", "ACTIONED", "DISMISSED"]),
+    decision: z.enum(["HIDE", "REMOVE", "SUSPEND", "BAN", "NONE"]),
+    reason: z.string().min(5).max(1000),
+  }),
+  z.object({ action: z.literal("refund"), paymentId: id }),
+  z.object({
+    action: z.literal("config"),
+    reportReasons: z.array(z.string().min(2).max(100)).min(1).max(20),
+    ppvMin: z.number().int().min(100),
+    ppvMax: z.number().int().max(100000),
+  }),
+  z.object({
+    action: z.literal("request"),
+    requestId: id,
+    status: z.enum(["ACCEPTED", "COMPLETED", "REJECTED"]),
+    fulfilledMediaId: id.optional(),
+    reason: z.string().min(5).max(1000),
+  }),
+  z.object({
+    action: z.literal("paidMessage"),
+    conversationId: id,
+    preview: z.string().min(5).max(200),
+    body: z.string().min(10).max(2000),
+    mediaId: id.optional(),
+  }),
+]);
+
+export type AdminCommand = z.infer<typeof adminSchema>;
