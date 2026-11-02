@@ -15,7 +15,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
-    "test:unit": "vitest run tests/domain.test.ts",
+    "test:unit": "vitest run tests/domain.test.ts tests/freellmapi.test.ts",
     "setup:env": "node scripts/setup-env.mjs",
     "format:check": "prettier --check src tests scripts prisma/seed.ts *.ts *.mjs *.json *.yml",
     "docker:build": "node scripts/docker-build.mjs"

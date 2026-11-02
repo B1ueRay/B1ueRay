@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { AppError } from "@/lib/security";
-import { moderation, llm } from "@/providers/mock";
+import { moderation } from "@/providers/mock";
+import { llm, llmDeadlineMs } from "@/providers/freellmapi";
 import { subscribed } from "./entitlements";
 export async function openConversation(userId: string, creatorId: string) {
   const creator = await db.creator.findUnique({ where: { id: creatorId } });
@@ -133,7 +134,7 @@ export async function sendMessage(
               "Your creator is taking a moment. Please try again.",
             ),
           ),
-        10000,
+        llmDeadlineMs,
       );
     }),
   ]).finally(() => clearTimeout(timeout));
@@ -149,7 +150,7 @@ export async function sendMessage(
         sender: "CREATOR",
         body: response.text,
         usageTokens: response.tokens,
-        provider: "mock",
+        provider: response.provider ?? "mock",
       },
     });
     const config = persona.monetizationConfig as {

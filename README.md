@@ -92,24 +92,36 @@ Money is EUR integer cents. Settlement adds a balanced journal: negative gross d
 
 ## Configuration
 
-| Variable                                   | Purpose                                                                                                                      |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                             | PostgreSQL connection, required                                                                                              |
-| `BETTER_AUTH_SECRET`                       | Independent random authentication secret, required                                                                           |
-| `BETTER_AUTH_URL`                          | Exact public origin; also trusted origin/CSRF origin                                                                         |
-| `NEXT_PUBLIC_APP_URL`                      | Public application origin configuration                                                                                      |
-| `MEDIA_SIGNING_SECRET`                     | Signs age-declaration cookies, required; protected media is authenticated, not publicly signed                               |
-| `PAYMENT_WEBHOOK_SECRET`                   | HMAC-SHA256 mock webhook verification, required                                                                              |
-| `DEMO_MODE`                                | Enables mock charges, demo users and development email inbox                                                                 |
-| `STORAGE_PATH`                             | Private filesystem storage root; default `.storage`                                                                          |
-| `BLOCKED_COUNTRIES`                        | Comma-separated uppercase ISO country codes                                                                                  |
-| `TRUST_COUNTRY_HEADER`                     | Accept `x-verified-country` only behind a proxy that removes incoming client headers and injects trusted geographic evidence |
-| `REDIS_URL`                                | Reserved Redis adapter destination; not used by current in-process adapters                                                  |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional Google social adapter credentials (Better Auth); provider callback must be registered                               |
-| `TEST_DATABASE_URL`                        | Optional isolated integration database; name must contain `velora_test`                                                      |
-| `E2E_BASE_URL`, `CHROMIUM_PATH`            | Browser-test target and Chromium executable                                                                                  |
+| Variable                                                             | Purpose                                                                                                                                                       |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                                                       | PostgreSQL connection, required                                                                                                                               |
+| `BETTER_AUTH_SECRET`                                                 | Independent random authentication secret, required                                                                                                            |
+| `BETTER_AUTH_URL`                                                    | Exact public origin; also trusted origin/CSRF origin                                                                                                          |
+| `NEXT_PUBLIC_APP_URL`                                                | Public application origin configuration                                                                                                                       |
+| `MEDIA_SIGNING_SECRET`                                               | Signs age-declaration cookies, required; protected media is authenticated, not publicly signed                                                                |
+| `PAYMENT_WEBHOOK_SECRET`                                             | HMAC-SHA256 mock webhook verification, required                                                                                                               |
+| `DEMO_MODE`                                                          | Enables mock charges, demo users and development email inbox                                                                                                  |
+| `STORAGE_PATH`                                                       | Private filesystem storage root; default `.storage`                                                                                                           |
+| `BLOCKED_COUNTRIES`                                                  | Comma-separated uppercase ISO country codes                                                                                                                   |
+| `TRUST_COUNTRY_HEADER`                                               | Accept `x-verified-country` only behind a proxy that removes incoming client headers and injects trusted geographic evidence                                  |
+| `REDIS_URL`                                                          | Reserved Redis adapter destination; not used by current in-process adapters                                                                                   |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`                           | Optional Google social adapter credentials (Better Auth); provider callback must be registered                                                                |
+| `FREELLMAPI_BASE_URL`, `FREELLMAPI_API_KEY`                          | Optional LLM for creator chat via [FreeLLMAPI](https://github.com/tashfeenahmed/freellmapi) or any OpenAI-compatible `/v1` endpoint; empty keeps mock replies |
+| `FREELLMAPI_MODEL`, `FREELLMAPI_TIMEOUT_MS`, `FREELLMAPI_MAX_TOKENS` | Model id (default `auto`, router picks), request timeout (default 25000 ms), reply token cap (default 400)                                                    |
+| `TEST_DATABASE_URL`                                                  | Optional isolated integration database; name must contain `velora_test`                                                                                       |
+| `E2E_BASE_URL`, `CHROMIUM_PATH`                                      | Browser-test target and Chromium executable                                                                                                                   |
 
 Jurisdiction checks fail closed if restrictions are configured without trusted country evidence. Directly enabling header trust on a publicly reachable server permits header forgery; configure the edge before using this feature. With `DEMO_MODE=false`, mock charging refuses service and real transactional email must be implemented before signup verification works. No real payment, AI, S3 or age-provider credentials are currently consumed. Implement approved adapters, then add their own securely injected credentials. Never put secrets in Git.
+
+## LLM chat via FreeLLMAPI
+
+Creator chat uses the deterministic mock unless an OpenAI-compatible endpoint is configured. [FreeLLMAPI](https://github.com/tashfeenahmed/freellmapi) routes requests across free tiers of many providers (Groq, Google, Cerebras, OpenRouter, …) behind one `/v1` API.
+
+1. Set `FREELLMAPI_ENCRYPTION_KEY` in `.env` (`openssl rand -hex 32`) and start the router: `docker compose --profile llm up -d freellmapi`.
+2. Open http://localhost:3001, create the admin account, add at least one provider key on the **Keys** page and copy the unified API key.
+3. In `.env` set `FREELLMAPI_BASE_URL=http://freellmapi:3001/v1` (inside Compose; use `http://localhost:3001/v1` for `npm run dev`) and `FREELLMAPI_API_KEY=<unified key>`, then `docker compose --profile llm up -d`.
+
+Replies still pass the moderation policy in both directions. If the router fails or times out, the chat falls back to a mock reply and logs the error; the provider and model are stored on each message (`freellmapi:<model>` or `mock`).
 
 ## Payments and webhooks
 
@@ -150,7 +162,7 @@ See `docs/validation.md` for commands actually exercised and `docs/security.md` 
 
 ## Current limitations
 
-This is a coherent working MVP, not a production launch authorization. Mock moderation is a conservative English keyword policy over safe generated placeholders, not a comprehensive safety classifier. The LLM is deterministic; media is original SFW vector art, not photorealistic content. Mock voice is a neutral tone. Video generation intentionally fails with a stored diagnostic. Generation is processed synchronously with database lifecycle records; external queues/Redis adapters and crash recovery are future work. No uploads are exposed publicly; MIME/size/filename validation is supplied for future adapters.
+This is a coherent working MVP, not a production launch authorization. Mock moderation is a conservative English keyword policy over safe generated placeholders, not a comprehensive safety classifier. The LLM is deterministic unless FreeLLMAPI is configured; media is original SFW vector art, not photorealistic content. Mock voice is a neutral tone. Video generation intentionally fails with a stored diagnostic. Generation is processed synchronously with database lifecycle records; external queues/Redis adapters and crash recovery are future work. No uploads are exposed publicly; MIME/size/filename validation is supplied for future adapters.
 
 Subscriptions renew manually; there is no automatic billing, tax calculation or payout system. Scheduled posts become visible at the scheduled time through request-time filtering, but scheduled notifications need a worker. Current cancellation-intent/MRR metrics are explicitly simplified. Community interactions/external creator onboarding are not enabled; consent records and blocked-user storage are groundwork. Account deletion is an audited review request, not an unattended purge. Long-term summarization, S3 storage, push/email delivery and formal verified age assurance require real adapters. Auth brute-force limiting is in-process; member action limits use atomic PostgreSQL counters. Configure shared auth limits at the gateway before multi-instance deployment.
 

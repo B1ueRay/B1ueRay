@@ -24,7 +24,7 @@ export interface LLMProvider {
   respond(
     context: ChatContext,
     message: string,
-  ): Promise<{ text: string; tokens: number }>;
+  ): Promise<{ text: string; tokens: number; provider?: string }>;
 }
 export type GeneratedMedia = {
   bytes: Buffer;

@@ -11,6 +11,11 @@ x-app-env: &app-env
   REDIS_URL: redis://redis:6379
   BLOCKED_COUNTRIES: ${BLOCKED_COUNTRIES:-}
   TRUST_COUNTRY_HEADER: ${TRUST_COUNTRY_HEADER:-false}
+  FREELLMAPI_BASE_URL: ${FREELLMAPI_BASE_URL:-}
+  FREELLMAPI_API_KEY: ${FREELLMAPI_API_KEY:-}
+  FREELLMAPI_MODEL: ${FREELLMAPI_MODEL:-auto}
+  FREELLMAPI_TIMEOUT_MS: ${FREELLMAPI_TIMEOUT_MS:-25000}
+  FREELLMAPI_MAX_TOKENS: ${FREELLMAPI_MAX_TOKENS:-400}
 services:
   db:
     image: postgres:17-alpine
@@ -62,7 +67,19 @@ services:
       interval: 15s
       timeout: 5s
       retries: 10
+  # Optional LLM router: `docker compose --profile llm up -d`.
+  freellmapi:
+    image: ghcr.io/tashfeenahmed/freellmapi:latest
+    profiles: ["llm"]
+    environment:
+      NODE_ENV: production
+      ENCRYPTION_KEY: ${FREELLMAPI_ENCRYPTION_KEY:-}
+      PORT: 3001
+    ports: ["127.0.0.1:${FREELLMAPI_PORT:-3001}:3001"]
+    volumes: ["freellmapi_data:/app/server/data"]
+    restart: unless-stopped
 volumes:
+  freellmapi_data:
   postgres_data:
   redis_data:
   media_data:
