@@ -343,6 +343,86 @@
   .dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 18px; }
   .dots i { width: 6px; height: 6px; border-radius: 9px; background: var(--s3); transition: width .2s; }
   .dots i.on { width: 22px; background: var(--gold); }
+
+  /* sign-up, sign-in and identity verification */
+  .auth { gap: 0; }
+  .a-top { display: flex; align-items: center; justify-content: space-between; min-height: 34px; }
+  .a-top .sp34 { width: 34px; }
+  .backb { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--s2); border: 1px solid var(--line); }
+  .stepper { display: flex; gap: 6px; margin: 20px 0 8px; }
+  .stepper i { flex: 1; height: 3px; border-radius: 3px; background: var(--s3); }
+  .stepper i.on { background: var(--gold); }
+  .step-lbl { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .auth > h1 { font-size: 38px; margin-top: 18px; text-wrap: balance; }
+  .auth .sub { color: var(--cash); margin-top: 8px; font-size: 15px; max-width: 38ch; }
+  .auth .sub b { color: var(--van); }
+  .form { display: grid; gap: 14px; margin-top: 22px; }
+  .form .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .fl { display: grid; gap: 7px; min-width: 0; }
+  .fl > span { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+  .err { font-style: normal; font-size: 12px; color: var(--bad); }
+  .err:empty { display: none; }
+  .inp.bad { border-color: rgba(192,116,102,.75); }
+  select.inp { appearance: none; -webkit-appearance: none; padding-right: 36px; background: var(--s1) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23c8b69a' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center; }
+  input[type=date].inp { color-scheme: dark; }
+  .pw { position: relative; }
+  .pw .inp { padding-right: 70px; }
+  .pw button { position: absolute; right: 8px; top: 8px; height: 34px; padding: 0 10px; color: var(--cash); font-size: 12px; font-weight: 700; }
+  .meter { display: flex; gap: 4px; }
+  .meter i { flex: 1; height: 3px; border-radius: 3px; background: var(--s3); }
+  .meter i.on { background: var(--gold); }
+  .meter-l { font-size: 12px; color: var(--muted); }
+  .tel { display: flex; gap: 8px; }
+  .tel span { flex: none; display: grid; place-items: center; min-width: 64px; height: 50px; padding: 0 10px; border-radius: 14px; border: 1px solid var(--line); background: var(--s2); font-weight: 700; }
+  .tel .inp { min-width: 0; }
+  .otp { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-top: 22px; }
+  .otp input { width: 100%; height: 58px; text-align: center; font: 600 28px var(--serif); font-variant-numeric: lining-nums; border-radius: 12px; border: 1px solid var(--line); background: var(--s1); outline: none; color: var(--van); }
+  .otp input:focus { border-color: var(--gold); }
+  .otp input:disabled { border-color: rgba(147,180,156,.5); }
+  .otp.shake { animation: shake .35s; }
+  @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .otp-msg { margin-top: 10px; font-size: 13px; color: var(--muted); }
+  .otp-msg.ok { color: var(--ok); }
+  .otp-msg.bad { color: var(--bad); }
+  .inbox { margin-top: 20px; padding: 12px 14px; border-radius: 14px; border: 1px dashed var(--line2); background: rgba(184,151,90,.06); font-size: 13px; color: var(--cash); display: flex; gap: 12px; align-items: center; }
+  .inbox svg { color: var(--gold2); }
+  .inbox b { font: 600 22px var(--serif); font-variant-numeric: lining-nums; letter-spacing: .16em; color: var(--gold2); margin-left: 4px; }
+  .links { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 16px; }
+  .linkb { color: var(--gold2); font-weight: 700; font-size: 14px; }
+  .linkb:disabled { color: var(--muted); opacity: 1; }
+  .auth .actions { margin-top: auto; padding-top: 24px; display: grid; gap: 8px; }
+  .auth .steps { margin-top: 20px; }
+  .docframe { position: relative; margin-top: 22px; aspect-ratio: 1.45; border-radius: 18px; background: var(--s1); border: 1px solid var(--line); overflow: hidden; display: grid; place-items: center; transition: box-shadow .3s; }
+  .docframe .c { position: absolute; width: 26px; height: 26px; border: 2px solid var(--gold2); }
+  .c.tl { top: 12px; left: 12px; border-right: 0; border-bottom: 0; border-radius: 8px 0 0 0; }
+  .c.tr { top: 12px; right: 12px; border-left: 0; border-bottom: 0; border-radius: 0 8px 0 0; }
+  .c.bl { bottom: 12px; left: 12px; border-right: 0; border-top: 0; border-radius: 0 0 0 8px; }
+  .c.br { bottom: 12px; right: 12px; border-left: 0; border-top: 0; border-radius: 0 0 8px 0; }
+  .doc-mock { width: 76%; aspect-ratio: 1.58; border-radius: 10px; background: linear-gradient(135deg, #1e2a22, #141a16); border: 1px solid var(--line); display: grid; grid-template-columns: 30% 1fr; gap: 12px; padding: 14px; }
+  .doc-mock.back { grid-template-columns: 1fr; }
+  .doc-mock .ph { border-radius: 6px; background: var(--s3); }
+  .doc-mock .ln { display: grid; gap: 8px; align-content: center; }
+  .doc-mock .ln i { height: 6px; border-radius: 3px; background: var(--s3); }
+  .doc-mock .ln i.mrz { height: 8px; background: repeating-linear-gradient(90deg, var(--s3) 0 6px, transparent 6px 9px); }
+  .scan { position: absolute; left: 7%; right: 7%; height: 2px; background: var(--gold2); top: 12%; opacity: 0; }
+  .docframe.scanning .scan { opacity: 1; animation: scan 1.4s ease-in-out; }
+  @keyframes scan { from { top: 12%; } to { top: 86%; } }
+  .docframe.ok { box-shadow: inset 0 0 0 1.5px var(--ok); }
+  .docframe.ok .c { border-color: var(--ok); }
+  .cap-ok { display: flex; gap: 8px; align-items: center; color: var(--ok); font-size: 14px; margin-top: 12px; font-weight: 600; }
+  .tips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .tips span { font-size: 12px; color: var(--cash); border: 1px solid var(--line); border-radius: 99px; padding: 4px 10px; }
+  .face { position: relative; width: 220px; height: 220px; margin: 28px auto 0; }
+  .face svg.ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+  .face #ring { transition: stroke-dashoffset .8s ease; }
+  .face .oval { position: absolute; inset: 18px; border-radius: 50%; background: radial-gradient(circle at 50% 40%, #233128, #0d110e); display: grid; place-items: center; color: var(--muted); }
+  .face-hint { text-align: center; margin-top: 18px; font: italic 600 22px var(--serif); min-height: 30px; }
+  .checks { display: grid; gap: 12px; margin-top: 24px; }
+  .checks > div { display: flex; gap: 12px; align-items: center; color: var(--cash); font-size: 15px; }
+  .checks .ic { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--s2); color: var(--muted); }
+  .checks .done { color: var(--van); }
+  .checks .done .ic { background: var(--green); color: var(--gold2); }
+  .checks .busy .ic { animation: blink 1s infinite; }
 </style>
 </head>
 <body>
@@ -485,8 +565,9 @@ const PASS = 0.6;          // share of "yes" votes needed to count a dare
 const FEE = 0.2;           // platform fee on completed dares
 
 /* ═════════ storage ═════════ */
-const KEY = 'kurazh.en.v1';
+const KEY = 'kurazh.en.v2';
 const defaults = () => ({
+  account: null, session: false, kyc: null,
   user: null, balance: CUR.start, earnings: 0, xp: 0, verified: false,
   tx: [{ id: uid(), t: Date.now(), amount: CUR.start, title: 'Demo account: starting funds', acc: 'main' }],
   backs: [], follows: [], payouts: [],
@@ -778,6 +859,7 @@ function tickStream(st, visible) {
 
 /* ═════════ viewer actions ═════════ */
 function backDare(st, d, amount) {
+  if (needKyc('back dares')) return false;
   if (needMoney(amount)) return false;
   addTx(-amount, `Into the pot: “${d.text}” · ${st.name}`);
   if (!d.my) d.backers++;
@@ -793,6 +875,7 @@ function backDare(st, d, amount) {
 function proposeDare(st, text, amount, time) {
   const r = Safety.check(text, modeOf(st.cat));
   if (!r.ok) { toast(`${r.cat}. ${r.hint}`, 'bad'); return false; }
+  if (needKyc('suggest dares')) return false;
   if (needMoney(amount)) return false;
   const d = { id: uid(), text: text.trim().replace(/\s+/g, ' '), tag: 'talk', pool: 0, backers: 0, time, by: S.user.nick, mine: true, my: 0 };
   st.dares.push(d);
@@ -1059,6 +1142,7 @@ function openRules() {
   <div class="note">Demo version: other streams are simulated, the money is practice money, and no real payments happen.</div>`, { type: 'rules' });
 }
 function openTopup() {
+  if (needKyc('add funds')) return;
   const body = openSheet(`${sheetHead('Add funds', 'Credited one to one, with no bonuses or exchange rates')}
     <div class="packs">${CUR.packs.map((n) => `<button class="pack" data-pack="${n}"><b>${money(n)}</b><span>card, Apple Pay or Google Pay</span></button>`).join('')}</div>
     <div class="note">Demo: the payment is simulated and nothing is charged. In production a licensed payment provider handles it, and the app never sees card details.</div>`, { type: 'topup' });
@@ -1069,22 +1153,8 @@ function openTopup() {
   });
 }
 function openVerify(next) {
-  const steps = [['idcard', 'ID document', 'Passport, ID card or driving licence'], ['face', 'Selfie video', 'Confirms it’s really you, live on camera'], ['check', 'Decision', 'Usually under a minute']];
-  const body = openSheet(`${sheetHead('Verify your identity', 'Needed for withdrawals and the 18+ section')}
-    <div class="steps">${steps.map(([i, t, d], k) => `<div class="step" data-s="${k}"><span class="ic">${ico(i, 20)}</span><div class="grow"><b>${t}</b><small>${d}</small></div></div>`).join('')}</div>
-    <div class="note">Demo: nothing is photographed or sent. In production a certified KYC provider runs the check, and documents are never stored in the app.</div>
-    <button class="btn gold block" style="margin-top:16px" id="kyc-go">Start verification</button>`, { type: 'verify' });
-  $('#kyc-go').addEventListener('click', async (e) => {
-    e.currentTarget.disabled = true; e.currentTarget.textContent = 'Checking…';
-    for (let k = 0; k < steps.length; k++) {
-      const s = body.querySelector(`[data-s="${k}"]`); s.classList.add('busy');
-      await new Promise((r) => setTimeout(r, 800));
-      s.classList.remove('busy'); s.classList.add('done'); beep(700 + k * 120, 0.06);
-    }
-    S.verified = true; S.verifiedAt = Date.now(); save();
-    toast('Identity verified', 'ok'); chime();
-    setTimeout(() => { closeSheet(); refreshViews(); next?.(); }, 500);
-  });
+  if (S.verified) { next?.(); return; }
+  authFlow({ mode: 'kyc', next });
 }
 function openAdultGate(next) {
   let agree = false;
@@ -1233,7 +1303,8 @@ function renderProfile() {
       <div class="stat"><b>${Math.round(st.liveSec / 60)}</b><span>minutes live</span></div><div class="stat"><b class="gold">${money(st.earnedTotal)}</b><span>earned in total</span></div></div>
     <h3>Account</h3>
     <div class="menu">
-      ${S.verified ? '' : `<button data-p="verify">${ico('idcard', 20)}<span class="grow">Verify identity<small>For withdrawals and the 18+ section</small></span>${ico('chev', 16)}</button>`}
+      <button data-p="security">${ico('lock', 20)}<span class="grow">Security<small>Two-step verification on${S.verified ? ' · identity verified' : ''}</small></span>${ico('chev', 16)}</button>
+      ${S.verified ? '' : `<button data-p="verify">${ico('idcard', 20)}<span class="grow">Verify identity<small>Needed for money, going live and 18+</small></span>${ico('chev', 16)}</button>`}
       <button data-p="adult"><span class="adult" style="margin-left:-1px">18+</span><span class="grow">Adult section<small>${adultOn() ? 'Visible' : 'Hidden from the feed'}</small></span><i class="switch ${adultOn() ? 'on' : ''}"></i></button>
       <button data-p="rules">${ico('shield', 20)}<span class="grow">Rules & safety</span>${ico('chev', 16)}</button>
       <button data-p="nick">${ico('pen', 20)}<span class="grow">Change nickname</span>${ico('chev', 16)}</button>
@@ -1243,7 +1314,7 @@ function renderProfile() {
       <button data-p="sound">${ico('sound', 20)}<span class="grow">Sounds</span><i class="switch ${S.settings.sound ? 'on' : ''}"></i></button>
       <button data-p="vibro">${ico('vibro', 20)}<span class="grow">Vibration</span><i class="switch ${S.settings.vibro ? 'on' : ''}"></i></button>
       <button data-p="install" data-pwa>${ico('phone', 20)}<span class="grow">Install on your phone</span>${ico('chev', 16)}</button>
-      <button data-p="reset" style="color:var(--bad)">${ico('reset', 20)}<span class="grow">Reset demo data</span></button>
+      <button data-p="reset" style="color:var(--bad)">${ico('reset', 20)}<span class="grow">Delete account</span></button>
     </div>
     <p class="muted small" style="margin-top:18px;text-align:center">Kurazh · demo · data stays on this device</p>`;
 }
@@ -1252,6 +1323,7 @@ $('#profile').addEventListener('click', (e) => {
   const p = b.dataset.p;
   if (p === 'rules') openRules();
   else if (p === 'verify') openVerify();
+  else if (p === 'security') openSecurity();
   else if (p === 'adult') {
     if (adultOn()) { S.settings.adult = false; save(); if (feedCat === 'adult') setCat('all'); refreshViews(); toast('18+ section hidden'); }
     else requireAdult(() => toast('18+ section unlocked. Find it in the stream feed', 'gold'));
@@ -1267,11 +1339,7 @@ $('#profile').addEventListener('click', (e) => {
   } else if (p === 'install') {
     if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; return; }
     openSheet(`${sheetHead('Install on your phone')}<ol class="rules" style="margin-top:16px"><li><b>iPhone (Safari):</b> Share → Add to Home Screen.</li><li><b>Android (Chrome):</b> menu ⋮ → Install app.</li></ol><p class="muted small" style="margin-top:12px">Once installed, Kurazh opens full screen and works offline.</p>`, { type: 'install' });
-  } else if (p === 'reset') {
-    const body = openSheet(`${sheetHead('Reset data?')}<p style="margin-top:14px;color:var(--cash)">Your balance, earnings, history, backing and stats on this device will be deleted. This can’t be undone.</p>
-      <div class="wbtns" style="margin-top:18px"><button class="btn ghost" data-close>Cancel</button><button class="btn bad" id="reset-ok">Reset</button></div>`, { type: 'reset' });
-    body.querySelector('#reset-ok').addEventListener('click', () => { try { localStorage.removeItem(KEY); } catch { /* ignore */ } location.reload(); });
-  }
+  } else if (p === 'reset') confirmDelete();
 });
 let deferredInstall = null;
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstall = e; });
@@ -1323,6 +1391,7 @@ async function startCam() {
   return L.camOk;
 }
 async function startLive() {
+  if (needKyc('go live')) return;
   if (L.cat === 'adult' && !S.verified) { openVerify(); return; }
   if (L.cat === 'adult' && !L.adultOk) { toast('Confirm the 18+ stream conditions', 'bad'); return; }
   if (!L.agree) { toast('Please accept the safety rules', 'bad'); $('#lv-agree').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
@@ -1424,7 +1493,7 @@ function renderLiveActive(force) {
       <div class="lv-acts"><button class="btn gold" data-l="done">${ico('check', 18)}Done</button><button class="btn ghost" data-l="quit">Give up</button></div></div>`;
     else if (a.phase === 'voting') el.innerHTML = `<div class="bn hot"><div class="bn-row"><span class="tag vote">Viewers are voting</span><span class="timer" data-k="t">${mmss(a.t)}</span></div>
       <div class="bn-text">“${esc(a.d.text)}”</div><div class="votes"><div class="vbtn yes"><i data-k="yb"></i><span>${ico('check', 16)}Yes</span><b data-k="yp">0%</b></div><div class="vbtn no"><i data-k="nb"></i><span>${ico('x', 16)}No</span><b data-k="np">0%</b></div></div></div>`;
-    else el.innerHTML = `<div class="bn result ${a.success ? 'ok' : 'bad'}"><div class="big">${a.success ? `+${money(a.net)}` : 'Not counted'}</div><div class="muted">${a.success ? 'Added to Stream earnings' : `${esc(a.why)}, so viewers were refunded`}</div></div>`;
+    else el.innerHTML = `<div class="bn result ${a.success ? 'ok' : 'bad'}"><div class="big">${a.success ? `+${money(a.net)}` : 'Not counted'}</div><div class="muted">${a.success ? 'Added to Stream earnings' : `Backers were refunded · ${esc(a.why)}`}</div></div>`;
   }
   if (!a) return;
   const q = (s) => el.querySelector(`[data-k="${s}"]`);
@@ -1521,41 +1590,393 @@ document.addEventListener('click', (e) => {
   closeSheet(); show(b.dataset.tab);
 });
 
-/* ═════════ onboarding ═════════ */
-function onboarding() {
-  const steps = [
-    { ic: 'feed', h: 'Live, right now', p: 'Streamers are out walking, drawing, singing and cooking. Swipe up to switch streams.' },
-    { ic: 'target', h: 'Dares with a price', p: 'Suggest a dare and put money in its pot. Other viewers add theirs, and the streamer takes on the richest one.' },
-    { ic: 'vote', h: 'Fair by design', p: `Real money, no tokens. The streamer is paid only if at least ${PASS * 100}% of viewers say the dare counts. Otherwise everyone gets a full refund.` },
-    { ic: 'shield', h: 'Bold, not reckless', p: 'The filter blocks dangerous, illegal and humiliating dares. Streamers can turn down any dare.' },
-  ];
-  const el = document.createElement('div'); el.className = 'onb'; $('#app').appendChild(el);
-  let i = 0, agree = false;
-  const render = () => {
-    const last = i === steps.length;
-    el.innerHTML = `<div class="logo">KURAZH</div>
-      <div class="hero">${last ? `<div class="ring">${ico('user', 30)}</div><h1>What should chat call you?</h1>
-        <input class="inp" id="onb-nick" maxlength="20" placeholder="Nickname" autocomplete="nickname" aria-label="Nickname" />
-        <button class="check ${agree ? 'on' : ''}" id="onb-agree"><i></i><span>I am over 18 and accept the safety rules</span></button>
-        <p class="small" style="font-size:13px">Your demo account starts with ${money(CUR.start)} of practice money.</p>`
-      : `<div class="ring">${ico(steps[i].ic, 30)}</div><h1>${steps[i].h}</h1><p>${steps[i].p}</p>`}</div>
-      <div class="dots">${[...steps, 0].map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div>
-      <button class="btn gold block" id="onb-next" style="height:54px;font-size:16px">${last ? 'Get started' : 'Next'}</button>
-      ${last ? '' : '<button class="btn block" id="onb-skip" style="margin-top:6px;background:none;color:var(--muted)">Skip</button>'}`;
-    const nick = $('#onb-nick', el);
-    if (nick) { nick.value = el.dataset.nick || ''; nick.addEventListener('input', () => (el.dataset.nick = nick.value)); }
-    $('#onb-agree', el)?.addEventListener('click', () => { agree = !agree; render(); });
-    $('#onb-skip', el)?.addEventListener('click', () => { i = steps.length; render(); });
-    $('#onb-next', el).addEventListener('click', () => {
-      if (!last) { i++; render(); return; }
-      const v = (el.dataset.nick || '').trim();
-      if (v.length < 2) return toast('Nickname needs at least 2 characters', 'bad');
-      if (!Safety.scan(v).ok) return toast("The filter won't allow that nickname", 'bad');
-      if (!agree) return toast('Confirm your age and the rules', 'bad');
-      S.user = { nick: v, joined: Date.now() }; save(); el.remove(); toast(`Welcome, ${v}`, 'gold'); chime();
-    });
+/* ═════════ account, two-step verification and identity (KYC) ═════════ */
+Object.assign(IC, {
+  back: '<path d="m15 6-6 6 6 6"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  logout: '<path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10"/>',
+});
+const COUNTRIES = [['UA', 'Ukraine', '+380'], ['PL', 'Poland', '+48'], ['DE', 'Germany', '+49'], ['CZ', 'Czechia', '+420'], ['GB', 'United Kingdom', '+44'],
+  ['US', 'United States', '+1'], ['ES', 'Spain', '+34'], ['OTHER', 'Other', '+']];
+const DOCS = { passport: { label: 'Passport', back: false }, id: { label: 'ID card', back: true }, licence: { label: 'Driving licence', back: true } };
+const ccOf = (code) => (COUNTRIES.find((c) => c[0] === code) || COUNTRIES[0])[2];
+const countryName = (code) => (COUNTRIES.find((c) => c[0] === code) || COUNTRIES[0])[1];
+const maskEmail = (e) => { const [u, d] = String(e).split('@'); return `${u[0]}${'•'.repeat(Math.max(2, Math.min(5, u.length - 1)))}@${d}`; };
+const maskPhone = (cc, n) => `${cc} ••• ••• ${String(n).replace(/\D/g, '').slice(-4).replace(/(\d{2})(\d{2})/, '$1 $2')}`.replace(/ /g, '\u00a0');
+const fmtDob = (d) => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+const ageOf = (dob) => { const d = new Date(dob + 'T00:00:00'), n = new Date(); let a = n.getFullYear() - d.getFullYear(); if (n.getMonth() < d.getMonth() || (n.getMonth() === d.getMonth() && n.getDate() < d.getDate())) a--; return a; };
+const otp6 = () => String(ri(0, 999999)).padStart(6, '0');
+const pwOk = (pw) => pw.length >= 8 && /[A-Za-z]/.test(pw) && /\d/.test(pw);
+function pwScore(pw) { let s = 0; if (pw.length >= 8) s++; if (pw.length >= 12) s++; if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) s++; if (/\d/.test(pw)) s++; if (/[^\w\s]/.test(pw)) s++; return pw ? Math.min(4, s) : 0; }
+const PW_LBL = ['Too weak', 'Weak', 'Fair', 'Strong', 'Very strong'];
+async function hashPw(pw) {
+  try { const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('kurazh:' + pw)); return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join(''); }
+  catch { return 'h' + hash('kurazh:' + pw); }
+}
+const INTRO = [
+  { ic: 'feed', h: 'Live, right now', p: 'Streamers are out walking, drawing, singing and cooking. Swipe up to switch streams.' },
+  { ic: 'target', h: 'Dares with a price', p: 'Suggest a dare and put money in its pot. Other viewers add theirs, and the streamer takes on the richest one.' },
+  { ic: 'vote', h: 'Fair by design', p: `Real money, no tokens. The streamer is paid only if at least ${PASS * 100}% of viewers say the dare counts. Otherwise everyone gets a full refund.` },
+  { ic: 'shield', h: 'Verified people only', p: 'Every member confirms their email and phone, and verifies their identity before money moves. The filter blocks dangerous dares.' },
+];
+const SIGNUP_LBL = ['Account', 'Email', 'Phone', 'Identity'];
+const stepIdx = (s) => (s === 'account' ? 0 : s.startsWith('email') ? 1 : s.startsWith('phone') ? 2 : 3);
+const A = { el: null, mode: 'signup', step: 'intro', i: 0, f: {}, code: '', codeFor: '', tries: 0, resendAt: 0, tick: null, doc: 'passport', docCountry: 'UA', shots: {}, next: null, fails: 0, lockUntil: 0, busy: false };
+const BACK = { account: 'intro', email: 'account', 'phone-code': 'phone', 'kyc-front': 'kyc-intro', 'kyc-back': 'kyc-front',
+  'kyc-selfie': () => (DOCS[A.doc].back ? 'kyc-back' : 'kyc-front'), 'kyc-review': 'kyc-selfie', 'signin-code': 'signin', forgot: 'signin', 'reset-code': 'forgot', replace: 'signin' };
+
+function authFlow({ mode = 'signup', next = null } = {}) {
+  A.mode = mode; A.next = next; A.i = 0; A.shots = {}; A.doc = 'passport'; A.docCountry = S.account?.country && S.account.country !== 'OTHER' ? S.account.country : 'UA';
+  if (!A.el) {
+    A.el = document.createElement('div'); A.el.className = 'onb auth'; $('#app').appendChild(A.el);
+    A.el.addEventListener('click', onAuthClick);
+    A.el.addEventListener('input', (e) => { const id = e.target.id; if (id && !e.target.closest('#otp')) setErr(id, ''); });
+    A.el.addEventListener('change', (e) => { if (e.target.id) setErr(e.target.id, ''); });
+  }
+  closeSheet();
+  go(mode === 'signup' ? 'intro' : mode === 'signin' ? 'signin' : 'kyc-intro');
+}
+function closeAuth() { clearInterval(A.tick); A.el?.remove(); A.el = null; }
+function go(step) { A.step = step; A.busy = false; clearInterval(A.tick); renderAuth(); if (A.el) A.el.scrollTop = 0; }
+function sendCode(target) { A.code = otp6(); A.codeFor = target; A.tries = 0; A.resendAt = Date.now() + 30000; }
+const fld = (id, label, input) => `<label class="fl" for="${id}"><span>${label}</span>${input}<em class="err" id="${id}-err"></em></label>`;
+const pwField = (id, ac) => `<div class="pw"><input class="inp" id="${id}" type="password" autocomplete="${ac}" /><button type="button" data-a="showpw">Show</button></div>`;
+const meterHTML = '<div class="meter" id="meter"><i></i><i></i><i></i><i></i></div><div class="meter-l" id="meter-l">At least 8 characters, with a letter and a number</div>';
+function wireMeter(input) {
+  input.addEventListener('input', () => {
+    const s = pwScore(input.value);
+    $$('#meter i', A.el).forEach((i, k) => i.classList.toggle('on', input.value && k < Math.max(1, s)));
+    $('#meter-l', A.el).textContent = input.value ? `${PW_LBL[s]}${pwOk(input.value) ? '' : ' · add a letter and a number, 8+ characters'}` : 'At least 8 characters, with a letter and a number';
+  });
+}
+function setErr(id, msg) { const e = $(`#${id}-err`, A.el); if (e) e.textContent = msg || ''; $(`#${id}`, A.el)?.classList.toggle('bad', !!msg); return !msg; }
+function authTop(back) {
+  const stepper = A.mode === 'signup' && !['intro', 'done', 'kyc-pending'].includes(A.step);
+  const k = stepIdx(A.step);
+  return `<div class="a-top">${back ? `<button class="backb" data-a="back" aria-label="Back">${ico('back', 18)}</button>` : '<span class="sp34"></span>'}<div class="logo">KURAZH</div><span class="sp34"></span></div>
+    ${stepper ? `<div class="stepper">${SIGNUP_LBL.map((_, j) => `<i class="${j <= k ? 'on' : ''}"></i>`).join('')}</div><div class="step-lbl">Step ${k + 1} of 4 · ${SIGNUP_LBL[k]}</div>` : ''}`;
+}
+function otpBlock(where, target) {
+  return `<div class="inbox">${ico(where === 'email' ? 'mail' : 'phone', 20)}<div><div class="small muted">Demo ${where === 'email' ? 'inbox' : 'SMS'} · in production this goes to ${esc(target)}</div>Your Kurazh code is <b>${A.code}</b></div></div>
+    <div class="otp" id="otp">${Array.from({ length: 6 }, (_, k) => `<input inputmode="numeric" pattern="[0-9]*" maxlength="6" ${k === 0 ? 'autocomplete="one-time-code"' : 'autocomplete="off"'} aria-label="Digit ${k + 1}" />`).join('')}</div>
+    <div class="otp-msg" id="otp-msg">The code is valid for 10 minutes</div>`;
+}
+function wireOtp(onOk) {
+  const box = $('#otp', A.el), ins = $$('input', box), msg = $('#otp-msg', A.el);
+  const code = () => ins.map((i) => i.value).join('');
+  const submit = () => {
+    if (code().length < 6) return;
+    if (A.tries >= 5) { msg.className = 'otp-msg bad'; msg.textContent = 'Too many attempts. Request a new code.'; return; }
+    if (code() === A.code) {
+      msg.className = 'otp-msg ok'; msg.textContent = 'Code confirmed'; ins.forEach((i) => (i.disabled = true)); beep(880, 0.06);
+      setTimeout(onOk, 400); return;
+    }
+    A.tries++; box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); buzz(60);
+    msg.className = 'otp-msg bad'; msg.textContent = A.tries >= 5 ? 'Too many attempts. Request a new code.' : `That code doesn’t match. ${5 - A.tries} attempts left.`;
+    ins.forEach((i) => (i.value = '')); ins[0].focus();
   };
-  render();
+  ins.forEach((inp, k) => {
+    inp.addEventListener('input', () => {
+      const v = inp.value.replace(/\D/g, '');
+      if (v.length > 1) { v.slice(0, 6 - k).split('').forEach((ch, j) => (ins[k + j].value = ch)); ins[Math.min(5, k + v.length)].focus(); }
+      else { inp.value = v; if (v && k < 5) ins[k + 1].focus(); }
+      submit();
+    });
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Backspace' && !inp.value && k > 0) { ins[k - 1].value = ''; ins[k - 1].focus(); } });
+  });
+  const rs = $('#resend', A.el);
+  const upd = () => { const s = Math.ceil((A.resendAt - Date.now()) / 1000); rs.disabled = s > 0; rs.textContent = s > 0 ? `Resend code in ${s}s` : 'Resend code'; };
+  upd(); A.tick = setInterval(upd, 1000);
+  setTimeout(() => ins[0]?.focus(), 60);
+}
+
+function renderAuth() {
+  const el = A.el; if (!el) return;
+  const a = S.account, f = A.f;
+  let html = '', wire = null;
+  switch (A.step) {
+    case 'intro': {
+      const s = INTRO[A.i], last = A.i === INTRO.length - 1;
+      html = `${authTop(false)}<div class="hero"><div class="ring">${ico(s.ic, 30)}</div><h1>${s.h}</h1><p>${s.p}</p></div>
+        <div class="dots">${INTRO.map((_, k) => `<i class="${k === A.i ? 'on' : ''}"></i>`).join('')}</div>
+        <button class="btn gold block" data-a="${last ? 'create' : 'intro-next'}" style="height:54px;font-size:16px">${last ? 'Create account' : 'Next'}</button>
+        ${last ? '' : '<button class="btn block" data-a="create" style="margin-top:6px;background:none;color:var(--muted)">Skip</button>'}`;
+      break;
+    }
+    case 'account': {
+      const max = new Date(); max.setFullYear(max.getFullYear() - 18);
+      html = `${authTop(true)}<h1>Create your account</h1><p class="sub">Use your legal name. It has to match your ID document.</p>
+        <form class="form" id="f-acc" novalidate>
+          <div class="two">${fld('a-first', 'First name', `<input class="inp" id="a-first" autocomplete="given-name" value="${esc(f.first || '')}" />`)}${fld('a-last', 'Last name', `<input class="inp" id="a-last" autocomplete="family-name" value="${esc(f.last || '')}" />`)}</div>
+          ${fld('a-email', 'Email', `<input class="inp" id="a-email" type="email" inputmode="email" autocomplete="email" value="${esc(f.email || '')}" />`)}
+          ${fld('a-pass', 'Password', pwField('a-pass', 'new-password') + meterHTML)}
+          ${fld('a-dob', 'Date of birth', `<input class="inp" id="a-dob" type="date" max="${max.toISOString().slice(0, 10)}" value="${esc(f.dob || '')}" />`)}
+          ${fld('a-country', 'Country of residence', `<select class="inp" id="a-country">${COUNTRIES.map(([c, n]) => `<option value="${c}" ${c === (f.country || 'UA') ? 'selected' : ''}>${n}</option>`).join('')}</select>`)}
+          ${fld('a-nick', 'Public nickname', `<input class="inp" id="a-nick" maxlength="20" autocomplete="nickname" value="${esc(f.nick || '')}" />`)}
+          <div><button type="button" class="check ${f.terms ? 'on' : ''}" id="a-terms"><i></i><span>I accept the Terms of Service and the Privacy Policy, and I confirm I am at least 18 years old</span></button><em class="err" id="a-terms-err"></em></div>
+          <button class="btn gold block" style="height:54px">Continue</button>
+          <div class="note">Demo: everything stays on this device and nothing is sent. Use a test password, not a real one.</div>
+        </form>`;
+      wire = () => {
+        const form = $('#f-acc', el), val = (id) => $(`#${id}`, el).value.trim();
+        form.addEventListener('input', () => Object.assign(f, { first: val('a-first'), last: val('a-last'), email: val('a-email'), dob: val('a-dob'), country: val('a-country'), nick: val('a-nick') }));
+        wireMeter($('#a-pass', el));
+        $('#a-terms', el).addEventListener('click', (e) => { f.terms = !f.terms; e.currentTarget.classList.toggle('on', f.terms); setErr('a-terms', ''); });
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault(); if (A.busy) return;
+          Object.assign(f, { first: val('a-first'), last: val('a-last'), email: val('a-email').toLowerCase(), dob: val('a-dob'), country: val('a-country'), nick: val('a-nick') });
+          const pw = $('#a-pass', el).value, name = /^[\p{L}' -]{2,40}$/u;
+          const ok = [
+            setErr('a-first', name.test(f.first) ? '' : 'Enter your first name as it appears on your ID'),
+            setErr('a-last', name.test(f.last) ? '' : 'Enter your last name as it appears on your ID'),
+            setErr('a-email', /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(f.email) ? '' : 'Enter a valid email address'),
+            setErr('a-pass', pwOk(pw) ? '' : 'Use at least 8 characters, with a letter and a number'),
+            setErr('a-dob', !f.dob ? 'Enter your date of birth' : ageOf(f.dob) < 18 ? 'Kurazh is for adults. You must be 18 or older.' : ageOf(f.dob) > 110 ? 'Check the year of birth' : ''),
+            setErr('a-nick', f.nick.length < 2 ? 'At least 2 characters' : !Safety.scan(f.nick).ok ? 'This nickname isn’t allowed' : ''),
+            setErr('a-terms', f.terms ? '' : 'You need to accept the terms to continue'),
+          ].every(Boolean);
+          if (!ok) { $('.inp.bad, #a-terms-err:not(:empty)', el)?.scrollIntoView({ block: 'center', behavior: 'smooth' }); buzz(40); return; }
+          A.busy = true; f.passHash = await hashPw(pw);
+          sendCode('email'); go('email');
+        });
+      };
+      break;
+    }
+    case 'email':
+      html = `${authTop(true)}<h1>Confirm your email</h1><p class="sub">Enter the 6-digit code we sent to <b>${esc(maskEmail(f.email))}</b>.</p>
+        ${otpBlock('email', maskEmail(f.email))}<div class="links"><button class="linkb" id="resend" data-a="resend"></button><button class="linkb" data-a="back">Change email</button></div>`;
+      wire = () => wireOtp(() => { f.emailVerified = true; go('phone'); });
+      break;
+    case 'phone':
+      html = `${authTop(false)}<h1>Add your phone</h1><p class="sub">We’ll text you a code every time you sign in. This is the second step of your verification.</p>
+        <form class="form" id="f-ph" novalidate>${fld('a-phone', 'Mobile number', `<div class="tel"><span>${ccOf(f.country)}</span><input class="inp" id="a-phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="67 123 4567" value="${esc(f.phone || '')}" /></div>`)}
+        <button class="btn gold block" style="height:54px">Send code</button></form>
+        <div class="facts" style="margin-top:22px"><div>${ico('shield', 18)}<span><b>Two-step verification</b> protects your balance and earnings even if someone learns your password.</span></div></div>`;
+      wire = () => $('#f-ph', el).addEventListener('submit', (e) => {
+        e.preventDefault();
+        const n = $('#a-phone', el).value.replace(/[^\d]/g, '');
+        if (!setErr('a-phone', n.length >= 7 && n.length <= 12 ? '' : 'Enter your mobile number without the country code')) return;
+        f.phone = n; sendCode('phone'); go('phone-code');
+      });
+      break;
+    case 'phone-code':
+      html = `${authTop(true)}<h1>Enter the SMS code</h1><p class="sub">We texted a 6-digit code to <b>${maskPhone(ccOf(f.country), f.phone)}</b>.</p>
+        ${otpBlock('sms', maskPhone(ccOf(f.country), f.phone))}<div class="links"><button class="linkb" id="resend" data-a="resend"></button><button class="linkb" data-a="back">Change number</button></div>`;
+      wire = () => wireOtp(createAccount);
+      break;
+    case 'kyc-intro':
+      html = `${authTop(A.mode === 'kyc')}<h1>Verify your identity</h1><p class="sub">Needed to add funds, back dares, go live, withdraw and enter the 18+ section. It takes about two minutes.</p>
+        <div class="field"><span>Document</span><div class="chips" id="k-doc">${Object.entries(DOCS).map(([k, d]) => `<button type="button" class="chip ${k === A.doc ? 'on' : ''}" data-v="${k}">${d.label}</button>`).join('')}</div></div>
+        <label class="field"><span>Issued in</span><select class="inp" id="k-country">${COUNTRIES.filter((c) => c[0] !== 'OTHER').map(([c, n]) => `<option value="${c}" ${c === A.docCountry ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+        <div class="steps">${[['camera', 'Photo of your document', DOCS[A.doc].back ? 'Front and back' : 'The photo page'], ['face', 'Selfie check', 'Proves you’re a real person who matches the photo'], ['shield', 'Review', 'Name and date of birth must match your account']]
+          .map(([i, t, d]) => `<div class="step"><span class="ic">${ico(i, 20)}</span><div class="grow"><b>${t}</b><small>${d}</small></div></div>`).join('')}</div>
+        <div class="actions"><button class="btn gold block" data-a="kyc-start" style="height:54px">Start</button>${A.mode === 'signup' ? '<button class="btn block" data-a="later" style="background:none;color:var(--muted)">Verify later</button>' : ''}</div>
+        <div class="note">Demo: nothing is photographed or uploaded. In production a certified identity-verification provider runs this check, and the app never stores your documents.</div>`;
+      wire = () => {
+        $('#k-doc', el).addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) { A.doc = c.dataset.v; A.shots = {}; renderAuth(); } });
+        $('#k-country', el).addEventListener('change', (e) => (A.docCountry = e.target.value));
+      };
+      break;
+    case 'kyc-front': case 'kyc-back': {
+      const side = A.step === 'kyc-front' ? 'front' : 'back', d = DOCS[A.doc], got = A.shots[side];
+      const title = A.doc === 'passport' ? 'Photo page of your passport' : `${side === 'front' ? 'Front' : 'Back'} of your ${A.doc === 'id' ? 'ID card' : d.label.toLowerCase()}`;
+      html = `${authTop(true)}<h1>${title}</h1><p class="sub">Lay it on a dark surface inside the frame. Keep all four corners visible and avoid glare.</p>
+        <div class="docframe ${got ? 'ok' : ''}" id="frame"><i class="c tl"></i><i class="c tr"></i><i class="c bl"></i><i class="c br"></i>
+          <div class="doc-mock ${side}">${side === 'front' ? '<div class="ph"></div><div class="ln"><i style="width:70%"></i><i></i><i style="width:55%"></i><i style="width:82%"></i></div>' : '<div class="ln"><i></i><i style="width:64%"></i><i class="mrz"></i><i class="mrz"></i></div>'}</div><div class="scan"></div></div>
+        ${got ? `<div class="cap-ok">${ico('check', 18)}Captured · corners visible · text readable</div>` : '<div class="tips"><span>No glare</span><span>All four corners</span><span>Text in focus</span></div>'}
+        <div class="actions">${got ? '<button class="btn gold block" data-a="kyc-next" style="height:54px">Continue</button><button class="btn ghost block" data-a="retake">Retake</button>'
+          : `<button class="btn gold block" data-a="capture" style="height:54px">${ico('camera', 18)}Capture</button>`}</div>`;
+      break;
+    }
+    case 'kyc-selfie': {
+      const done = A.shots.selfie;
+      html = `${authTop(true)}<h1>Selfie check</h1><p class="sub">We check that you’re a real person, here right now, and that you match your document photo.</p>
+        <div class="face"><svg class="ring" viewBox="0 0 220 220" aria-hidden="true"><circle cx="110" cy="110" r="104" fill="none" style="stroke:rgba(236,226,207,.1)" stroke-width="4"/><circle id="ring" cx="110" cy="110" r="104" fill="none" style="stroke:var(--gold)" stroke-width="4" stroke-linecap="round" stroke-dasharray="653.5" stroke-dashoffset="${done ? 0 : 653.5}"/></svg>
+          <div class="oval">${done ? ico('check', 44) : ico('user', 64)}</div></div>
+        <div class="face-hint" id="hint">${done ? 'Liveness confirmed' : 'Good light. No hat or sunglasses.'}</div>
+        <div class="actions">${done ? '<button class="btn gold block" data-a="to-review" style="height:54px">Continue</button>' : '<button class="btn gold block" data-a="selfie" style="height:54px">Start check</button>'}</div>`;
+      break;
+    }
+    case 'kyc-review': {
+      const d = DOCS[A.doc];
+      html = `${authTop(true)}<h1>Review and submit</h1><p class="sub">We’ll compare these details with your document.</p>
+        <div class="facts" style="margin-top:22px">
+          <div>${ico('user', 18)}<span><b>Legal name</b><br>${esc(a.first)} ${esc(a.last)}</span></div>
+          <div>${ico('clock', 18)}<span><b>Date of birth</b><br>${fmtDob(a.dob)} · ${ageOf(a.dob)} years old</span></div>
+          <div>${ico('idcard', 18)}<span><b>Document</b><br>${d.label} · ${countryName(A.docCountry)}</span></div>
+          <div>${ico('camera', 18)}<span><b>Captured</b><br>${d.back ? 'Front, back' : 'Photo page'} and selfie</span></div>
+        </div>
+        <div><button type="button" class="check" id="k-conf"><i></i><span>I confirm these details are accurate and the document belongs to me</span></button><em class="err" id="k-conf-err"></em></div>
+        <div class="actions"><button class="btn gold block" data-a="submit-kyc" style="height:54px">Submit for verification</button></div>`;
+      wire = () => $('#k-conf', el).addEventListener('click', (e) => { e.currentTarget.classList.toggle('on'); setErr('k-conf', ''); });
+      break;
+    }
+    case 'kyc-pending':
+      html = `${authTop(false)}<h1>Checking your documents</h1><p class="sub">This usually takes under a minute. Please keep the app open.</p>
+        <div class="checks">${['Document is genuine', 'Face matches the photo', 'Age is 18 or over', 'Details match your account'].map((t, k) => `<div data-c="${k}"><span class="ic">${ico('check', 15)}</span>${t}</div>`).join('')}</div>`;
+      wire = async () => {
+        for (let k = 0; k < 4; k++) {
+          const row = $(`[data-c="${k}"]`, el); if (!row) return;
+          row.classList.add('busy'); await new Promise((r) => setTimeout(r, 750));
+          row.classList.remove('busy'); row.classList.add('done'); beep(700 + k * 90, 0.05);
+        }
+        S.verified = true; S.verifiedAt = Date.now(); S.kyc = { doc: A.doc, country: A.docCountry }; save(); chime();
+        setTimeout(() => go('done'), 450);
+      };
+      break;
+    case 'done':
+      if (A.mode === 'kyc') {
+        html = `${authTop(false)}<div class="hero"><div class="ring">${ico('shield', 30)}</div><h1>You’re verified</h1><p>Adding funds, backing dares, going live, withdrawals and the 18+ section are now open to you.</p></div>
+          <button class="btn gold block" data-a="finish" style="height:54px">Continue</button>`;
+      } else {
+        const row = (ok, t) => `<div class="${ok ? 'done' : ''}"><span class="ic">${ico(ok ? 'check' : 'clock', 15)}</span>${t}</div>`;
+        html = `${authTop(false)}<div class="hero"><div class="ring">${ico('user', 30)}</div><h1>Welcome, ${esc(a.first)}</h1>
+          <div class="checks" style="margin-top:6px">${row(true, 'Email confirmed')}${row(true, 'Phone confirmed · two-step verification on')}${row(S.verified, S.verified ? 'Identity verified' : 'Identity not verified yet. You can watch and chat, and verify in Profile to use money')}</div>
+          <p style="margin-top:6px">Your demo account starts with ${money(CUR.start)} of practice money.</p></div>
+          <button class="btn gold block" data-a="finish" style="height:54px">Enter Kurazh</button>`;
+      }
+      break;
+    case 'signin':
+      html = `${authTop(false)}<h1>Welcome back</h1><p class="sub">Sign in to your account.</p>
+        <form class="form" id="f-in" novalidate>
+          ${fld('s-email', 'Email', `<input class="inp" id="s-email" type="email" inputmode="email" autocomplete="username" value="${esc(a?.email || '')}" />`)}
+          ${fld('s-pass', 'Password', pwField('s-pass', 'current-password'))}
+          <button class="btn gold block" style="height:54px">Sign in</button>
+        </form>
+        <div class="links"><button class="linkb" data-a="forgot">Forgot password?</button><button class="linkb" data-a="replace">Use another account</button></div>
+        <div class="note">Demo: the account lives only on this device.</div>`;
+      wire = () => $('#f-in', el).addEventListener('submit', async (e) => {
+        e.preventDefault(); if (A.busy) return;
+        if (Date.now() < A.lockUntil) { setErr('s-pass', `Too many attempts. Try again in ${Math.ceil((A.lockUntil - Date.now()) / 1000)}s`); return; }
+        A.busy = true;
+        const em = $('#s-email', el).value.trim().toLowerCase(), h = await hashPw($('#s-pass', el).value);
+        A.busy = false;
+        if (em === a.email && h === a.passHash) { A.fails = 0; sendCode('signin'); go('signin-code'); return; }
+        A.fails++; if (A.fails >= 5) { A.lockUntil = Date.now() + 30000; A.fails = 0; }
+        setErr('s-email', ' '); setErr('s-pass', 'Email or password is incorrect'); buzz(60);
+      });
+      break;
+    case 'signin-code':
+      html = `${authTop(true)}<h1>Two-step verification</h1><p class="sub">Enter the code we texted to <b>${maskPhone(a.cc, a.phone)}</b>.</p>
+        ${otpBlock('sms', maskPhone(a.cc, a.phone))}<div class="links"><button class="linkb" id="resend" data-a="resend"></button></div>`;
+      wire = () => wireOtp(() => {
+        S.session = true; S.lastSignIn = Date.now(); save(); closeAuth(); refreshViews(); refreshBalance();
+        toast(`Signed in. Welcome back, ${a.first}`, 'gold'); chime();
+      });
+      break;
+    case 'forgot':
+      html = `${authTop(true)}<h1>Reset your password</h1><p class="sub">We’ll email you a code to confirm it’s you.</p>
+        <form class="form" id="f-fg" novalidate>${fld('f-email', 'Email', `<input class="inp" id="f-email" type="email" inputmode="email" value="${esc(a?.email || '')}" />`)}<button class="btn gold block" style="height:54px">Send code</button></form>`;
+      wire = () => $('#f-fg', el).addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!setErr('f-email', $('#f-email', el).value.trim().toLowerCase() === a.email ? '' : 'There’s no account with this email on this device')) return;
+        sendCode('reset'); go('reset-code');
+      });
+      break;
+    case 'reset-code':
+      html = `${authTop(true)}<h1>Check your email</h1><p class="sub">Enter the code we sent to <b>${esc(maskEmail(a.email))}</b>.</p>
+        ${otpBlock('email', maskEmail(a.email))}<div class="links"><button class="linkb" id="resend" data-a="resend"></button></div>`;
+      wire = () => wireOtp(() => go('reset-pass'));
+      break;
+    case 'reset-pass':
+      html = `${authTop(false)}<h1>Choose a new password</h1><p class="sub">You’ll still need the SMS code when you sign in.</p>
+        <form class="form" id="f-rp" novalidate>${fld('r-pass', 'New password', pwField('r-pass', 'new-password') + meterHTML)}<button class="btn gold block" style="height:54px">Save password</button></form>`;
+      wire = () => {
+        wireMeter($('#r-pass', el));
+        $('#f-rp', el).addEventListener('submit', async (e) => {
+          e.preventDefault(); const pw = $('#r-pass', el).value;
+          if (!setErr('r-pass', pwOk(pw) ? '' : 'Use at least 8 characters, with a letter and a number')) return;
+          a.passHash = await hashPw(pw); save(); toast('Password updated. Sign in with the new one', 'ok'); go('signin');
+        });
+      };
+      break;
+    case 'replace':
+      html = `${authTop(true)}<h1>Use another account?</h1><p class="sub">This demo keeps one account per device. Starting over deletes the current account, its balance, earnings and history from this device.</p>
+        <div class="actions"><button class="btn bad block" data-a="wipe" style="height:54px">Delete and start over</button><button class="btn ghost block" data-a="back">Keep my account</button></div>`;
+      break;
+  }
+  el.innerHTML = html;
+  wire?.();
+}
+function createAccount() {
+  const f = A.f, country = f.country || 'UA';
+  S.account = { first: f.first, last: f.last, email: f.email, passHash: f.passHash, dob: f.dob, country, cc: ccOf(country), phone: f.phone,
+    emailVerified: true, phoneVerified: true, twoStep: true, createdAt: Date.now() };
+  S.user = { nick: f.nick, joined: Date.now() };
+  S.session = true; save();
+  A.f = {}; A.docCountry = country !== 'OTHER' ? country : 'UA';
+  go('kyc-intro');
+}
+async function onAuthClick(e) {
+  const b = e.target.closest('[data-a]'); if (!b || b.disabled) return;
+  const act = b.dataset.a;
+  if (act === 'back') {
+    if (A.step === 'kyc-intro' && A.mode === 'kyc') { closeAuth(); return; }
+    const t = BACK[A.step]; if (t) go(typeof t === 'function' ? t() : t);
+  } else if (act === 'intro-next') { A.i++; renderAuth(); }
+  else if (act === 'create') go('account');
+  else if (act === 'showpw') { const i = b.previousElementSibling; i.type = i.type === 'password' ? 'text' : 'password'; b.textContent = i.type === 'password' ? 'Show' : 'Hide'; }
+  else if (act === 'resend') { sendCode(A.codeFor); go(A.step); toast('New code sent'); }
+  else if (act === 'later') go('done');
+  else if (act === 'kyc-start') go('kyc-front');
+  else if (act === 'capture') {
+    b.disabled = true; b.textContent = 'Scanning…';
+    $('#frame', A.el).classList.add('scanning');
+    await new Promise((r) => setTimeout(r, 1400));
+    A.shots[A.step === 'kyc-front' ? 'front' : 'back'] = true; beep(900, 0.05); buzz(20); renderAuth();
+  } else if (act === 'retake') { delete A.shots[A.step === 'kyc-front' ? 'front' : 'back']; renderAuth(); }
+  else if (act === 'kyc-next') go(A.step === 'kyc-front' && DOCS[A.doc].back ? 'kyc-back' : 'kyc-selfie');
+  else if (act === 'selfie') {
+    b.disabled = true;
+    const ring = $('#ring', A.el), hint = $('#hint', A.el);
+    const prompts = ['Look straight at the camera', 'Slowly turn your head left', 'Now slowly to the right', 'And a smile'];
+    for (let k = 0; k < prompts.length; k++) {
+      if (!A.el || A.step !== 'kyc-selfie') return;
+      hint.textContent = prompts[k]; ring.setAttribute('stroke-dashoffset', String(653.5 * (1 - (k + 1) / prompts.length)));
+      await new Promise((r) => setTimeout(r, 900));
+    }
+    A.shots.selfie = true; beep(900, 0.06); renderAuth();
+  } else if (act === 'to-review') go('kyc-review');
+  else if (act === 'submit-kyc') {
+    if (!$('#k-conf', A.el).classList.contains('on')) { setErr('k-conf', 'Please confirm to submit'); return; }
+    go('kyc-pending');
+  } else if (act === 'finish') {
+    const next = A.mode === 'kyc' ? A.next : null, first = S.account.first;
+    closeAuth(); refreshViews(); refreshBalance();
+    if (next) next(); else toast(A.mode === 'signup' ? `Welcome to Kurazh, ${first}` : 'Identity verified', 'gold');
+  } else if (act === 'forgot') go('forgot');
+  else if (act === 'replace') go('replace');
+  else if (act === 'wipe') { try { localStorage.removeItem(KEY); } catch { /* ignore */ } location.reload(); }
+}
+function needKyc(what) {
+  if (S.verified) return false;
+  toast(`Verify your identity to ${what}`, 'bad'); openVerify();
+  return true;
+}
+function openSecurity() {
+  const a = S.account;
+  const body = openSheet(`${sheetHead('Security', 'Your sign-in and verification')}
+    <div class="menu" style="margin-top:16px">
+      <div>${ico('mail', 20)}<span class="grow">Email<small>${esc(maskEmail(a.email))}</small></span><span class="st ok">CONFIRMED</span></div>
+      <div>${ico('phone', 20)}<span class="grow">Phone<small>${maskPhone(a.cc, a.phone)}</small></span><span class="st ok">CONFIRMED</span></div>
+      <div>${ico('shield', 20)}<span class="grow">Two-step verification<small>Password + SMS code at every sign-in</small></span><span class="st ok">ON</span></div>
+      <button data-s="kyc">${ico('idcard', 20)}<span class="grow">Identity<small>${S.verified ? `${DOCS[S.kyc?.doc || 'passport'].label} · verified ${new Date(S.verifiedAt).toLocaleDateString('en-GB')}` : 'Not verified'}</small></span>${S.verified ? '<span class="st ok">VERIFIED</span>' : ico('chev', 16)}</button>
+      <div>${ico('user', 20)}<span class="grow">Legal name<small>${esc(a.first)} ${esc(a.last)} · born ${fmtDob(a.dob)}</small></span></div>
+    </div>
+    <div class="wbtns" style="margin-top:16px"><button class="btn ghost" data-s="out">${ico('logout', 18)}Sign out</button><button class="btn bad" data-s="del">Delete account</button></div>`, { type: 'security' });
+  body.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-s]'); if (!b) return;
+    if (b.dataset.s === 'kyc' && !S.verified) openVerify();
+    else if (b.dataset.s === 'out') signOut();
+    else if (b.dataset.s === 'del') confirmDelete();
+  });
+}
+function signOut() { S.session = false; save(); closeSheet(); show('feed'); authFlow({ mode: 'signin' }); }
+function confirmDelete() {
+  const body = openSheet(`${sheetHead('Delete account?')}<p style="margin-top:14px;color:var(--cash)">Your account, balance, earnings, history, backing and stats on this device will be deleted. This can’t be undone.</p>
+    <div class="wbtns" style="margin-top:18px"><button class="btn ghost" data-close>Cancel</button><button class="btn bad" id="reset-ok">Delete</button></div>`, { type: 'reset' });
+  body.querySelector('#reset-ok').addEventListener('click', () => { try { localStorage.removeItem(KEY); } catch { /* ignore */ } location.reload(); });
 }
 
 /* ═════════ boot ═════════ */
@@ -1572,7 +1993,8 @@ setInterval(() => {
   if (L.on) liveTick();
 }, 1000);
 requestAnimationFrame(frame);
-if (!S.user) onboarding();
+if (!S.account) authFlow({ mode: 'signup' });
+else if (!S.session) authFlow({ mode: 'signin' });
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
 window.Kurazh = { Safety, BANK, UNSAFE, ADULT_UNSAFE, S: () => S, streams, L, money };
 </script>
