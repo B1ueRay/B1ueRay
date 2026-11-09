@@ -105,7 +105,7 @@
   .cats .chip.x18 { color: var(--gold2); border-color: var(--line2); }
   .cats .chip.x18.on { background: var(--gold); color: var(--ink); border-color: var(--gold); }
   .balance { flex: none; height: 32px; font-size: 13px; }
-  .balance b { color: var(--gold2); }
+  .balance b { color: var(--gold2); display: inline-flex; gap: 5px; align-items: center; }
   .feed { height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; }
   .feed::-webkit-scrollbar { display: none; }
   .card { position: relative; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; background: #000; }
@@ -423,6 +423,28 @@
   .checks .done { color: var(--van); }
   .checks .done .ic { background: var(--green); color: var(--gold2); }
   .checks .busy .ic { animation: blink 1s infinite; }
+  .pay-wrap { z-index: 70; }
+  .cardic { flex: none; width: 44px; height: 30px; border-radius: 6px; background: var(--s3); border: 1px solid var(--line2); display: grid; place-items: center; font: 800 9px var(--sans); letter-spacing: .08em; color: var(--gold2); }
+  .lockic { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: rgba(184,151,90,.14); color: var(--gold2); }
+  .timeline { display: grid; gap: 12px; margin-top: 18px; padding: 14px; border-radius: 16px; background: var(--s2); border: 1px solid var(--line); }
+  .timeline > div { display: flex; gap: 12px; align-items: flex-start; font-size: 13.5px; color: var(--cash); line-height: 1.45; }
+  .timeline b { color: var(--van); }
+  .timeline .ic { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--green); color: var(--gold2); }
+  .fbtn { flex: none; height: 32px; padding: 0 10px; gap: 5px; }
+  .fbtn b { min-width: 16px; height: 16px; border-radius: 8px; background: var(--ink); color: var(--gold2); font-size: 10px; display: grid; place-items: center; }
+  .fbtn.on { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+  .c-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 7px; }
+  .c-tags span { height: 21px; padding: 0 8px; border-radius: 6px; display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; background: var(--glass); border: 1px solid var(--line); color: var(--cash); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .c-tags .min { color: var(--gold2); border-color: var(--line2); }
+  .minrow { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+  .minrow span { font-size: 13px; color: var(--muted); }
+  .minrow .inp { height: 40px; max-width: 160px; }
+  .vsafe { display: flex; gap: 12px; align-items: flex-start; margin-top: 14px; padding: 13px 14px; border-radius: 14px; background: rgba(30,58,44,.55); border: 1px solid var(--line2); font-size: 13.5px; color: var(--cash); line-height: 1.45; }
+  .vsafe svg { color: var(--gold2); margin-top: 2px; }
+  .vsafe b { color: var(--van); }
+  .drivebtn { cursor: pointer; }
+  .drivebtn.on { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+  .tag svg { display: inline-block; }
 </style>
 </head>
 <body>
@@ -430,6 +452,7 @@
   <div class="screens">
     <section class="screen on" id="scr-feed">
       <div class="feed-top">
+        <button class="pill fbtn" id="fbtn" aria-label="Stream filters"></button>
         <div class="cats" id="cats"></div>
         <button class="pill balance" data-tab="wallet" aria-label="Balance"><b data-bal class="num">0</b></button>
       </div>
@@ -456,7 +479,11 @@
         <label class="field"><span>Stream title</span><input class="inp" id="lv-title" maxlength="60" placeholder="e.g. Evening walk along the seafront" /></label>
         <div class="field"><span>Category</span><div class="chips" id="lv-cat"></div></div>
         <div class="field"><span>Dares you accept</span><div class="chips" id="lv-allow"></div></div>
-        <div class="field"><span>Minimum dare pot</span><div class="chips" id="lv-min"></div></div>
+        <div class="field"><span>What you’re doing · up to 3</span><div class="chips" id="lv-themes"></div></div>
+        <div class="vsafe" id="lv-vsafe" hidden></div>
+        <div class="field"><span>Minimum stake per dare</span><div class="chips" id="lv-min"></div>
+          <div class="minrow"><span>Custom</span><input class="inp" id="lv-min-custom" type="number" inputmode="decimal" min="1" step="1" placeholder="Amount" aria-label="Custom minimum stake" /></div></div>
+        <button class="check" id="lv-drive" hidden><i></i><span>I never take dares while driving. Racing dares only on a closed track, never on public roads.</span></button>
         <button class="check" id="lv-adult" hidden><i></i><span>Everyone on camera is over 18 and consents to the broadcast. I won't stream in public places or arrange meetups.</span></button>
         <button class="check" id="lv-agree"><i></i><span>I won't do dangerous dares, I respect people around me, and I can decline any dare without penalty</span></button>
         <button class="btn gold block" id="lv-start" style="margin-top:20px;height:54px;font-size:16px">Start streaming</button>
@@ -470,6 +497,7 @@
           <span class="pill" id="lv-viewers-p"></span>
           <span class="pill"><b id="lv-earned" class="gold num">$0</b></span>
           <span class="sp"></span>
+          <button class="pill drivebtn" id="lv-drivebtn" hidden aria-pressed="false"></button>
           <button class="iconb" id="lv-flip" aria-label="Switch camera"></button>
           <button class="iconb" id="lv-end" aria-label="End stream"></button>
         </div>
@@ -489,6 +517,7 @@
   <nav class="tabbar" id="tabbar"></nav>
 
   <div class="sheet-wrap" id="sheet"><div class="sheet-bg" data-close></div><div class="sheet"><div class="grab"></div><div class="sheet-body" id="sheet-body"></div></div></div>
+  <div class="sheet-wrap pay-wrap" id="pay"><div class="sheet-bg" data-pclose></div><div class="sheet"><div class="grab"></div><div class="sheet-body pay-body"></div></div></div>
   <div id="toasts" role="status" aria-live="polite"></div>
 </div>
 
@@ -496,10 +525,10 @@
 'use strict';
 /* ═════════ currency ═════════
    All money in the app goes through this block. To switch to hryvnia, replace CUR with:
-   { sym: '₴', prefix: false, unit: 10, start: 500, dare: [20, 50, 100, 200, 500], back: [20, 50, 100], boost: 50,
-     packs: [200, 500, 1000, 2000], minPayout: 200, liveMin: [20, 50, 100, 200], liveMinAdult: [50, 100, 200, 500] } */
-const CUR = { sym: '$', prefix: true, unit: 1, start: 50, dare: [2, 5, 10, 20, 50], back: [1, 5, 10], boost: 5,
-  packs: [10, 25, 50, 100], minPayout: 20, liveMin: [2, 5, 10, 20], liveMinAdult: [5, 10, 20, 50] };
+   { sym: '₴', prefix: false, unit: 10, dare: [20, 50, 100, 200, 500], back: [20, 50, 100], boost: 50,
+     holdLimit: 20000, minPayout: 200, liveMin: [20, 50, 100, 200], liveMinAdult: [50, 100, 200, 500] } */
+const CUR = { sym: '$', prefix: true, unit: 1, dare: [2, 5, 10, 20, 50], back: [1, 5, 10], boost: 5,
+  holdLimit: 500, minPayout: 20, liveMin: [2, 5, 10, 20], liveMinAdult: [5, 10, 20, 50] };
 
 /* ═════════ helpers ═════════ */
 const $ = (s, r = document) => r.querySelector(s);
@@ -557,6 +586,9 @@ const IC = {
   undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
   percent: '<path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
   transfer: '<path d="M4 8h14l-3-3M20 16H6l3 3"/>',
+  sliders: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+  pause: '<path d="M9 6v12M15 6v12"/>',
+  wheel: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 14v7M10 12.5 3.5 10M14 12.5l6.5-2.5"/>',
 };
 const ico = (n, w) => svg(IC[n], w);
 
@@ -565,11 +597,11 @@ const PASS = 0.6;          // share of "yes" votes needed to count a dare
 const FEE = 0.2;           // platform fee on completed dares
 
 /* ═════════ storage ═════════ */
-const KEY = 'kurazh.en.v2';
+const KEY = 'kurazh.en.v3';
 const defaults = () => ({
   account: null, session: false, kyc: null,
-  user: null, balance: CUR.start, earnings: 0, xp: 0, verified: false,
-  tx: [{ id: uid(), t: Date.now(), amount: CUR.start, title: 'Demo account: starting funds', acc: 'main' }],
+  user: null, cards: [], earnings: 0, xp: 0, verified: false,
+  tx: [],
   backs: [], follows: [], payouts: [],
   settings: { sound: true, vibro: true, adult: false },
   stats: { proposed: 0, backed: 0, won: 0, refunded: 0, streams: 0, liveSec: 0, daresDone: 0, earnedTotal: 0 },
@@ -592,11 +624,12 @@ const Safety = (() => {
   // Always on, in every room.
   const BASE = [
     { cat: 'Dangerous', hint: 'No heights, fire, roads, vehicles, choking or risky stunts.',
-      stems: ['roof', 'ledge', 'balcon', 'fire', 'lighter', 'burn', 'knife', 'knive', 'blade', 'weapon', 'chok', 'strangl', 'suffocat', 'drown', 'overdose', 'poison', 'railway', 'railroad', 'highway', 'bleach',
+      stems: ['overtak', 'tailgat', 'обгон', 'обгін', 'превыш', 'перевищ', 'roof', 'ledge', 'balcon', 'fire', 'lighter', 'burn', 'knife', 'knive', 'blade', 'weapon', 'chok', 'strangl', 'suffocat', 'drown', 'overdose', 'poison', 'railway', 'railroad', 'highway', 'bleach',
         'спрыг', 'крыш', 'дах', 'высот', 'висот', 'карниз', 'балкон', 'огон', 'огн', 'вогн', 'зажигал', 'поджиг', 'подожг', 'поджог', 'підпал', 'лезви', 'порез', 'оруж', 'зброя', 'пистолет', 'задох', 'задуш', 'удуш', 'утоп', 'таблет', 'отрав', 'розетк', 'рельс', 'поезд', 'потяг', 'электрич', 'трасс', 'шоссе', 'перебег', 'перебеж'],
-      words: ['gun', 'guns', 'pill', 'pills', 'train', 'trains', 'нож', 'ножа', 'ножом', 'ніж'],
+      words: ['gun', 'guns', 'pill', 'pills', 'train', 'trains', 'нож', 'ножа', 'ножом', 'ніж', 'speeding', 'drift', 'drifting', 'burnout'],
       phrases: ['jump off', 'jump from', 'red light', 'behind the wheel', 'hold your breath', 'eat soap', 'tide pod', 'run across the road', 'cross the road', 'in front of a car',
-        'прыгни с', 'прыгнуть с', 'стрибни з', 'на красный', 'на червоне', 'за руль', 'не дыши', 'бытовую химию'] },
+        'прыгни с', 'прыгнуть с', 'стрибни з', 'на красный', 'на червоне', 'за руль', 'не дыши', 'бытовую химию',
+        'while driving', 'while you drive', 'street race', 'race on the road', 'no seatbelt', 'without a seatbelt', 'top speed', 'floor it', 'text and drive', 'hands off the wheel', 'без ремня', 'на скорости', 'на швидкості'] },
     { cat: 'Alcohol & drugs', hint: 'Alcohol, tobacco and drugs are banned in every stream.',
       stems: ['alcohol', 'vodka', 'beer', 'wine', 'whisk', 'tequila', 'booze', 'drunk', 'chug', 'cocaine', 'drug', 'cigarett', 'vape', 'hookah', 'champagne',
         'алкогол', 'водк', 'горілк', 'пив', 'коньяк', 'виски', 'віскі', 'бухн', 'бухать', 'залпом', 'наркот', 'травк', 'сигарет', 'цигарк', 'вейп', 'кальян', 'самогон', 'шампанск'],
@@ -680,6 +713,10 @@ const BANK = {
     ['Cook an omelette in 3 minutes', 'food'], ['Review a cucumber like a restaurant critic', 'talk']],
   music: [['Sing Twinkle Twinkle as an opera aria', 'creative'], ['Write a rap about the chat in a minute', 'creative'], ['Play a tune on water glasses', 'creative'],
     ['Sing a verse while holding your nose', 'creative'], ['Perform the chat anthem as a ballad', 'creative']],
+  forest: [['Find three kinds of mushroom. Look, don’t pick', 'creative'], ['Name the bird from its call', 'talk'], ['Stack a tiny cairn from pebbles', 'creative'],
+    ['Whistle a tune and let the echo answer', 'creative'], ['Count every shade of green you can see', 'talk']],
+  vehicle: [['Interview your mechanic in the pit lane', 'talk'], ['Rate the chat’s dream car out of ten', 'talk'], ['Guess the next lap time to the second', 'talk'],
+    ['Polish one wheel to showroom shine', 'phys'], ['Explain the racing line like a commentator', 'talk'], ['Sing a verse at the next fuel stop', 'creative']],
   talk: [["Guess a viewer's job in three questions", 'talk'], ['Tell a story where every word starts with P', 'talk'], ['Sell me this pen in 30 seconds', 'talk']],
   adult: [['A slow dance to a song the chat picks', 'look'], ['Change into an evening look in 3 minutes', 'look'], ['Try on the outfit the top backer picks', 'look'],
     ['Answer a spicy question from the chat', 'talk'], ['Read a poem in a whisper', 'talk'], ['Tell the story of your boldest date', 'talk'],
@@ -691,17 +728,24 @@ const UNSAFE = ['Jump off the garage roof', 'Chug a bottle of vodka', 'Run acros
 const ADULT_UNSAFE = ["Let's meet in person tonight", 'Send me your telegram', 'Go out on the street like that', 'Dress up as a schoolgirl', 'Have a glass of wine on camera',
   'Tell us your address', 'Show yourself to the neighbours at the window'];
 
+const THEMES = { forest: 'Forest', mountains: 'Mountains', water: 'Sea & lakes', outdoors: 'Outdoors', city: 'City', night: 'Night out',
+  road: 'Road trip', car: 'Cars', racing: 'Racing · track', gym: 'Gym', kitchen: 'Kitchen', studio: 'Studio', home: 'At home' };
+const VEHICLE = ['road', 'car', 'racing'];
+const isVehicle = (themes) => (themes || []).some((t) => VEHICLE.includes(t));
 const STREAMERS = [
-  { id: 'nika', name: 'Nika Lysenko', cat: 'irl', city: 'Kyiv', title: 'Evening walk through the centre. You call the shots', pal: ['#1f3a2c', '#060807'], glow: ['#b8975a', '#c8b69a', '#3c5c49'], viewers: 1840 },
-  { id: 'mila', name: 'Mila Koval', cat: 'art', city: 'Lviv', title: 'Drawing whatever you dream up, against the clock', pal: ['#2a3329', '#070807'], glow: ['#cdb27c', '#93b49c', '#ece2cf'], viewers: 2310 },
-  { id: 'taras', name: 'Taras Boyko', cat: 'sport', city: 'Kharkiv', title: 'Gym is open. Let’s test my form', pal: ['#1b2a22', '#050605'], glow: ['#b8975a', '#6d8a74', '#c8b69a'], viewers: 960 },
-  { id: 'ivan', name: 'Ivan Holos', cat: 'music', city: 'Dnipro', title: 'Singing your requests', pal: ['#26301f', '#070806'], glow: ['#cdb27c', '#c8b69a', '#4c6a55'], viewers: 1270 },
-  { id: 'andriy', name: 'Chef Andriy', cat: 'food', city: 'Odesa', title: 'Cooking with whatever is in the fridge', pal: ['#2e2a1e', '#080706'], glow: ['#b8975a', '#ece2cf', '#6b5a3a'], viewers: 640 },
-  { id: 'daria', name: 'Daria Moroz', cat: 'irl', city: 'Odesa', title: 'Arcadia seafront and your challenges', pal: ['#1a3330', '#050807'], glow: ['#93b49c', '#c8b69a', '#b8975a'], viewers: 880 },
-  { id: 'lev', name: 'Lev Tkachenko', cat: 'talk', city: 'Uzhhorod', title: 'Ask me anything', pal: ['#232b25', '#060706'], glow: ['#c8b69a', '#b8975a', '#3c5c49'], viewers: 520 },
-  { id: 'velvet', name: 'Velvet', cat: 'adult', city: 'Kyiv', title: 'Late-night stream · looks on request', pal: ['#2a1513', '#050404'], glow: ['#b8975a', '#7e2b25', '#c8b69a'], viewers: 4210, mult: 3 },
-  { id: 'noir', name: 'Madame Noir', cat: 'adult', city: 'Lviv', title: 'Candid questions, honest answers', pal: ['#1d1714', '#040403'], glow: ['#cdb27c', '#5a2a24', '#ece2cf'], viewers: 3120, mult: 3 },
-  { id: 'carmen', name: 'Carmen', cat: 'adult', city: 'Odesa', title: 'Dancing to your music', pal: ['#2b1a16', '#060404'], glow: ['#b8975a', '#8e3a2f', '#c8b69a'], viewers: 2580, mult: 3 },
+  { id: 'nika', name: 'Nika Lysenko', cat: 'irl', themes: ['city', 'night'], minDare: 2, city: 'Kyiv', title: 'Evening walk through the centre. You call the shots', pal: ['#1f3a2c', '#060807'], glow: ['#b8975a', '#c8b69a', '#3c5c49'], viewers: 1840 },
+  { id: 'mila', name: 'Mila Koval', cat: 'art', themes: ['studio', 'home'], minDare: 2, city: 'Lviv', title: 'Drawing whatever you dream up, against the clock', pal: ['#2a3329', '#070807'], glow: ['#cdb27c', '#93b49c', '#ece2cf'], viewers: 2310 },
+  { id: 'taras', name: 'Taras Boyko', cat: 'sport', themes: ['gym'], minDare: 5, city: 'Kharkiv', title: 'Gym is open. Let’s test my form', pal: ['#1b2a22', '#050605'], glow: ['#b8975a', '#6d8a74', '#c8b69a'], viewers: 960 },
+  { id: 'ivan', name: 'Ivan Holos', cat: 'music', themes: ['studio'], minDare: 2, city: 'Dnipro', title: 'Singing your requests', pal: ['#26301f', '#070806'], glow: ['#cdb27c', '#c8b69a', '#4c6a55'], viewers: 1270 },
+  { id: 'andriy', name: 'Chef Andriy', cat: 'food', themes: ['kitchen', 'home'], minDare: 2, city: 'Odesa', title: 'Cooking with whatever is in the fridge', pal: ['#2e2a1e', '#080706'], glow: ['#b8975a', '#ece2cf', '#6b5a3a'], viewers: 640 },
+  { id: 'daria', name: 'Daria Moroz', cat: 'irl', themes: ['water', 'outdoors'], minDare: 5, city: 'Odesa', title: 'Arcadia seafront and your challenges', pal: ['#1a3330', '#050807'], glow: ['#93b49c', '#c8b69a', '#b8975a'], viewers: 880 },
+  { id: 'lev', name: 'Lev Tkachenko', cat: 'talk', themes: ['home'], minDare: 1, city: 'Uzhhorod', title: 'Ask me anything', pal: ['#232b25', '#060706'], glow: ['#c8b69a', '#b8975a', '#3c5c49'], viewers: 520 },
+  { id: 'yana', name: 'Yana Lis', cat: 'irl', themes: ['forest', 'mountains', 'outdoors'], minDare: 5, city: 'Carpathians', title: 'Forest trail to the waterfall', pal: ['#173322', '#040805'], glow: ['#93b49c', '#b8975a', '#3c5c49'], viewers: 1420 },
+  { id: 'oleh', name: 'Oleh Rally', cat: 'sport', themes: ['racing', 'car'], minDare: 10, city: 'Chernivtsi', title: 'Track day at the circuit · pit-lane dares', pal: ['#2a2a22', '#070706'], glow: ['#cdb27c', '#7e2b25', '#c8b69a'], viewers: 3050 },
+  { id: 'max', name: 'Max on the Road', cat: 'talk', themes: ['road', 'car'], minDare: 5, city: 'Kyiv → Lviv', title: 'Road trip west · dares at every stop', pal: ['#202a26', '#050706'], glow: ['#b8975a', '#93b49c', '#c8b69a'], viewers: 990 },
+  { id: 'velvet', name: 'Velvet', cat: 'adult', themes: ['home'], minDare: 10, city: 'Kyiv', title: 'Late-night stream · looks on request', pal: ['#2a1513', '#050404'], glow: ['#b8975a', '#7e2b25', '#c8b69a'], viewers: 4210, mult: 3 },
+  { id: 'noir', name: 'Madame Noir', cat: 'adult', themes: ['studio'], minDare: 15, city: 'Lviv', title: 'Candid questions, honest answers', pal: ['#1d1714', '#040403'], glow: ['#cdb27c', '#5a2a24', '#ece2cf'], viewers: 3120, mult: 3 },
+  { id: 'carmen', name: 'Carmen', cat: 'adult', themes: ['home'], minDare: 10, city: 'Odesa', title: 'Dancing to your music', pal: ['#2b1a16', '#060404'], glow: ['#b8975a', '#8e3a2f', '#c8b69a'], viewers: 2580, mult: 3 },
 ];
 const NICK_A = ['fox', 'shadow', 'pixel', 'wolf', 'owl', 'mint', 'luna', 'storm', 'raccoon', 'velvet', 'zero', 'neo', 'count', 'tiger', 'muffin', 'nova', 'echo', 'sage'];
 const botNick = () => pick(NICK_A) + pick(['_', '.', '', '']) + (Math.random() < 0.7 ? ri(1, 999) : pick(['ok', 'x', 'pro', 'ua']));
@@ -749,20 +793,117 @@ function goldDust(n = 28) {
 }
 
 /* ═════════ money core ═════════ */
-function addTx(amount, title, acc = 'main') {
-  if (acc === 'earn') S.earnings = Math.round((S.earnings + amount) * 100) / 100; else S.balance = Math.round((S.balance + amount) * 100) / 100;
-  S.tx.unshift({ id: uid(), t: Date.now(), amount, title, acc });
+function addTx(amount, title, kind = 'hold') {
+  if (kind === 'earn' || kind === 'payout') S.earnings = Math.round((S.earnings + amount) * 100) / 100;
+  S.tx.unshift({ id: uid(), t: Date.now(), amount, title, kind });
   S.tx.length = Math.min(S.tx.length, 150);
   save(); refreshBalance();
 }
 function gainXp(n) { S.xp += n; save(); }
 const level = (xp) => Math.floor(Math.sqrt(xp / 40)) + 1;
 const lvlFloor = (l) => 40 * (l - 1) ** 2;
-function refreshBalance() { $$('[data-bal]').forEach((e) => (e.textContent = money(S.balance))); if (cur === 'wallet') renderWallet(); }
-function needMoney(amount) {
-  if (S.balance >= amount) return false;
-  toast(`Not enough funds: you need ${money(amount)}, your balance is ${money(S.balance)}`, 'bad');
-  openTopup();
+function refreshBalance() {
+  const h = heldNow(), c = defCard();
+  $$('[data-bal]').forEach((e) => (e.innerHTML = h ? `${ico('lock', 13)}${money(h)} held` : c ? `${ico('card', 14)}•• ${c.last4}` : `${ico('card', 14)}Add card`));
+  if (cur === 'wallet') renderWallet();
+}
+
+/* ═════════ card holds: freeze now, charge only if the dare counts ═════════ */
+const DEMO_CARDS = [{ brand: 'Visa', last4: '4242', exp: '12/29' }, { brand: 'Mastercard', last4: '4444', exp: '08/28' },
+  { brand: 'Apple Pay', last4: '1881', exp: '' }, { brand: 'Google Pay', last4: '5100', exp: '' }];
+const defCard = () => S.cards.find((c) => c.def) || S.cards[0];
+const cardLbl = (c) => `${c.brand} •• ${c.last4}`;
+const cardIcon = (c) => `<span class="cardic">${{ Visa: 'VISA', Mastercard: 'MC', 'Apple Pay': 'PAY', 'Google Pay': 'GPAY' }[c.brand] || 'CARD'}</span>`;
+const heldNow = () => S.backs.filter((b) => b.status === 'held').reduce((a, b) => a + b.amount, 0);
+function heldToday() {
+  const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+  return S.tx.filter((t) => t.kind === 'hold' && t.t >= d0.getTime()).reduce((a, t) => a + Math.abs(t.amount), 0);
+}
+let payCtx = null;
+function openPay(html) { const m = $('#pay'); m.querySelector('.pay-body').innerHTML = html; m.classList.add('open'); }
+function closePay() { $('#pay').classList.remove('open'); payCtx = null; }
+function requestHold(o) {
+  if (needKyc('back dares')) return;
+  payCtx = { ...o };
+  if (defCard()) renderPay(); else renderLinkCard();
+}
+function renderPay() {
+  const o = payCtx, c = defCard(); if (!o || !c) return;
+  const left = Math.max(0, CUR.holdLimit - heldToday());
+  openPay(`${sheetHead(`Hold ${money(o.amount)}`, `${esc(o.what)} · ${esc(o.st.name)}`)}
+    ${o.amounts ? `<div class="field"><span>Amount</span>${chipRow('p-amt', o.amounts, o.amount, money, 'money')}</div>` : ''}
+    <div class="field"><span>Pay with</span><button class="row" data-pay="cards">${cardIcon(c)}<div class="grow"><div class="t">${cardLbl(c)}</div><div class="m">${c.exp ? `Expires ${c.exp}` : 'Wallet'}</div></div><span class="linkb">Change</span></button></div>
+    <div class="timeline">
+      <div><span class="ic">${ico('lock', 15)}</span><span><b>Held now.</b> ${money(o.amount)} is frozen on your card. Nothing is charged yet.</span></div>
+      <div><span class="ic">${ico('check', 15)}</span><span><b>If it counts</b> (at least ${PASS * 100}% yes), the hold is charged and goes to the streamer.</span></div>
+      <div><span class="ic">${ico('undo', 15)}</span><span><b>If it doesn’t,</b> or the streamer passes or runs out of time, the hold is released in full.</span></div>
+    </div>
+    <div class="muted small" style="margin-top:12px">Daily hold limit ${money(CUR.holdLimit)} · ${money(left)} left today. Your bank may show the hold as pending.</div>
+    <button class="btn gold block" data-pay="go" style="margin-top:16px;height:54px">${ico('lock', 18)}Hold ${money(o.amount)}</button>
+    <div class="note">Demo: no card is charged and no bank is contacted. In production a licensed payment provider places the hold (a card authorization), then captures or releases it.</div>`);
+}
+function renderLinkCard() {
+  const free = DEMO_CARDS.filter((dc) => !S.cards.some((c) => c.last4 === dc.last4));
+  openPay(`${sheetHead('Link a card', 'Your stake is frozen on this card and charged only if the dare counts')}
+    <div class="list" style="margin-top:16px">${free.map((dc) => `<button class="row" data-link="${dc.last4}">${cardIcon(dc)}<div class="grow"><div class="t">${dc.exp ? cardLbl(dc) : dc.brand}</div><div class="m">${dc.exp ? `Test card · expires ${dc.exp}` : 'Test wallet'}</div></div>${ico('plus', 16)}</button>`).join('')}</div>
+    <div class="note">In production you enter your card in the payment provider’s secure form (PCI DSS). Kurazh receives only a token and never sees the card number. Demo: pick a test card.</div>`);
+}
+function renderCards() {
+  openPay(`${sheetHead('Your cards', 'Holds and charges go to the default card')}
+    <div class="list" style="margin-top:16px">${S.cards.map((c) => `<div class="row">${cardIcon(c)}<div class="grow"><div class="t">${cardLbl(c)}</div><div class="m">${c.exp ? `Expires ${c.exp}` : 'Wallet'}</div></div>
+      ${c === defCard() ? '<span class="st ok">DEFAULT</span>' : `<button class="btn sm ghost" data-def="${c.last4}">Use</button>`}<button class="x" data-rm="${c.last4}" aria-label="Remove card">${ico('x', 14)}</button></div>`).join('')}
+      ${S.cards.length < DEMO_CARDS.length ? `<button class="row" data-pay="link">${ico('plus', 20)}<div class="grow"><div class="t">Link another card</div></div></button>` : ''}</div>
+    ${payCtx?.st ? `<button class="btn gold block" data-pay="back" style="margin-top:16px">Continue to hold ${money(payCtx.amount)}</button>` : ''}`);
+}
+$('#pay').addEventListener('click', (e) => {
+  const t = e.target;
+  if (t.closest('[data-pclose], [data-close]')) { closePay(); return; }
+  const chip = t.closest('#p-amt .chip'); if (chip) { payCtx.amount = +chip.dataset.v; renderPay(); return; }
+  const link = t.closest('[data-link]');
+  if (link) {
+    const dc = DEMO_CARDS.find((x) => x.last4 === link.dataset.link);
+    S.cards.forEach((c) => (c.def = false)); S.cards.push({ ...dc, id: uid(), def: true }); save(); refreshBalance();
+    toast(`${cardLbl(dc)} linked`, 'ok');
+    if (payCtx?.st) renderPay(); else renderCards();
+    return;
+  }
+  const def = t.closest('[data-def]');
+  if (def) { S.cards.forEach((c) => (c.def = c.last4 === def.dataset.def)); save(); refreshBalance(); payCtx?.st ? renderPay() : renderCards(); return; }
+  const rm = t.closest('[data-rm]');
+  if (rm) {
+    const c = S.cards.find((x) => x.last4 === rm.dataset.rm);
+    if (S.backs.some((b) => b.status === 'held' && b.card === cardLbl(c))) { toast('This card has active holds. Remove it after they finish', 'bad'); return; }
+    S.cards = S.cards.filter((x) => x !== c); if (S.cards.length && !defCard().def) S.cards[0].def = true;
+    save(); refreshBalance(); if (S.cards.length) renderCards(); else if (payCtx?.st) renderLinkCard(); else closePay();
+    return;
+  }
+  const b = t.closest('[data-pay]'); if (!b) return;
+  const act = b.dataset.pay;
+  if (act === 'cards') renderCards();
+  else if (act === 'link') renderLinkCard();
+  else if (act === 'back') renderPay();
+  else if (act === 'go') {
+    const o = payCtx, c = defCard();
+    if (o.amount > CUR.holdLimit - heldToday()) { toast(`That would go over your daily hold limit of ${money(CUR.holdLimit)}`, 'bad'); return; }
+    b.disabled = true; b.textContent = 'Authorizing with your bank…';
+    setTimeout(() => {
+      const ok = o.onDone(o.amount, c);
+      closePay();
+      if (ok) { toast(`${money(o.amount)} held on ${cardLbl(c)}`, 'gold'); beep(880, 0.06); buzz(15); }
+    }, 1100);
+  }
+});
+function dareOpen(st, d) { return st.dares.includes(d) || (st.active?.d === d && st.active.phase === 'doing'); }
+function applyBack(st, d, amount, card) {
+  if (!dareOpen(st, d)) { toast('That dare has already finished, so nothing was held'); return false; }
+  addTx(-amount, `Hold · “${d.text}” · ${cardLbl(card)}`, 'hold');
+  if (!d.my) d.backers++;
+  d.pool += amount; d.my += amount;
+  const ex = myBacks(d.id)[0];
+  if (ex) ex.amount += amount;
+  else S.backs.unshift({ id: uid(), dareId: d.id, streamId: st.id, streamer: st.name, text: d.text, amount, status: 'held', t: Date.now(), mine: d.mine, card: cardLbl(card) });
+  S.stats.backed++; gainXp(5); save(); refreshBalance();
+  pushChat(st, { nick: S.user.nick, me: true, text: `+${money(amount)} on “${d.text}”` });
   return true;
 }
 
@@ -771,15 +912,19 @@ function makeBokeh(glow) {
   return Array.from({ length: 12 }, () => ({ x: Math.random(), y: rnd(0, 0.72), r: rnd(0.04, 0.13), c: pick(glow), a: rnd(0.07, 0.22), s: rnd(0.12, 0.45), p: rnd(0, 6.3) }));
 }
 const U = CUR.unit;
-function bankFor(cat) { return cat === 'adult' ? BANK.adult : [...(BANK[cat] || []), ...BANK.any]; }
+function bankFor(cat, themes = []) {
+  if (cat === 'adult') return BANK.adult;
+  const extra = [...(themes.some((t) => ['forest', 'mountains', 'outdoors'].includes(t)) ? BANK.forest : []), ...(isVehicle(themes) ? BANK.vehicle : [])];
+  return [...extra, ...(BANK[cat] || []), ...BANK.any];
+}
 function botDare(st) {
   const taken = new Set([...st.dares.map((d) => d.text), st.active?.d.text]);
-  const pool = bankFor(st.cat).filter(([t]) => !taken.has(t));
-  const [text, tag] = pick(pool.length ? pool : bankFor(st.cat));
-  return { id: uid(), text, tag, pool: ri(3, 30) * U * (st.mult || 1), backers: ri(1, 14), time: pick([30, 30, 60, 60, 120]), by: botNick(), mine: false, my: 0 };
+  const pool = bankFor(st.cat, st.themes).filter(([t]) => !taken.has(t));
+  const [text, tag] = pick(pool.length ? pool : bankFor(st.cat, st.themes));
+  return { id: uid(), text, tag, pool: Math.max(st.minDare || 0, ri(3, 30) * U * (st.mult || 1)), backers: ri(1, 14), time: pick([30, 30, 60, 60, 120]), by: botNick(), mine: false, my: 0 };
 }
 const streams = STREAMERS.map((m) => {
-  const st = { ...m, likes: ri(2000, 30000), dares: [], active: null, cooldown: ri(3, 9), chat: [], bokeh: makeBokeh(m.glow), liked: false };
+  const st = { ...m, likes: ri(2000, 30000), dares: [], active: null, cooldown: ri(3, 9), chat: [], bokeh: makeBokeh(m.glow), liked: false, moving: false, moveT: ri(20, 40) };
   for (let i = 0, n = ri(2, 4); i < n; i++) st.dares.push(botDare(st));
   if (Math.random() < 0.6) { const d = topDare(st); st.dares = st.dares.filter((x) => x !== d); st.active = { d, phase: 'doing', t: ri(10, d.time), total: d.time, yes: 0, no: 0, myVote: null }; }
   for (let i = 0; i < 5; i++) st.chat.push({ nick: botNick(), text: pick(st.cat === 'adult' ? CHAT.adultIdle : CHAT.idle) });
@@ -792,7 +937,7 @@ function pushChat(st, m) {
   st.chat.push(m); if (st.chat.length > 30) st.chat.shift();
   if (st === curStream() && cur === 'feed') renderChat(st);
 }
-function myBacks(dareId) { return S.backs.filter((b) => b.dareId === dareId && b.status === 'pending'); }
+function myBacks(dareId) { return S.backs.filter((b) => b.dareId === dareId && b.status === 'held'); }
 
 function startDare(st, d) {
   st.dares = st.dares.filter((x) => x !== d);
@@ -802,23 +947,23 @@ function startDare(st, d) {
 }
 function declineDare(st, d) {
   st.dares = st.dares.filter((x) => x !== d);
-  pushChat(st, { sys: true, text: `${st.name} passed on “${d.text}”. Backers were refunded.` });
+  pushChat(st, { sys: true, text: `${st.name} passed on “${d.text}”. All holds were released.` });
   settle(d, false, st, 'the streamer passed');
 }
 function settle(d, success, st, why) {
   const mine = myBacks(d.id);
   if (!mine.length) return;
-  const sum = mine.reduce((a, b) => a + b.amount, 0);
-  for (const b of mine) b.status = success ? 'paid' : 'refunded';
-  if (success) { S.stats.won++; gainXp(20); toast(`Counted. Your ${money(sum)} went to ${st.name}`, 'ok'); }
-  else { S.stats.refunded++; addTx(sum, `Refund (${why}): “${d.text}”`); toast(`Refunded ${money(sum)} · ${why}`); }
+  const sum = mine.reduce((a, b) => a + b.amount, 0), card = mine[0].card;
+  for (const b of mine) { b.status = success ? 'captured' : 'released'; b.done = Date.now(); }
+  if (success) { S.stats.won++; gainXp(20); addTx(-sum, `Charged · “${d.text}” → ${st.name} · ${card}`, 'charge'); toast(`It counted. ${money(sum)} charged to ${card}`, 'ok'); }
+  else { S.stats.refunded++; addTx(sum, `Released · “${d.text}” (${why})`, 'release'); toast(`Hold of ${money(sum)} released · ${why}`); }
   save();
 }
 function finishVote(st) {
   const a = st.active, total = a.yes + a.no;
   a.success = total > 0 && a.yes / total >= PASS;
   a.phase = 'result'; a.t = 5;
-  pushChat(st, { sys: true, text: a.success ? `Counted (${Math.round((a.yes / total) * 100)}%) · ${money(a.d.pool)} goes to the streamer` : `Not counted · ${money(a.d.pool)} goes back to backers` });
+  pushChat(st, { sys: true, text: a.success ? `Counted (${Math.round((a.yes / total) * 100)}%) · ${money(a.d.pool)} goes to the streamer` : `Not counted · holds of ${money(a.d.pool)} released` });
   const involved = a.d.my > 0 || a.myVote !== null;
   settle(a.d, a.success, st, 'not counted');
   if (st === curStream() && cur === 'feed') { if (a.success) { if (involved) goldDust(); chime(); } else beep(220, 0.25, 'triangle'); }
@@ -835,7 +980,12 @@ function tickStream(st, visible) {
   const m = (st.mult || 1) * U;
   if (st.dares.length && Math.random() < 0.35) { const d = pick(st.dares); d.pool += pick([1, 2, 5, 5, 10]) * m; d.backers++; }
   for (const d of st.dares) if (d.mine && Math.random() < 0.3) { d.pool += pick([1, 2, 5, 10]) * m; d.backers++; }
+  if (isVehicle(st.themes) && !a && --st.moveT <= 0) {
+    st.moving = !st.moving; st.moveT = st.moving ? ri(20, 35) : ri(35, 60);
+    pushChat(st, { sys: true, text: st.moving ? `${st.themes.includes('racing') ? 'Back on track' : 'Driving'} · dares paused until the next stop` : `${st.themes.includes('racing') ? 'In the pit lane' : 'Stopped'} · dares are back on` });
+  }
   if (!a) {
+    if (st.moving) return;
     if (--st.cooldown > 0 || !st.dares.length) return;
     const top = topDare(st);
     if (top.pool < 6 * m) { st.cooldown = 3; return; }
@@ -858,32 +1008,23 @@ function tickStream(st, visible) {
 }
 
 /* ═════════ viewer actions ═════════ */
-function backDare(st, d, amount) {
-  if (needKyc('back dares')) return false;
-  if (needMoney(amount)) return false;
-  addTx(-amount, `Into the pot: “${d.text}” · ${st.name}`);
-  if (!d.my) d.backers++;
-  d.pool += amount; d.my += amount;
-  const ex = myBacks(d.id)[0];
-  if (ex) ex.amount += amount;
-  else S.backs.unshift({ id: uid(), dareId: d.id, streamId: st.id, streamer: st.name, text: d.text, amount, status: 'pending', t: Date.now(), mine: d.mine });
-  S.stats.backed++; gainXp(5); save();
-  pushChat(st, { nick: S.user.nick, me: true, text: `+${money(amount)} on “${d.text}”` });
-  beep(880, 0.06); buzz(15);
-  return true;
+function backDare(st, d, amount, after) {
+  requestHold({ st, what: `“${d.text}”`, amount, amounts: [...new Set([...CUR.back, amount])].sort((x, y) => x - y),
+    onDone: (amt, card) => { const ok = applyBack(st, d, amt, card); if (ok) after?.(); return ok; } });
 }
-function proposeDare(st, text, amount, time) {
+function proposeDare(st, text, amount, time, after) {
   const r = Safety.check(text, modeOf(st.cat));
-  if (!r.ok) { toast(`${r.cat}. ${r.hint}`, 'bad'); return false; }
-  if (needKyc('suggest dares')) return false;
-  if (needMoney(amount)) return false;
-  const d = { id: uid(), text: text.trim().replace(/\s+/g, ' '), tag: 'talk', pool: 0, backers: 0, time, by: S.user.nick, mine: true, my: 0 };
-  st.dares.push(d);
-  backDare(st, d, amount);
-  S.stats.proposed++; gainXp(10); save();
-  pushChat(st, { sys: true, text: `New dare from ${S.user.nick}: “${d.text}” · ${money(d.pool)}` });
-  toast('Dare sent. A bigger pot means a better chance', 'gold');
-  return true;
+  if (!r.ok) { toast(`${r.cat}. ${r.hint}`, 'bad'); return; }
+  if (amount < (st.minDare || 0)) { toast(`${st.name} takes dares from ${money(st.minDare)}`, 'bad'); return; }
+  const clean = text.trim().replace(/\s+/g, ' ');
+  requestHold({ st, what: `New dare “${clean}”`, amount, amounts: null, onDone: (amt, card) => {
+    const d = { id: uid(), text: clean, tag: 'talk', pool: 0, backers: 0, time, by: S.user.nick, mine: true, my: 0 };
+    st.dares.push(d);
+    applyBack(st, d, amt, card);
+    S.stats.proposed++; gainXp(10); save();
+    pushChat(st, { sys: true, text: `New dare from ${S.user.nick}: “${d.text}” · ${money(d.pool)}` });
+    after?.(); return true;
+  } });
 }
 function vote(st, yes) {
   const a = st.active;
@@ -895,9 +1036,23 @@ function vote(st, yes) {
 
 /* ═════════ feed ═════════ */
 const feedEl = $('#feed');
-let feedCat = 'all', feedList = [], curIdx = 0, io = null;
+let feedCat = 'all', feedList = [], curIdx = 0, io = null, feedThemes = [], feedMax = 0;
 const curStream = () => feedList[curIdx];
 const avaHTML = (st, size) => `<div class="ava ${st.cat === 'adult' ? 'adult-ava' : ''}"${size ? ` style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.46)}px"` : ''}>${esc(st.name[0].toUpperCase())}</div>`;
+function openFilters() {
+  let th = [...feedThemes], mx = feedMax;
+  const body = openSheet(`${sheetHead('Stream filters', 'What streamers are doing, and how much a dare costs')}
+    <div class="field"><span>Setting</span><div class="chips" id="ft">${Object.entries(THEMES).map(([k, v]) => `<button class="chip ${th.includes(k) ? 'on' : ''}" data-t="${k}">${v}</button>`).join('')}</div></div>
+    <div class="field"><span>Minimum stake</span><div class="chips" id="fm">${[0, CUR.dare[0], CUR.dare[1], CUR.dare[2]].map((v) => `<button class="chip money ${v === mx ? 'on' : ''}" data-m="${v}">${v ? `Up to ${money(v)}` : 'Any'}</button>`).join('')}</div></div>
+    <div class="wbtns" style="margin-top:20px"><button class="btn ghost" id="f-clear">Clear</button><button class="btn gold" id="f-apply">Show streams</button></div>`, { type: 'filters' });
+  body.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-t]'); if (t) { const k = t.dataset.t; th = th.includes(k) ? th.filter((x) => x !== k) : [...th, k]; t.classList.toggle('on'); return; }
+    const m = e.target.closest('[data-m]'); if (m) { mx = +m.dataset.m; $$('#fm .chip', body).forEach((c) => c.classList.toggle('on', c === m)); return; }
+    if (e.target.closest('#f-clear')) { th = []; mx = 0; $$('.chip', body).forEach((c) => c.classList.toggle('on', c.dataset.m === '0')); return; }
+    if (e.target.closest('#f-apply')) { feedThemes = th; feedMax = mx; closeSheet(); buildFeed(); }
+  });
+}
+$('#fbtn').addEventListener('click', openFilters);
 function renderCats() {
   $('#cats').innerHTML = Object.entries(CATS).map(([k, v]) => {
     if (k === 'adult') return `<button class="chip x18 ${feedCat === k ? 'on' : ''}" data-cat="adult">${adultOn() ? '' : ico('lock', 13)}18+</button>`;
@@ -923,6 +1078,7 @@ function cardHTML(st) {
     </div>
     <div class="banner" data-el="banner"></div>
     <div class="c-bottom">
+      <div class="c-tags">${(st.themes || []).map((t) => `<span>${THEMES[t]}</span>`).join('')}<span class="min">Dares from ${money(st.minDare || 1)}</span></div>
       <div class="c-title">${esc(st.title)}</div>
       <div class="chat" data-el="chat"></div>
       <form class="say" data-act="say"><input enterkeyhint="send" maxlength="120" placeholder="Say something" aria-label="Chat message" /><button aria-label="Send">${ico('send', 18)}</button></form>
@@ -935,11 +1091,16 @@ function cardHTML(st) {
     </div>
   </article>`;
 }
-function bannerKey(st) { const a = st.active; return a ? `${a.phase}:${a.d.id}:${a.myVote}` : `idle:${topDare(st)?.id || ''}`; }
+function bannerKey(st) { const a = st.active; return a ? `${a.phase}:${a.d.id}:${a.myVote}` : `idle:${st.moving ? 'm' : ''}${topDare(st)?.id || ''}`; }
 function bannerHTML(st) {
   const a = st.active;
   if (!a) {
     const top = topDare(st);
+    if (st.moving) {
+      return `<div class="bn idle"><div class="bn-row"><span class="tag">${ico('pause', 13)}${st.themes.includes('racing') ? 'On track' : 'Driving'} · dares paused</span><span>queued <b data-k="q">${st.dares.length}</b></span></div>
+        <div class="bn-text">Dares resume at the next stop. Kurazh never runs dares while a vehicle is moving.</div>
+        <button class="btn sm gold" data-act="dares">${ico('target', 16)}Queue a dare</button></div>`;
+    }
     return `<div class="bn idle"><div class="bn-row"><span class="tag">Picking the next dare</span><span>queued <b data-k="q">${st.dares.length}</b></span></div>
       ${top ? `<div class="bn-text">Leading: “${esc(top.text)}” · <span class="money" data-k="tp">${money(top.pool)}</span></div>` : ''}
       <button class="btn sm gold" data-act="dares">${ico('target', 16)}Suggest a dare</button></div>`;
@@ -987,10 +1148,13 @@ function renderChat(st) {
   if (card) card.querySelector('[data-el="chat"]').innerHTML = chatHTML(st.chat.slice(-8));
 }
 function buildFeed() {
-  feedList = streams.filter((s) => (feedCat === 'all' ? s.cat !== 'adult' : s.cat === feedCat));
+  feedList = streams.filter((s) => (feedCat === 'all' ? s.cat !== 'adult' : s.cat === feedCat)
+    && (!feedThemes.length || (s.themes || []).some((t) => feedThemes.includes(t))) && (!feedMax || (s.minDare || 0) <= feedMax));
+  const n = feedThemes.length + (feedMax ? 1 : 0);
+  $('#fbtn').innerHTML = `${ico('sliders', 16)}${n ? `<b>${n}</b>` : ''}`; $('#fbtn').classList.toggle('on', !!n);
   if (io) io.disconnect();
   curIdx = 0; feedEl.scrollTop = 0;
-  if (!feedList.length) { feedEl.innerHTML = `<div class="empty-feed"><div><h2>Quiet right now</h2><p style="margin-top:8px">Nobody is live in ${CATS[feedCat]}. Try All.</p></div></div>`; return; }
+  if (!feedList.length) { feedEl.innerHTML = `<div class="empty-feed"><div><h2>Quiet right now</h2><p style="margin-top:8px">No live streams match ${feedThemes.length || feedMax ? 'these filters' : CATS[feedCat]}. Try All or clear the filters.</p></div></div>`; return; }
   feedEl.innerHTML = feedList.map(cardHTML).join('');
   feedList.forEach((st) => { updateCard(st, true); renderChat(st); });
   io = new IntersectionObserver((ents) => {
@@ -1005,7 +1169,7 @@ feedEl.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-act]'); if (!btn || btn.tagName === 'FORM') return;
   const st = byId(e.target.closest('.card').dataset.id), act = btn.dataset.act;
   if (act === 'dares') openDares(st);
-  else if (act === 'boost' && st.active) { backDare(st, st.active.d, CUR.boost) && updateCard(st, true); }
+  else if (act === 'boost' && st.active) backDare(st, st.active.d, CUR.boost, () => updateCard(st, true));
   else if (act === 'yes' || act === 'no') vote(st, act === 'yes');
   else if (act === 'like') like(st, btn);
   else if (act === 'follow') {
@@ -1049,9 +1213,11 @@ const chipRow = (id, vals, on, label, cls = '') => `<div class="chips" id="${id}
 
 function openDares(st) {
   const mode = modeOf(st.cat), m = st.mult || 1;
-  const ideas = [...bankFor(st.cat)].sort(() => Math.random() - 0.5).slice(0, 6);
-  const amounts = CUR.dare.map((v) => v * (m > 1 ? 2 : 1));
-  const body = openSheet(`${sheetHead(`Dares · ${esc(st.name)}`, 'Money waits in the dare’s pot and goes to the streamer only once it counts')}
+  const ideas = [...bankFor(st.cat, st.themes)].sort(() => Math.random() - 0.5).slice(0, 6);
+  const mn = st.minDare || 0;
+  let amounts = CUR.dare.map((v) => v * (m > 1 ? 2 : 1)).filter((v) => v >= mn);
+  if (amounts.length < 3) amounts = [mn, mn * 2, mn * 5, mn * 10];
+  const body = openSheet(`${sheetHead(`Dares · ${esc(st.name)}`, `New dares from ${money(mn || 1)}. Your stake is frozen on your card and charged only if the dare counts`)}
     <div id="d-active" style="margin-top:14px"></div>
     <div class="bn-row" style="margin:16px 0 9px"><span class="tag">Queue</span>${chipRow('d-amt', CUR.back, CUR.back[1], (v) => `+${money(v)}`, 'money')}</div>
     <div class="list" id="d-list"></div>
@@ -1060,10 +1226,10 @@ function openDares(st) {
       <textarea class="inp" id="d-text" maxlength="140" placeholder="${mode === 'adult' ? 'e.g. A slow dance to your favourite song' : 'e.g. Sing a verse like an opera star'}"></textarea>
       <div class="ideas">${ideas.map(([t]) => `<button type="button" data-idea="${esc(t)}">${esc(t)}</button>`).join('')}</div>
       <div class="safe-hint" id="d-hint">${ico('shield', 14)}Every dare goes through the safety filter</div>
-      <div class="field"><span>Your stake</span>${chipRow('d-pool', amounts, amounts[1], money, 'money')}</div>
+      <div class="field"><span>Your stake</span>${chipRow('d-pool', amounts, amounts[1] ?? amounts[0], money, 'money')}</div>
       <div class="field"><span>Time limit</span>${chipRow('d-time', [30, 60, 120, 300], 60, durLabel)}</div>
-      <button class="btn gold block" style="margin-top:20px" id="d-send">Suggest for ${money(amounts[1])}</button>
-      <div class="muted small" style="margin-top:10px;text-align:center">Balance <b data-bal>${money(S.balance)}</b>. If the streamer passes or the dare doesn't count, you get your money back.</div>
+      <button class="btn gold block" style="margin-top:20px" id="d-send">Suggest for ${money(amounts[1] ?? amounts[0])}</button>
+      <div class="muted small" style="margin-top:10px;text-align:center">Paid by card: the amount is frozen now and charged only if the dare counts.</div>
     </form>`, { type: 'dares', id: st.id, sig: '' });
   const val = (sel) => +body.querySelector(`${sel} .chip.on`).dataset.v;
   const upd = () => {
@@ -1081,13 +1247,13 @@ function openDares(st) {
     const b = e.target.closest('[data-back]');
     if (b) {
       const s = byId(sheetCtx.id), d = b.dataset.back === 'active' ? s.active?.d : s.dares.find((x) => x.id === b.dataset.back);
-      if (d && backDare(s, d, val('#d-amt'))) { renderDaresSheet(true); updateCard(s, true); }
+      if (d) backDare(s, d, val('#d-amt'), () => { renderDaresSheet(true); updateCard(s, true); });
     }
   });
   $('#d-text').addEventListener('input', upd);
   $('#d-form').addEventListener('submit', (e) => {
     e.preventDefault();
-    if (proposeDare(st, $('#d-text').value, val('#d-pool'), val('#d-time'))) { $('#d-text').value = ''; upd(); renderDaresSheet(true); updateCard(st, true); }
+    proposeDare(st, $('#d-text').value, val('#d-pool'), val('#d-time'), () => { $('#d-text').value = ''; upd(); renderDaresSheet(true); updateCard(st, true); });
   });
   renderDaresSheet(true);
 }
@@ -1128,7 +1294,7 @@ function openRules() {
   openSheet(`${sheetHead('Rules & safety')}<ol class="rules" style="margin-top:16px">
     <li><b>Banned everywhere:</b> anything dangerous to life or health, alcohol and drugs, theft and vandalism, touching strangers without consent, sharing personal data, humiliation and bullying.</li>
     <li>Every dare, message and nickname goes through the <b>safety filter</b>. Streamers choose which dares they accept and can decline any of them without penalty.</li>
-    <li><b>Real money, no tokens.</b> It waits in the dare’s pot and goes to the streamer only if at least ${PASS * 100}% of viewers vote that it counts. A pass, a timeout or a “no” means a full refund.</li>
+    <li><b>Paid by card, no tokens.</b> Your stake is frozen on your card and charged only if at least ${PASS * 100}% of viewers vote that the dare counts. A pass, a timeout or a “no” releases the hold in full.</li>
     <li>Streamers receive the pot minus a ${FEE * 100}% fee. Withdrawals to a card need identity verification.</li>
   </ol>
   <h3>18+ section</h3>
@@ -1140,17 +1306,6 @@ function openRules() {
     <li>Recording or sharing streams without the streamer’s consent is banned.</li>
   </ol>
   <div class="note">Demo version: other streams are simulated, the money is practice money, and no real payments happen.</div>`, { type: 'rules' });
-}
-function openTopup() {
-  if (needKyc('add funds')) return;
-  const body = openSheet(`${sheetHead('Add funds', 'Credited one to one, with no bonuses or exchange rates')}
-    <div class="packs">${CUR.packs.map((n) => `<button class="pack" data-pack="${n}"><b>${money(n)}</b><span>card, Apple Pay or Google Pay</span></button>`).join('')}</div>
-    <div class="note">Demo: the payment is simulated and nothing is charged. In production a licensed payment provider handles it, and the app never sees card details.</div>`, { type: 'topup' });
-  body.addEventListener('click', (e) => {
-    const p = e.target.closest('[data-pack]'); if (!p || p.disabled) return;
-    p.disabled = true; p.querySelector('span').textContent = 'Processing…';
-    setTimeout(() => { addTx(+p.dataset.pack, 'Top-up (demo)'); closeSheet(); toast(`${money(+p.dataset.pack)} added`, 'ok'); chime(); }, 900);
-  });
 }
 function openVerify(next) {
   if (S.verified) { next?.(); return; }
@@ -1179,29 +1334,25 @@ function requireAdult(next) {
 }
 function openWithdraw() {
   if (!S.verified) { openVerify(openWithdraw); return; }
+  if (!defCard()) { payCtx = null; renderLinkCard(); toast('Link a card to receive payouts'); return; }
+  const card = cardLbl(defCard());
   if (S.earnings < CUR.minPayout) { toast(`Withdrawals start at ${money(CUR.minPayout)}. Available now: ${money(S.earnings)}`); return; }
   const all = Math.floor(S.earnings);
   const opts = [...new Set([CUR.minPayout, CUR.minPayout * 2.5, CUR.minPayout * 10].filter((v) => v < all).concat([all]))];
   const body = openSheet(`${sheetHead('Withdraw to card', `Available ${money(S.earnings)}`)}
     <div class="field"><span>Amount</span>${chipRow('w-amt', opts, all, (v) => (v === all ? `All · ${money(v)}` : money(v)), 'money')}</div>
-    <div class="field"><span>To</span><div class="row">${ico('card', 22)}<div class="grow"><div class="t">Demo card •• 0000</div><div class="m">No fee · 1–2 business days</div></div></div></div>
+    <div class="field"><span>To</span><div class="row">${ico('card', 22)}<div class="grow"><div class="t">${card}</div><div class="m">No fee · 1–2 business days</div></div></div></div>
     <button class="btn gold block" style="margin-top:18px" id="w-go">Withdraw</button>
     <div class="note">Demo: no money is sent anywhere. In production a payout partner handles it and takes care of tax reporting.</div>`, { type: 'withdraw' });
   const val = () => +body.querySelector('#w-amt .chip.on').dataset.v;
   body.addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) c.parentElement.querySelectorAll('.chip').forEach((x) => x.classList.toggle('on', x === c)); });
   $('#w-go').addEventListener('click', () => {
     const amt = Math.min(val(), all);
-    const p = { id: uid(), t: Date.now(), amount: amt, status: 'pending' };
-    S.payouts.unshift(p); addTx(-amt, 'Withdrawal to card •• 0000', 'earn');
+    const p = { id: uid(), t: Date.now(), amount: amt, status: 'pending', card };
+    S.payouts.unshift(p); addTx(-amt, `Payout to ${card}`, 'payout');
     closeSheet(); toast(`Withdrawal of ${money(amt)} requested`, 'ok');
     setTimeout(() => { p.status = 'paid'; save(); if (cur === 'wallet') renderWallet(); }, 6000);
   });
-}
-function transferEarnings() {
-  if (S.earnings <= 0) return toast('Nothing to move yet');
-  const amt = S.earnings;
-  addTx(-amt, 'Moved to main balance', 'earn'); addTx(amt, 'Moved from earnings');
-  toast(`${money(amt)} moved to your balance`, 'ok');
 }
 
 /* ═════════ top dares tab ═════════ */
@@ -1226,7 +1377,7 @@ function renderTop(force) {
     if (!force && msig === topSig) return;
     topSig = msig;
     list.innerHTML = S.backs.length ? S.backs.map((b) => {
-      const [cls, lbl] = { pending: ['q', 'IN THE POT'], paid: ['ok', 'COUNTED'], refunded: ['back', 'REFUNDED'] }[b.status];
+      const [cls, lbl] = { held: ['go', 'HELD'], captured: ['ok', 'CHARGED'], released: ['back', 'RELEASED'] }[b.status] || ['q', b.status];
       return `<button class="row" data-go="${b.streamId}"><div class="grow"><div class="t">${esc(b.text)}</div><div class="m"><span class="st ${cls}">${lbl}</span>${b.mine ? '<span class="st mine">YOURS</span>' : ''}${esc(b.streamer)} · ${ago(b.t)}</div></div><div class="amt money">${money(b.amount)}</div></button>`;
     }).join('') : `<div class="empty"><div class="ring">${ico('target', 24)}</div>You haven't backed any dares yet.<br>Open a stream and tap Dares.</div>`;
     return;
@@ -1263,29 +1414,35 @@ function goToStream(id, sheet) {
 }
 
 /* ═════════ wallet & profile ═════════ */
+const TXK = { hold: ['HELD', 'go', 'var(--cash)'], charge: ['CHARGED', 'q', 'var(--van)'], release: ['RELEASED', 'ok', 'var(--ok)'], earn: ['EARNED', 'ok', 'var(--ok)'], payout: ['PAYOUT', 'back', 'var(--van)'] };
 function renderWallet() {
-  const pend = S.backs.filter((b) => b.status === 'pending').reduce((a, b) => a + b.amount, 0);
+  const held = heldNow(), active = S.backs.filter((b) => b.status === 'held');
   $('#wallet').innerHTML = `<h1>Wallet</h1>
-    <div class="acct"><div class="lbl">Balance</div><div class="sum num">${money(S.balance)}</div>
-      <div class="hint">For dares and backing streamers${pend ? ` · another ${money(pend)} is waiting in dare pots` : ''}</div>
-      <div class="wbtns"><button class="btn gold" data-w="top">${ico('plus', 18)}Add funds</button><button class="btn ghost" data-w="rules">How it works</button></div></div>
+    <div class="acct"><div class="lbl">On hold now</div><div class="sum num">${money(held)}</div>
+      <div class="hint">${active.length ? `Frozen on your card across ${active.length} dare${active.length > 1 ? 's' : ''}. Charged only if they count.` : 'Nothing is frozen. When you back a dare, the amount is held on your card until the result.'}</div>
+      <div class="wbtns"><button class="btn gold" data-w="cards">${ico('card', 18)}${S.cards.length ? 'Cards' : 'Link a card'}</button><button class="btn ghost" data-w="rules">How it works</button></div></div>
+    ${active.length ? `<div class="list" style="margin-top:8px">${active.map((b) => `<button class="row" data-go="${b.streamId}"><span class="lockic">${ico('lock', 16)}</span><div class="grow"><div class="t">${esc(b.text)}</div><div class="m">${esc(b.streamer)} · ${esc(b.card || '')} · ${ago(b.t)}</div></div><div class="amt money">${money(b.amount)}</div></button>`).join('')}</div>` : ''}
     <div class="acct dark"><div class="lbl">Stream earnings</div><div class="sum num">${money(S.earnings)}</div>
-      <div class="hint">After the ${FEE * 100}% fee · withdraw from ${money(CUR.minPayout)}${S.verified ? '' : ' once your identity is verified'}</div>
-      <div class="wbtns"><button class="btn green" data-w="out">${ico('card', 18)}Withdraw</button><button class="btn ghost" data-w="move">${ico('transfer', 18)}To balance</button></div></div>
-    <h3>How money works</h3>
+      <div class="hint">After the ${FEE * 100}% fee · paid out to your card from ${money(CUR.minPayout)}${S.verified ? '' : ' once your identity is verified'}</div>
+      <button class="btn green block" data-w="out" style="position:relative;z-index:1">${ico('card', 18)}Withdraw</button></div>
+    <h3>How payments work</h3>
     <div class="facts">
-      <div>${ico('coins', 18)}<span><b>Real money, no tokens.</b> Top-ups are credited one to one, with no in-app currency or exchange rate.</span></div>
-      <div>${ico('vote', 18)}<span><b>The dare’s pot.</b> Money waits while viewers vote. If it counts, the streamer gets it.</span></div>
-      <div>${ico('undo', 18)}<span><b>Full refund</b> if the streamer passes, runs out of time, or the dare doesn’t count.</span></div>
-      <div>${ico('percent', 18)}<span><b>${FEE * 100}% fee</b> on completed dares only, paid on the streamer’s side.</span></div>
+      <div>${ico('card', 18)}<span><b>Straight from your card.</b> No top-ups, no balance, no tokens.</span></div>
+      <div>${ico('lock', 18)}<span><b>Held, not charged.</b> When you back a dare, that amount is frozen on your card while the dare runs.</span></div>
+      <div>${ico('check', 18)}<span><b>Charged only if it counts</b> (at least ${PASS * 100}% yes). Then it goes to the streamer.</span></div>
+      <div>${ico('undo', 18)}<span><b>Released in full</b> if the streamer passes, runs out of time, or the dare doesn’t count.</span></div>
+      <div>${ico('percent', 18)}<span><b>${FEE * 100}% fee</b> only on completed dares, paid on the streamer’s side.</span></div>
     </div>
-    ${S.payouts.length ? `<h3>Withdrawals</h3><div class="list">${S.payouts.map((p) => `<div class="row">${ico('card', 20)}<div class="grow"><div class="t">${money(p.amount)} to card •• 0000</div><div class="m">${ago(p.t)}</div></div><span class="st ${p.status === 'paid' ? 'ok' : 'q'}">${p.status === 'paid' ? 'PAID' : 'PROCESSING'}</span></div>`).join('')}</div>` : ''}
+    ${S.payouts.length ? `<h3>Payouts</h3><div class="list">${S.payouts.map((p) => `<div class="row">${ico('card', 20)}<div class="grow"><div class="t">${money(p.amount)} to ${esc(p.card || 'card')}</div><div class="m">${ago(p.t)}</div></div><span class="st ${p.status === 'paid' ? 'ok' : 'q'}">${p.status === 'paid' ? 'PAID' : 'PROCESSING'}</span></div>`).join('')}</div>` : ''}
     <h3>History</h3>
-    <div class="list">${S.tx.map((t) => `<div class="row"><div class="grow"><div class="t" style="font-weight:500;font-size:14px">${esc(t.title)}</div><div class="m">${ago(t.t)}${t.acc === 'earn' ? ' · <span class="gold">earnings</span>' : ''}</div></div><div class="amt num" style="font-weight:700;color:${t.amount > 0 ? 'var(--ok)' : 'var(--van)'}">${t.amount > 0 ? '+' : ''}${money(t.amount)}</div></div>`).join('')}</div>`;
+    <div class="list">${S.tx.length ? S.tx.map((t) => { const [lbl, cls, col] = TXK[t.kind] || ['', 'q', 'var(--van)']; return `<div class="row"><div class="grow"><div class="t" style="font-weight:500;font-size:14px">${esc(t.title)}</div><div class="m"><span class="st ${cls}">${lbl}</span>${ago(t.t)}</div></div><div class="amt num" style="font-weight:700;color:${col}">${t.kind === 'earn' ? '+' : t.kind === 'release' || t.kind === 'hold' ? '' : '−'}${money(Math.abs(t.amount))}</div></div>`; }).join('')
+      : '<div class="empty" style="padding:24px">No activity yet</div>'}</div>`;
 }
 $('#wallet').addEventListener('click', (e) => {
+  const g = e.target.closest('[data-go]'); if (g) { goToStream(g.dataset.go, false); return; }
   const b = e.target.closest('[data-w]'); if (!b) return;
-  ({ top: openTopup, out: openWithdraw, move: transferEarnings, rules: openRules })[b.dataset.w]();
+  if (b.dataset.w === 'cards') { payCtx = null; S.cards.length ? renderCards() : renderLinkCard(); }
+  else ({ out: openWithdraw, rules: openRules })[b.dataset.w]();
 });
 function renderProfile() {
   const u = S.user || { nick: 'guest' }, l = level(S.xp), lo = lvlFloor(l), hi = lvlFloor(l + 1);
@@ -1346,15 +1503,19 @@ window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); defe
 function refreshViews() { renderCats(); if (cur === 'profile') renderProfile(); if (cur === 'wallet') renderWallet(); if (cur === 'live' && !L.on) renderSetup(); if (cur === 'top') renderTop(true); }
 
 /* ═════════ go live (streamer mode) ═════════ */
-const L = { on: false, cat: 'talk', allow: { phys: true, people: true, food: true, creative: true, talk: true, look: true }, minPool: CUR.liveMin[0], agree: false, adultOk: false, facing: 'user' };
+const L = { on: false, cat: 'talk', allow: { phys: true, people: true, food: true, creative: true, talk: true, look: true }, minPool: CUR.liveMin[0], agree: false, adultOk: false, driveOk: false, themes: [], driving: false, facing: 'user' };
 const liveTags = () => (L.cat === 'adult' ? ['look', 'creative', 'talk'] : ['phys', 'people', 'food', 'creative', 'talk']);
 function renderSetup() {
   $('#lv-cat').innerHTML = Object.entries(CATS).filter(([k]) => k !== 'all').map(([k, v]) =>
     `<button class="chip ${k === L.cat ? 'on' : ''}" data-v="${k}">${k === 'adult' && !S.verified ? ico('lock', 13) : ''}${v}</button>`).join('');
   $('#lv-allow').innerHTML = liveTags().map((k) => `<button class="chip ${L.allow[k] ? 'on' : ''}" data-v="${k}">${TAGS[k]}</button>`).join('');
   const mins = L.cat === 'adult' ? CUR.liveMinAdult : CUR.liveMin;
-  if (!mins.includes(L.minPool)) L.minPool = mins[0];
+  if (!L.minCustom && !mins.includes(L.minPool)) L.minPool = mins[0];
   $('#lv-min').innerHTML = mins.map((v) => `<button class="chip money ${v === L.minPool ? 'on' : ''}" data-v="${v}">from ${money(v)}</button>`).join('');
+  $('#lv-themes').innerHTML = Object.entries(THEMES).map(([k, v]) => `<button class="chip ${L.themes.includes(k) ? 'on' : ''}" data-v="${k}">${v}</button>`).join('');
+  const veh = isVehicle(L.themes) && L.cat !== 'adult';
+  $('#lv-vsafe').hidden = !veh; $('#lv-drive').hidden = !veh; $('#lv-drive').classList.toggle('on', L.driveOk);
+  $('#lv-vsafe').innerHTML = `${ico('wheel', 18)}<span><b>Vehicle safety is on.</b> Dares pause automatically while you drive and you can only accept them when stopped. Dares about speed, overtaking, phones at the wheel or street racing are blocked.</span>`;
   $('#lv-agree').classList.toggle('on', L.agree);
   $('#lv-adult').hidden = L.cat !== 'adult';
   $('#lv-adult').classList.toggle('on', L.adultOk);
@@ -1364,7 +1525,21 @@ $('#lv-cat').addEventListener('click', (e) => {
   if (c.dataset.v === 'adult' && !S.verified) { openVerify(() => { L.cat = 'adult'; renderSetup(); }); return; }
   L.cat = c.dataset.v; renderSetup();
 });
-$('#lv-min').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) { L.minPool = +c.dataset.v; renderSetup(); } });
+$('#lv-min').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) { L.minPool = +c.dataset.v; L.minCustom = false; $('#lv-min-custom').value = ''; renderSetup(); } });
+$('#lv-min-custom').addEventListener('input', (e) => {
+  const v = Math.round(+e.target.value);
+  if (v >= 1) { L.minPool = Math.min(v, CUR.holdLimit); L.minCustom = true; $$('#lv-min .chip').forEach((c) => c.classList.remove('on')); }
+  else { L.minCustom = false; renderSetup(); }
+});
+$('#lv-themes').addEventListener('click', (e) => {
+  const c = e.target.closest('.chip'); if (!c) return;
+  const k = c.dataset.v;
+  if (L.themes.includes(k)) L.themes = L.themes.filter((x) => x !== k);
+  else if (L.themes.length >= 3) { toast('Pick up to 3'); return; }
+  else L.themes = [...L.themes, k];
+  renderSetup();
+});
+$('#lv-drive').addEventListener('click', () => { L.driveOk = !L.driveOk; renderSetup(); });
 $('#lv-allow').addEventListener('click', (e) => {
   const c = e.target.closest('.chip'); if (!c) return;
   L.allow[c.dataset.v] = !L.allow[c.dataset.v];
@@ -1394,13 +1569,15 @@ async function startLive() {
   if (needKyc('go live')) return;
   if (L.cat === 'adult' && !S.verified) { openVerify(); return; }
   if (L.cat === 'adult' && !L.adultOk) { toast('Confirm the 18+ stream conditions', 'bad'); return; }
+  if (isVehicle(L.themes) && L.cat !== 'adult' && !L.driveOk) { toast('Confirm the vehicle safety rule', 'bad'); return; }
   if (!L.agree) { toast('Please accept the safety rules', 'bad'); $('#lv-agree').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
   const title = $('#lv-title').value.trim() || `${S.user.nick} is live`;
   if (!Safety.scan(title, modeOf(L.cat)).ok) { toast("That title didn't pass the safety filter", 'bad'); return; }
   const glow = L.cat === 'adult' ? ['#b8975a', '#7e2b25', '#c8b69a'] : ['#b8975a', '#c8b69a', '#3c5c49'];
-  Object.assign(L, { on: true, title, sec: 0, viewers: ri(3, 12), earned: 0, done: 0, filtered: 0, incoming: [], active: null, chat: [], peak: 0,
+  Object.assign(L, { on: true, driving: false, title, sec: 0, viewers: ri(3, 12), earned: 0, done: 0, filtered: 0, incoming: [], active: null, chat: [], peak: 0,
     fake: { pal: L.cat === 'adult' ? ['#2a1513', '#050404'] : ['#1f3a2c', '#060807'], glow, bokeh: makeBokeh(glow) } });
   $('#live-setup').hidden = true; $('#live-view').hidden = false; document.body.classList.add('is-live');
+  $('#lv-drivebtn').hidden = !isVehicle(L.themes) || L.cat === 'adult'; renderDriveBtn();
   renderLiveActive(true); renderIncoming(true); renderLiveChat(); renderLiveTop();
   const ok = await startCam();
   liveChat({ sys: true, text: ok ? 'You’re live. Viewers are joining…' : 'Camera unavailable, streaming with a cover screen' });
@@ -1423,6 +1600,16 @@ function endLive() {
 $('#lv-end').addEventListener('click', endLive);
 $('#lv-flip').addEventListener('click', async () => { L.facing = L.facing === 'user' ? 'environment' : 'user'; if (!(await startCam())) toast('Camera unavailable'); });
 
+function renderDriveBtn() {
+  const b = $('#lv-drivebtn'); b.classList.toggle('on', L.driving); b.setAttribute('aria-pressed', String(L.driving));
+  b.innerHTML = `${ico('wheel', 15)}${L.driving ? 'Driving' : 'Stopped'}`;
+}
+$('#lv-drivebtn').addEventListener('click', () => {
+  if (!L.driving && L.active && L.active.phase === 'doing') { toast('Finish or give up the current dare before you drive', 'bad'); return; }
+  L.driving = !L.driving; renderDriveBtn();
+  liveChat({ sys: true, text: L.driving ? 'Driving · dares paused until the next stop' : 'Stopped · dares are back on' });
+  renderLiveActive(true); renderIncoming(true);
+});
 function liveChat(m) { L.chat.push(m); if (L.chat.length > 20) L.chat.shift(); renderLiveChat(); }
 function renderLiveChat() { $('#lv-chat').innerHTML = chatHTML(L.chat.slice(-6)); }
 function renderLiveTop() {
@@ -1438,7 +1625,7 @@ function genIncoming() {
     if (!r.ok) { L.filtered++; toast(`Filter blocked a dare: ${r.cat}`); return; }
   }
   const taken = new Set([...L.incoming.map((d) => d.text), L.active?.d.text]);
-  const pool = bankFor(L.cat).filter(([t]) => !taken.has(t));
+  const pool = bankFor(L.cat, L.themes).filter(([t]) => !taken.has(t));
   if (!pool.length) return;
   const [text, tag] = pick(pool);
   if (!L.allow[tag]) { L.filtered++; return; }
@@ -1455,7 +1642,7 @@ function liveTick() {
   const a = L.active, m = (L.cat === 'adult' ? 3 : 1) * U;
   const lines = a ? (a.phase === 'result' ? CHAT[a.success ? 'ok' : 'bad'] : CHAT[a.phase]) : (L.cat === 'adult' ? CHAT.adultIdle : CHAT.idle);
   if (Math.random() < 0.45) liveChat({ nick: botNick(), text: pick(lines) });
-  if (!a && L.incoming.length < 3 && Math.random() < (L.sec < 6 ? 0.5 : 0.2)) genIncoming();
+  if (!a && !L.driving && L.incoming.length < 3 && Math.random() < (L.sec < 6 ? 0.5 : 0.2)) genIncoming();
   for (const d of L.incoming) if (Math.random() < 0.25) { d.pool += pick([1, 2, 5]) * m; d.backers++; }
   if (a) {
     a.t--;
@@ -1483,10 +1670,11 @@ function liveResolve(success, why) {
   renderLiveActive(true);
 }
 function renderLiveActive(force) {
-  const el = $('#lv-active'), a = L.active, k = a ? `${a.phase}:${a.d.id}` : `idle:${L.incoming.length ? 1 : 0}`;
+  const el = $('#lv-active'), a = L.active, k = a ? `${a.phase}:${a.d.id}` : `idle:${L.driving ? 'd' : L.incoming.length ? 1 : 0}`;
   if (force || el.dataset.k !== k) {
     el.dataset.k = k;
-    if (!a) el.innerHTML = L.incoming.length ? '' : '<div class="bn idle"><div class="bn-text">Waiting for dares from viewers. Chat with them while they come up with something.</div></div>';
+    if (!a && L.driving) el.innerHTML = `<div class="bn idle"><div class="bn-row"><span class="tag">${ico('pause', 13)}Dares paused</span></div><div class="bn-text">You’re driving, so viewers can queue dares but nothing starts. Tap Stopped when you’ve parked.</div></div>`;
+    else if (!a) el.innerHTML = L.incoming.length ? '' : '<div class="bn idle"><div class="bn-text">Waiting for dares from viewers. Chat with them while they come up with something.</div></div>';
     else if (a.phase === 'doing') el.innerHTML = `<div class="bn hot"><div class="bn-row"><span class="tag hot">You’re on</span><span class="timer" data-k="t">${mmss(a.t)}</span></div>
       <div class="bn-text">“${esc(a.d.text)}”</div><div class="bar"><i data-k="bar" style="width:${(a.t / a.total) * 100}%"></i></div>
       <div class="bn-row"><span>Pot <span class="money" data-k="pool">${money(a.d.pool)}</span></span><span>you get ≈ <b class="gold" data-k="net">${money(a.d.pool * (1 - FEE))}</b></span></div>
@@ -1506,7 +1694,7 @@ function renderLiveActive(force) {
   }
 }
 function renderIncoming(force) {
-  const el = $('#lv-incoming'), hide = !!L.active, sig = hide ? 'hide' : L.incoming.map((d) => d.id).join();
+  const el = $('#lv-incoming'), hide = !!L.active || L.driving, sig = hide ? 'hide' : L.incoming.map((d) => d.id).join();
   if (force || el.dataset.sig !== sig) {
     el.dataset.sig = sig;
     el.innerHTML = hide ? '' : L.incoming.map((d) => `<div class="icard" data-i="${d.id}"><div class="grow"><div class="t">${esc(d.text)}</div>
@@ -1617,7 +1805,7 @@ async function hashPw(pw) {
 const INTRO = [
   { ic: 'feed', h: 'Live, right now', p: 'Streamers are out walking, drawing, singing and cooking. Swipe up to switch streams.' },
   { ic: 'target', h: 'Dares with a price', p: 'Suggest a dare and put money in its pot. Other viewers add theirs, and the streamer takes on the richest one.' },
-  { ic: 'vote', h: 'Fair by design', p: `Real money, no tokens. The streamer is paid only if at least ${PASS * 100}% of viewers say the dare counts. Otherwise everyone gets a full refund.` },
+  { ic: 'vote', h: 'Fair by design', p: `Your stake is frozen on your card, not charged. It’s charged only if at least ${PASS * 100}% of viewers say the dare counts. Otherwise the hold is released.` },
   { ic: 'shield', h: 'Verified people only', p: 'Every member confirms their email and phone, and verifies their identity before money moves. The filter blocks dangerous dares.' },
 ];
 const SIGNUP_LBL = ['Account', 'Email', 'Phone', 'Identity'];
@@ -1833,7 +2021,7 @@ function renderAuth() {
         const row = (ok, t) => `<div class="${ok ? 'done' : ''}"><span class="ic">${ico(ok ? 'check' : 'clock', 15)}</span>${t}</div>`;
         html = `${authTop(false)}<div class="hero"><div class="ring">${ico('user', 30)}</div><h1>Welcome, ${esc(a.first)}</h1>
           <div class="checks" style="margin-top:6px">${row(true, 'Email confirmed')}${row(true, 'Phone confirmed · two-step verification on')}${row(S.verified, S.verified ? 'Identity verified' : 'Identity not verified yet. You can watch and chat, and verify in Profile to use money')}</div>
-          <p style="margin-top:6px">Your demo account starts with ${money(CUR.start)} of practice money.</p></div>
+          <p style="margin-top:6px">When you back a dare, the amount is frozen on your card and charged only if the dare counts.</p></div>
           <button class="btn gold block" data-a="finish" style="height:54px">Enter Kurazh</button>`;
       }
       break;
@@ -1996,7 +2184,7 @@ requestAnimationFrame(frame);
 if (!S.account) authFlow({ mode: 'signup' });
 else if (!S.session) authFlow({ mode: 'signin' });
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
-window.Kurazh = { Safety, BANK, UNSAFE, ADULT_UNSAFE, S: () => S, streams, L, money };
+window.Kurazh = { Safety, BANK, UNSAFE, ADULT_UNSAFE, S: () => S, streams, L, money, settle, byId, updateCard };
 </script>
 </body>
 </html>
