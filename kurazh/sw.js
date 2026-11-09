@@ -1,5 +1,5 @@
-// Кураж — офлайн-кэш: отдаём из кэша и обновляем его в фоне.
-const CACHE = 'kurazh-v1';
+// Kurazh offline cache: serve from cache, refresh it in the background.
+const CACHE = 'kurazh-v2';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {

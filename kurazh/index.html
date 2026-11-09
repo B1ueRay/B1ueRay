@@ -1,35 +1,48 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#07060b" />
-<meta name="description" content="Кураж — живые эфиры, где зрители предлагают задания и скидываются в банк, а стримеры решаются их выполнить." />
+<meta name="theme-color" content="#0a0c0a" />
+<meta name="description" content="Kurazh: live streams where viewers suggest dares and pool money behind them, and streamers decide whether to take them on." />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="Кураж" />
-<link rel="manifest" href="manifest.webmanifest" />
-<link rel="icon" href="icon.svg" type="image/svg+xml" />
-<link rel="apple-touch-icon" href="icon-192.png" />
-<title>Кураж — эфиры с заданиями</title>
+<meta name="apple-mobile-web-app-title" content="Kurazh" />
+<link rel="manifest" href="manifest.webmanifest" data-pwa />
+<link rel="icon" href="icon.svg" type="image/svg+xml" data-pwa />
+<link rel="apple-touch-icon" href="icon-192.png" data-pwa />
+<title>Kurazh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" />
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  /* Layout: full-bleed vertical live feed under a frosted category rail; matte surfaces; gold only for money and the primary action. */
   :root {
-    --bg: #07060b; --s1: #111019; --s2: #191723; --s3: #252232; --line: rgba(255,255,255,.09);
-    --text: #f5f2ff; --muted: #9b95b3; --lime: #c6ff3d; --pink: #ff3d8b; --cyan: #41e2ff;
-    --ok: #3dffa0; --bad: #ff5a6a; --nav: 64px;
-    --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px);
+    --bg: #0a0c0a; --s1: #111512; --s2: #161c18; --s3: #1f2822; --glass: rgba(11,15,12,.72);
+    --line: rgba(236,226,207,.09); --line2: rgba(184,151,90,.34);
+    --green: #1e3a2c; --green2: #284a39; --gold: #b8975a; --gold2: #cdb27c; --cash: #c8b69a; --van: #ece2cf;
+    --muted: #8f8b7e; --ok: #93b49c; --bad: #c07466; --live: #7e2b25; --ink: #121410;
+    --serif: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
+    --sans: Manrope, Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --nav: 64px; --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px);
+    color-scheme: dark;
   }
-  html, body { height: 100%; background: var(--bg); color: var(--text); overflow: hidden; overscroll-behavior: none;
-    font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--van); overflow: hidden; overscroll-behavior: none;
+    font: 15px/1.4 var(--sans); -webkit-font-smoothing: antialiased; }
   button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; touch-action: manipulation; }
   button:disabled { opacity: .45; cursor: default; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 1.5px solid var(--gold2); outline-offset: 2px; }
   input, textarea { font: inherit; color: inherit; }
   b { font-weight: 700; }
+  svg { flex: none; display: block; }
   [hidden] { display: none !important; }
   .muted { color: var(--muted); }
   .small { font-size: 12px; }
+  .gold { color: var(--gold2); }
+  .num { font-variant-numeric: lining-nums tabular-nums; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 
   #app { position: relative; height: 100dvh; max-width: 480px; margin: 0 auto; overflow: hidden; background: var(--bg); }
   .screens { position: absolute; inset: 0 0 calc(var(--nav) + var(--sb)) 0; }
@@ -38,267 +51,318 @@
   .screen { position: absolute; inset: 0; display: none; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .screen.on { display: block; }
   #scr-feed { overflow: hidden; }
-  .page { padding: calc(var(--st) + 18px) 16px 28px; }
-  h1 { font-size: 28px; font-weight: 850; letter-spacing: -.02em; }
-  h2 { font-size: 20px; font-weight: 800; letter-spacing: -.01em; }
-  h3 { font-size: 15px; font-weight: 700; margin: 22px 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-size: 12px; }
+  .page { padding: calc(var(--st) + 22px) 16px 32px; }
+  h1 { font: 600 36px/1.05 var(--serif); letter-spacing: -.01em; }
+  h2 { font: 600 26px/1.1 var(--serif); }
+  h3 { margin: 26px 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .14em; font-size: 11px; font-weight: 700; }
+  .lead { color: var(--cash); margin-top: 8px; max-width: 36ch; }
 
-  /* ── buttons & chips ── */
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 48px; padding: 0 18px;
-    border-radius: 14px; background: var(--s3); font-weight: 700; transition: transform .12s, background .2s; }
-  .btn:active { transform: scale(.97); }
-  .btn.lime { background: var(--lime); color: #0c0f02; }
-  .btn.pink { background: var(--pink); color: #fff; }
-  .btn.bad { background: rgba(255,90,106,.16); color: var(--bad); }
-  .btn.ghost { background: rgba(255,255,255,.06); border: 1px solid var(--line); }
-  .btn.sm { height: 34px; padding: 0 12px; border-radius: 11px; font-size: 13px; }
+  /* buttons & chips */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 50px; padding: 0 20px;
+    border-radius: 14px; background: var(--s3); font-weight: 700; letter-spacing: .01em; transition: transform .12s, background .2s; }
+  .btn:active { transform: scale(.98); }
+  .btn.gold { background: var(--gold); color: var(--ink); }
+  .btn.green { background: var(--green); color: var(--van); }
+  .btn.bad { background: rgba(192,116,102,.14); color: var(--bad); }
+  .btn.ghost { background: transparent; border: 1px solid var(--line); }
+  .btn.sm { height: 34px; padding: 0 13px; border-radius: 10px; font-size: 13px; }
   .btn.block { width: 100%; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { height: 36px; padding: 0 14px; border-radius: 999px; background: var(--s2); border: 1px solid var(--line);
-    font-size: 14px; font-weight: 600; }
-  .chip.on { background: var(--lime); color: #0c0f02; border-color: var(--lime); }
-  .pill { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 10px; border-radius: 999px;
-    background: rgba(8,7,14,.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 13px; font-weight: 600; }
-  .live { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 6px;
-    background: var(--pink); color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .06em; }
-  .live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: blink 1.2s infinite; }
-  @keyframes blink { 50% { opacity: .25; } }
-  .ava { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; font-weight: 800;
-    color: #0b0a10; font-size: 16px; }
-  .spark { color: var(--lime); }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; background: var(--s2);
+    border: 1px solid var(--line); font-size: 14px; font-weight: 600; color: var(--cash); white-space: nowrap; }
+  .chip.on { background: var(--van); color: var(--ink); border-color: var(--van); }
+  .chip.money.on { background: var(--gold); border-color: var(--gold); }
+  .pill { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border-radius: 999px; white-space: nowrap;
+    background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line);
+    font-size: 13px; font-weight: 600; }
+  .live { display: inline-flex; align-items: center; gap: 5px; height: 20px; padding: 0 7px; border-radius: 5px;
+    background: var(--live); color: var(--van); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+  .live::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--van); animation: blink 1.4s infinite; }
+  .adult { display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: 5px; border: 1px solid var(--gold);
+    color: var(--gold2); font-size: 10px; font-weight: 800; letter-spacing: .06em; }
+  @keyframes blink { 50% { opacity: .3; } }
+  .ava { flex: none; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--green);
+    box-shadow: inset 0 0 0 1px var(--line2); font: 600 20px/1 var(--serif); color: var(--van); }
+  .ava.adult-ava { background: #3a1d19; }
 
-  /* ── tab bar ── */
+  /* tab bar */
   .tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--nav) + var(--sb)); padding-bottom: var(--sb);
-    display: flex; background: rgba(9,8,14,.94); border-top: 1px solid var(--line); z-index: 20; }
-  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-    font-size: 10.5px; font-weight: 600; color: var(--muted); }
-  .tab svg { width: 24px; height: 24px; }
-  .tab.on { color: var(--text); }
-  .tab.on svg { color: var(--lime); }
+    display: flex; background: #070807; border-top: 1px solid var(--line); z-index: 20; }
+  .tab { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    font-size: 10.5px; font-weight: 600; letter-spacing: .02em; color: var(--muted); }
+  .tab.on { color: var(--van); }
+  .tab.on::before { content: ""; position: absolute; top: 0; width: 22px; height: 2px; border-radius: 2px; background: var(--gold); }
   .tab-go { flex: 1; display: grid; place-items: center; }
-  .tab-go span { display: grid; place-items: center; width: 52px; height: 38px; border-radius: 13px;
-    background: linear-gradient(135deg, var(--lime), #7dff6b); color: #0b0f02; box-shadow: 0 0 24px rgba(198,255,61,.35); }
-  .tab-go span::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--pink); box-shadow: 0 0 0 3px #0b0f02; }
+  .tab-go span { display: grid; place-items: center; width: 54px; height: 38px; border-radius: 13px; background: var(--gold); }
+  .tab-go span::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 3px var(--ink); }
 
-  /* ── feed ── */
+  /* feed */
+  .feed-top { position: absolute; top: calc(var(--st) + 10px); left: 0; right: 0; z-index: 6; display: flex; gap: 8px; align-items: center; padding: 0 12px; }
+  .cats { flex: 1; min-width: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); padding-right: 20px; }
+  .cats::-webkit-scrollbar { display: none; }
+  .cats .chip { height: 32px; padding: 0 12px; font-size: 13px; background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .cats .chip.on { background: var(--van); }
+  .cats .chip.x18 { color: var(--gold2); border-color: var(--line2); }
+  .cats .chip.x18.on { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+  .balance { flex: none; height: 32px; font-size: 13px; }
+  .balance b { color: var(--gold2); }
   .feed { height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; }
   .feed::-webkit-scrollbar { display: none; }
   .card { position: relative; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; background: #000; }
   .card canvas, .live-view canvas, .live-view video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .shade { position: absolute; inset: 0; pointer-events: none;
-    background: linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 26%, rgba(0,0,0,0) 48%, rgba(0,0,0,.78) 100%); }
-  .c-top { position: absolute; top: calc(var(--st) + 12px); left: 12px; right: 110px; display: flex; gap: 10px; align-items: center; }
+    background: linear-gradient(180deg, rgba(5,6,5,.7) 0%, rgba(5,6,5,0) 30%, rgba(5,6,5,0) 50%, rgba(5,6,5,.82) 100%); }
+  .c-top { position: absolute; top: calc(var(--st) + 54px); left: 12px; right: 12px; display: flex; gap: 10px; align-items: center; }
   .c-top .who { flex: 1; min-width: 0; }
-  .c-top .who b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .c-top .who small { display: flex; gap: 6px; align-items: center; color: rgba(255,255,255,.78); font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; }
-  .follow { flex: none; height: 28px; padding: 0 10px; border-radius: 9px; background: var(--pink); color: #fff; font-size: 12px; font-weight: 700; }
-  .follow.on { background: rgba(255,255,255,.14); }
-  .balance { position: absolute; top: calc(var(--st) + 14px); right: 12px; z-index: 5; height: 34px; font-size: 14px; }
-  .balance b { color: var(--lime); }
-  .banner { position: absolute; top: calc(var(--st) + 66px); left: 12px; right: 12px; }
-  .bn { background: rgba(10,9,16,.62); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line);
-    border-radius: 16px; padding: 10px 12px; display: grid; gap: 8px; animation: pop .25s ease; }
+  .c-top .who b { display: block; font: 600 20px/1.1 var(--serif); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .c-top .who small { display: flex; gap: 6px; align-items: center; color: var(--cash); font-size: 12px; margin-top: 4px; white-space: nowrap; overflow: hidden; }
+  .c-top .who small svg { opacity: .8; }
+  .follow { flex: none; height: 30px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--line2); color: var(--gold2); font-size: 12px; font-weight: 700; background: var(--glass); }
+  .follow.on { border-color: var(--line); color: var(--muted); }
+  .banner { position: absolute; top: calc(var(--st) + 110px); left: 12px; right: 12px; }
+  .bn { background: var(--glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--line);
+    border-radius: 18px; padding: 12px 14px; display: grid; gap: 9px; animation: pop .3s ease; }
+  .bn.hot { border-color: var(--line2); }
   @keyframes pop { from { transform: translateY(-6px); opacity: 0; } }
-  .bn-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
-  .bn-text { font-size: 16px; font-weight: 700; line-height: 1.25; }
-  .bn.idle .bn-text { font-size: 13px; font-weight: 500; color: rgba(255,255,255,.85); }
-  .tag { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-  .tag.hot { color: var(--pink); }
-  .tag.cyan { color: var(--cyan); }
-  .timer { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 18px; }
+  .bn-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--cash); }
+  .bn-text { font: italic 600 22px/1.12 var(--serif); color: var(--van); }
+  .bn.idle .bn-text { font: 500 14px/1.35 var(--sans); font-style: normal; color: var(--cash); }
+  .tag { display: inline-flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .tag.hot { color: var(--gold2); }
+  .tag.hot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--gold2); }
+  .tag.vote { color: var(--ok); }
+  .timer { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 20px; color: var(--van); }
   .timer.low { color: var(--bad); }
-  .bar { height: 5px; border-radius: 9px; background: rgba(255,255,255,.12); overflow: hidden; }
-  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--pink), var(--lime)); transition: width 1s linear; }
+  .money { font: 700 17px/1 var(--serif); font-variant-numeric: lining-nums; color: var(--gold2); letter-spacing: .01em; }
+  .bar { height: 3px; border-radius: 3px; background: rgba(236,226,207,.12); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--gold); transition: width 1s linear; }
   .votes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .vbtn { position: relative; height: 48px; border-radius: 13px; overflow: hidden; display: flex; align-items: center; justify-content: space-between;
-    padding: 0 14px; font-weight: 800; background: rgba(255,255,255,.07); border: 1px solid var(--line); }
+  .vbtn { position: relative; height: 48px; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px; font-weight: 700; background: rgba(236,226,207,.05); border: 1px solid var(--line); }
   .vbtn i { position: absolute; left: 0; top: 0; bottom: 0; z-index: 0; transition: width .6s; }
-  .vbtn span, .vbtn b { position: relative; z-index: 1; }
-  .vbtn.yes i { background: rgba(61,255,160,.25); }
-  .vbtn.no i { background: rgba(255,90,106,.25); }
-  .vbtn.sel { border-color: var(--text); }
+  .vbtn span, .vbtn b { position: relative; z-index: 1; display: flex; align-items: center; gap: 6px; }
+  .vbtn.yes i { background: rgba(147,180,156,.22); }
+  .vbtn.no i { background: rgba(192,116,102,.2); }
+  .vbtn.sel { border-color: var(--van); }
   .vbtn:disabled { opacity: 1; }
-  .bn.result { text-align: center; padding: 14px; }
-  .bn.result .big { font-size: 20px; font-weight: 850; }
-  .bn.result.ok { border-color: rgba(61,255,160,.5); }
-  .bn.result.bad { border-color: rgba(255,90,106,.5); }
-  .rail { position: absolute; right: 8px; bottom: 14px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
-  .rbtn { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; }
-  .rbtn > span { position: relative; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%;
-    background: rgba(8,7,14,.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 21px; }
-  .rbtn.main > span { background: var(--lime); color: #0b0f02; }
-  .rbtn .cnt { position: absolute; top: -3px; right: -3px; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px;
-    background: var(--pink); color: #fff; font-size: 11px; display: grid; place-items: center; }
-  .c-bottom { position: absolute; left: 12px; right: 70px; bottom: 14px; }
-  .c-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; text-shadow: 0 1px 6px rgba(0,0,0,.6); }
-  .chat { display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; height: 132px; overflow: hidden; margin-bottom: 8px;
+  .bn.result { text-align: center; padding: 16px; }
+  .bn.result .big { font: 600 26px/1.1 var(--serif); }
+  .bn.result.ok { border-color: rgba(147,180,156,.45); }
+  .bn.result.bad { border-color: rgba(192,116,102,.45); }
+  .rail { position: absolute; right: 10px; bottom: 14px; display: flex; flex-direction: column; gap: 14px; align-items: center; }
+  .rbtn { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: var(--cash); }
+  .rbtn > span { position: relative; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; color: var(--van);
+    background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line); }
+  .rbtn.main > span { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+  .rbtn.liked > span { color: var(--gold2); }
+  .rbtn .cnt { position: absolute; top: -4px; right: -4px; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px;
+    background: var(--van); color: var(--ink); font-size: 11px; display: grid; place-items: center; }
+  .c-bottom { position: absolute; left: 12px; right: 72px; bottom: 14px; }
+  .c-title { font: 600 18px/1.2 var(--serif); margin-bottom: 8px; }
+  .c-title span { font: 500 12px var(--sans); color: var(--muted); }
+  .chat { display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; height: 128px; overflow: hidden; margin-bottom: 10px;
     -webkit-mask-image: linear-gradient(180deg, transparent, #000 40%); mask-image: linear-gradient(180deg, transparent, #000 40%); }
-  .msg { font-size: 13px; line-height: 1.3; text-shadow: 0 1px 4px rgba(0,0,0,.7); animation: rise .25s ease; overflow-wrap: anywhere; }
-  .msg b { margin-right: 5px; }
-  .msg.sys { align-self: flex-start; background: rgba(198,255,61,.14); border: 1px solid rgba(198,255,61,.25); padding: 4px 8px; border-radius: 9px; text-shadow: none; }
-  .msg.me b { color: var(--lime) !important; }
+  .msg { font-size: 13px; line-height: 1.35; text-shadow: 0 1px 4px rgba(0,0,0,.75); animation: rise .25s ease; overflow-wrap: anywhere; color: var(--van); }
+  .msg b { margin-right: 6px; font-weight: 700; }
+  .msg.sys { align-self: flex-start; background: rgba(30,58,44,.72); border: 1px solid var(--line2); padding: 5px 9px; border-radius: 9px; text-shadow: none; color: var(--cash); }
+  .msg.sys b { color: var(--gold2); margin: 0; }
+  .msg.me b { color: var(--gold2) !important; }
   @keyframes rise { from { transform: translateY(6px); opacity: 0; } }
   .say { display: flex; gap: 6px; }
-  .say input { flex: 1; min-width: 0; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: rgba(8,7,14,.55);
-    padding: 0 12px; outline: none; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 16px; }
-  .say button { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,.12); font-size: 16px; }
-  .heart { position: absolute; right: 22px; bottom: 210px; font-size: 26px; pointer-events: none; animation: fly 1.4s ease-out forwards; }
-  @media (max-width: 400px) { .follow .fl { display: none; } .follow { width: 30px; padding: 0; } .c-top { right: 96px; } }
+  .say input { flex: 1; min-width: 0; height: 42px; border-radius: 12px; border: 1px solid var(--line); background: var(--glass);
+    padding: 0 13px; outline: none; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); font-size: 16px; }
+  .say input::placeholder { color: var(--muted); }
+  .say button { width: 42px; height: 42px; border-radius: 12px; background: var(--green); display: grid; place-items: center; }
+  .heart { position: absolute; right: 22px; bottom: 240px; color: var(--gold2); pointer-events: none; animation: fly 1.5s ease-out forwards; }
+  @keyframes fly { to { transform: translate(var(--dx), -200px) scale(1.3); opacity: 0; } }
+  .empty-feed { height: 100%; display: grid; place-items: center; text-align: center; padding: 0 30px; color: var(--muted); }
+  @media (max-width: 400px) { .follow .fl { display: none; } .follow { width: 30px; padding: 0; display: grid; place-items: center; } }
   @media (max-height: 700px) {
-    .rail { gap: 8px; }
-    .rbtn { font-size: 0; }
+    .rail { gap: 9px; }
+    .rbtn { font-size: 0; gap: 0; }
     .rbtn b { font-size: 11px; }
-    .rbtn > span { width: 40px; height: 40px; font-size: 18px; }
-    .chat { height: 96px; }
-    .bn { padding: 8px 10px; gap: 6px; }
-    .bn-text { font-size: 15px; }
+    .rbtn > span { width: 40px; height: 40px; }
+    .chat { height: 92px; }
+    .bn { padding: 9px 12px; gap: 7px; }
+    .bn-text { font-size: 19px; }
+    .c-title { font-size: 16px; }
   }
-  @keyframes fly { to { transform: translate(var(--dx), -220px) scale(1.4); opacity: 0; } }
 
-  /* ── lists ── */
-  .seg { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--s1); margin: 16px 0; }
-  .seg button { flex: 1; height: 38px; border-radius: 11px; font-weight: 700; font-size: 14px; color: var(--muted); }
-  .seg button.on { background: var(--s3); color: var(--text); }
-  .list { display: grid; gap: 10px; }
-  .row { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 16px; background: var(--s1); border: 1px solid var(--line); text-align: left; width: 100%; }
+  /* lists */
+  .seg { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--s1); border: 1px solid var(--line); margin: 18px 0; }
+  .seg button { flex: 1; height: 38px; border-radius: 10px; font-weight: 700; font-size: 14px; color: var(--muted); }
+  .seg button.on { background: var(--s3); color: var(--van); }
+  .list { display: grid; gap: 8px; }
+  .row { display: flex; gap: 12px; align-items: center; padding: 13px 14px; border-radius: 16px; background: var(--s1); border: 1px solid var(--line); text-align: left; width: 100%; }
   .row .grow { flex: 1; min-width: 0; }
-  .row .t { font-weight: 700; line-height: 1.25; }
-  .row .m { font-size: 12px; color: var(--muted); margin-top: 3px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-  .row .amt { flex: none; text-align: right; font-weight: 800; }
-  .st { display: inline-block; padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 800; }
-  .st.q { background: rgba(255,255,255,.08); color: var(--muted); }
-  .st.go { background: rgba(255,61,139,.18); color: var(--pink); }
-  .st.vote { background: rgba(65,226,255,.16); color: var(--cyan); }
-  .st.ok { background: rgba(61,255,160,.15); color: var(--ok); }
-  .st.back { background: rgba(255,255,255,.08); color: #d8d3ea; }
-  .st.mine { background: rgba(198,255,61,.16); color: var(--lime); }
-  .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
-  .empty div { font-size: 42px; margin-bottom: 8px; }
+  .row .t { font-weight: 600; line-height: 1.3; }
+  .row .m { font-size: 12px; color: var(--muted); margin-top: 4px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .row .amt { flex: none; text-align: right; }
+  .st { display: inline-flex; align-items: center; height: 19px; padding: 0 7px; border-radius: 5px; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; }
+  .st.q { background: rgba(236,226,207,.07); color: var(--cash); }
+  .st.go { background: rgba(184,151,90,.16); color: var(--gold2); }
+  .st.vote { background: rgba(147,180,156,.14); color: var(--ok); }
+  .st.ok { background: rgba(147,180,156,.14); color: var(--ok); }
+  .st.back { background: rgba(236,226,207,.07); color: var(--cash); }
+  .st.mine { background: var(--green); color: var(--van); }
+  .empty { text-align: center; padding: 44px 24px; color: var(--muted); display: grid; justify-items: center; gap: 10px; }
+  .empty .ring { width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--line2); display: grid; place-items: center; color: var(--gold2); }
 
-  /* ── wallet / profile ── */
-  .wcard { margin-top: 16px; padding: 20px; border-radius: 22px; position: relative; overflow: hidden;
-    background: radial-gradient(120% 140% at 100% 0%, rgba(255,61,139,.35), transparent 55%), radial-gradient(120% 120% at 0% 100%, rgba(198,255,61,.22), transparent 55%), var(--s2);
-    border: 1px solid var(--line); }
-  .wcard .num { font-size: 42px; font-weight: 900; letter-spacing: -.03em; margin: 4px 0 14px; }
-  .wcard .num small { font-size: 22px; color: var(--lime); }
-  .wbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .note { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: rgba(65,226,255,.08); border: 1px solid rgba(65,226,255,.2); font-size: 12.5px; color: #bfefff; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  /* wallet / profile */
+  .acct { margin-top: 18px; padding: 20px; border-radius: 22px; background: var(--green); border: 1px solid var(--line2); position: relative; overflow: hidden; }
+  .acct::after { content: ""; position: absolute; right: -40px; top: -40px; width: 160px; height: 160px; border-radius: 50%; border: 1px solid rgba(205,178,124,.18); }
+  .acct.dark { background: var(--s1); border-color: var(--line); }
+  .acct .lbl { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--cash); font-weight: 700; }
+  .acct .sum { font: 600 46px/1 var(--serif); font-variant-numeric: lining-nums; letter-spacing: -.01em; margin: 10px 0 16px; }
+  .acct .sum small { font-size: 26px; color: var(--gold2); margin-left: 4px; }
+  .acct .hint { font-size: 12.5px; color: var(--cash); margin: -6px 0 14px; }
+  .wbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative; z-index: 1; }
+  .note { margin-top: 12px; padding: 11px 13px; border-radius: 12px; background: rgba(236,226,207,.04); border: 1px solid var(--line); font-size: 12.5px; color: var(--cash); line-height: 1.45; }
+  .facts { display: grid; gap: 1px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: var(--line); }
+  .facts div { display: flex; gap: 12px; align-items: flex-start; padding: 13px 14px; background: var(--s1); font-size: 13.5px; color: var(--cash); }
+  .facts svg { color: var(--gold2); margin-top: 1px; }
+  .facts b { color: var(--van); font-weight: 700; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .stat { padding: 14px; border-radius: 16px; background: var(--s1); border: 1px solid var(--line); }
-  .stat b { display: block; font-size: 22px; font-weight: 850; }
+  .stat b { display: block; font: 600 28px/1 var(--serif); font-variant-numeric: lining-nums; margin-bottom: 6px; }
   .stat span { font-size: 12px; color: var(--muted); }
-  .me-head { display: flex; gap: 14px; align-items: center; margin-top: 16px; }
-  .me-head .ava { width: 64px; height: 64px; font-size: 26px; }
-  .lvl { margin-top: 14px; }
-  .lvl .bar { height: 8px; margin-top: 6px; }
+  .me-head { display: flex; gap: 14px; align-items: center; margin-top: 18px; }
+  .me-head .ava { width: 66px; height: 66px; font-size: 30px; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-top: 6px; }
+  .badge.ok { background: rgba(147,180,156,.14); color: var(--ok); }
+  .badge.no { background: rgba(236,226,207,.07); color: var(--cash); }
+  .lvl { margin-top: 16px; }
+  .lvl .bar { margin-top: 7px; }
   .menu { display: grid; border-radius: 16px; overflow: hidden; background: var(--s1); border: 1px solid var(--line); }
-  .menu > * { display: flex; justify-content: space-between; align-items: center; height: 52px; padding: 0 14px; text-align: left; border-bottom: 1px solid var(--line); width: 100%; }
+  .menu > * { display: flex; gap: 12px; align-items: center; min-height: 54px; padding: 0 14px; text-align: left; border-bottom: 1px solid var(--line); width: 100%; }
   .menu > *:last-child { border-bottom: 0; }
+  .menu .grow { flex: 1; min-width: 0; }
+  .menu .grow small { display: block; font-size: 12px; color: var(--muted); }
+  .menu svg { color: var(--cash); }
   .switch { position: relative; width: 46px; height: 28px; border-radius: 99px; background: var(--s3); transition: background .2s; flex: none; }
-  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform .2s; }
-  .switch.on { background: var(--lime); }
-  .switch.on::after { transform: translateX(18px); background: #0b0f02; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--cash); transition: transform .2s; }
+  .switch.on { background: var(--gold); }
+  .switch.on::after { transform: translateX(18px); background: var(--ink); }
 
-  /* ── go live ── */
-  .preview { position: relative; height: 200px; border-radius: 20px; overflow: hidden; background: var(--s1); border: 1px solid var(--line); margin-top: 16px; }
+  /* go live */
+  .preview { position: relative; height: 200px; border-radius: 20px; overflow: hidden; background: var(--s1); border: 1px solid var(--line); margin-top: 18px; }
   .preview canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
   .preview .pill { position: absolute; left: 12px; bottom: 12px; }
-  .field { display: block; margin-top: 16px; }
-  .field > span { display: block; font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
-  .inp { width: 100%; height: 48px; border-radius: 14px; border: 1px solid var(--line); background: var(--s1); padding: 0 14px; outline: none; font-size: 16px; }
-  textarea.inp { height: 84px; padding: 12px 14px; resize: none; line-height: 1.35; }
-  .inp:focus { border-color: rgba(198,255,61,.6); }
-  .check { display: flex; gap: 10px; align-items: flex-start; margin-top: 16px; font-size: 14px; text-align: left; }
-  .check i { flex: none; width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--muted); display: grid; place-items: center; font-style: normal; font-size: 13px; color: #0b0f02; margin-top: 1px; }
-  .check.on i { background: var(--lime); border-color: var(--lime); }
-  .check.on i::before { content: "✓"; font-weight: 900; }
+  .field { display: block; margin-top: 18px; }
+  .field > span { display: block; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 9px; }
+  .inp { width: 100%; height: 50px; border-radius: 14px; border: 1px solid var(--line); background: var(--s1); padding: 0 14px; outline: none; font-size: 16px; }
+  .inp::placeholder { color: var(--muted); }
+  textarea.inp { height: 86px; padding: 12px 14px; resize: none; line-height: 1.4; }
+  .inp:focus { border-color: var(--line2); }
+  .check { display: flex; gap: 11px; align-items: flex-start; margin-top: 16px; font-size: 14px; text-align: left; color: var(--cash); }
+  .check i { flex: none; width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--muted); display: grid; place-items: center; margin-top: 1px; color: var(--ink); }
+  .check.on i { background: var(--gold); border-color: var(--gold); }
+  .check.on i::before { content: ""; width: 10px; height: 6px; border: 2px solid var(--ink); border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); }
   .live-view { position: absolute; inset: 0; background: #000; overflow: hidden; }
   .live-view video { transform: scaleX(-1); }
   .live-view video.rear { transform: none; }
-  .lv-top { position: absolute; top: calc(var(--st) + 12px); left: 12px; right: 12px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .lv-top { position: absolute; top: calc(var(--st) + 12px); left: 12px; right: 12px; display: flex; gap: 6px; align-items: center; }
   .lv-top .sp { flex: 1; }
-  .lv-top .iconb { width: 34px; height: 34px; border-radius: 50%; background: rgba(8,7,14,.55); font-size: 17px; }
-  .lv-shield { position: absolute; top: calc(var(--st) + 54px); left: 12px; }
+  .iconb { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--glass); border: 1px solid var(--line); }
+  .lv-top .live { height: 30px; padding: 0 10px; border-radius: 999px; font-size: 11px; }
+  .lv-shield { position: absolute; top: calc(var(--st) + 52px); left: 12px; display: flex; gap: 6px; }
+  .lv-shield svg { color: var(--ok); }
   .lv-active { position: absolute; top: calc(var(--st) + 92px); left: 12px; right: 12px; }
   .lv-bottom { position: absolute; left: 12px; right: 12px; bottom: calc(var(--sb) + 14px); display: grid; gap: 10px; }
-  .lv-bottom .chat { height: 110px; margin: 0; width: 78%; }
+  .lv-bottom .chat { height: 110px; margin: 0; width: 80%; }
   .inc { display: grid; gap: 8px; }
-  .icard { display: flex; gap: 10px; align-items: center; padding: 10px; border-radius: 15px; background: rgba(10,9,16,.7);
-    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); animation: rise .25s ease; }
+  .icard { display: flex; gap: 10px; align-items: center; padding: 11px 11px 11px 13px; border-radius: 16px; background: var(--glass);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--line); animation: rise .25s ease; }
   .icard .grow { flex: 1; min-width: 0; }
-  .icard .t { font-weight: 700; font-size: 14px; line-height: 1.25; }
-  .icard .m { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .icard .t { font: italic 600 18px/1.15 var(--serif); }
+  .icard .m { font-size: 12px; color: var(--muted); margin-top: 4px; display: flex; gap: 6px; align-items: center; }
   .icard .acts { display: flex; gap: 6px; }
-  .icard .acts button { width: 40px; height: 40px; border-radius: 12px; font-size: 17px; font-weight: 800; }
-  .icard .yes { background: var(--lime); color: #0b0f02; }
-  .icard .no { background: rgba(255,255,255,.1); }
-  .lv-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .icard .acts button { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; }
+  .icard .yes { background: var(--gold); color: var(--ink); }
+  .icard .no { background: rgba(236,226,207,.08); }
+  .lv-acts { display: grid; grid-template-columns: 1.3fr 1fr; gap: 8px; }
 
-  /* ── sheet ── */
+  /* sheet */
   .sheet-wrap { position: absolute; inset: 0; z-index: 50; pointer-events: none; }
-  .sheet-bg { position: absolute; inset: 0; background: rgba(0,0,0,.55); opacity: 0; transition: opacity .25s; }
-  .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 88%; display: flex; flex-direction: column; background: var(--s1);
-    border-radius: 24px 24px 0 0; border-top: 1px solid var(--line); transform: translateY(100%); transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+  .sheet-bg { position: absolute; inset: 0; background: rgba(0,0,0,.6); opacity: 0; transition: opacity .25s; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 90%; display: flex; flex-direction: column; background: var(--s1);
+    border-radius: 24px 24px 0 0; border-top: 1px solid var(--line2); transform: translateY(100%); transition: transform .32s cubic-bezier(.2,.8,.2,1); }
   .sheet-wrap.open { pointer-events: auto; }
   .sheet-wrap.open .sheet-bg { opacity: 1; }
   .sheet-wrap.open .sheet { transform: none; }
-  .grab { width: 40px; height: 5px; border-radius: 9px; background: var(--s3); margin: 10px auto 2px; flex: none; }
-  .sheet-body { overflow-y: auto; padding: 8px 16px calc(var(--sb) + 20px); -webkit-overflow-scrolling: touch; }
-  .sh-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 6px 0 4px; }
-  .x { width: 34px; height: 34px; border-radius: 50%; background: var(--s3); font-size: 15px; flex: none; }
-  .safe-hint { margin-top: 8px; font-size: 12.5px; color: var(--muted); min-height: 18px; }
+  .grab { width: 38px; height: 4px; border-radius: 9px; background: var(--s3); margin: 10px auto 2px; flex: none; }
+  .sheet-body { overflow-y: auto; padding: 8px 16px calc(var(--sb) + 22px); -webkit-overflow-scrolling: touch; }
+  .sh-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin: 8px 0 4px; }
+  .sh-head .sub { font-size: 13px; color: var(--cash); margin-top: 4px; }
+  .x { width: 34px; height: 34px; border-radius: 50%; background: var(--s3); display: grid; place-items: center; flex: none; }
+  .safe-hint { display: flex; gap: 6px; align-items: center; margin-top: 9px; font-size: 12.5px; color: var(--muted); min-height: 18px; }
   .safe-hint.ok { color: var(--ok); }
   .safe-hint.bad { color: var(--bad); }
-  .ideas { display: flex; gap: 6px; overflow-x: auto; margin-top: 8px; padding-bottom: 2px; scrollbar-width: none; }
+  .ideas { display: flex; gap: 6px; overflow-x: auto; margin-top: 9px; padding-bottom: 2px; scrollbar-width: none; }
   .ideas::-webkit-scrollbar { display: none; }
-  .ideas button { flex: none; height: 30px; padding: 0 10px; border-radius: 99px; background: var(--s2); border: 1px solid var(--line); font-size: 12.5px; }
-  .drow { display: flex; gap: 10px; align-items: center; padding: 11px 12px; border-radius: 15px; background: var(--s2); }
+  .ideas button { flex: none; height: 30px; padding: 0 11px; border-radius: 99px; background: var(--s2); border: 1px solid var(--line); font-size: 12.5px; color: var(--cash); }
+  .drow { display: flex; gap: 10px; align-items: center; padding: 12px; border-radius: 15px; background: var(--s2); border: 1px solid transparent; }
+  .drow.now { border-color: var(--line2); }
   .drow .grow { flex: 1; min-width: 0; }
-  .drow .t { font-weight: 700; line-height: 1.25; }
-  .drow .m { font-size: 12px; color: var(--muted); margin-top: 3px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-  .drow .pool { color: var(--lime); font-weight: 800; }
-  .rules li { margin: 0 0 10px 18px; }
-  .rules { font-size: 14px; color: #ddd8ee; }
-  .packs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
-  .pack { padding: 16px 12px; border-radius: 16px; background: var(--s2); border: 1px solid var(--line); text-align: center; position: relative; }
-  .pack b { display: block; font-size: 24px; font-weight: 900; }
-  .pack em { position: absolute; top: 8px; right: 8px; font-style: normal; font-size: 10.5px; font-weight: 800; color: #0b0f02; background: var(--lime); padding: 2px 6px; border-radius: 6px; }
+  .drow .t { font: italic 600 18px/1.15 var(--serif); }
+  .drow .m { font-size: 12px; color: var(--muted); margin-top: 5px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .drow .m span { display: inline-flex; align-items: center; gap: 4px; }
+  .drow .m .money { font-size: 15px; }
+  .crown { color: var(--gold2); font: 600 11px var(--sans); letter-spacing: .12em; text-transform: uppercase; }
+  .rules { font-size: 14px; color: var(--cash); display: grid; gap: 10px; padding-left: 18px; line-height: 1.45; }
+  .rules b { color: var(--van); }
+  .packs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+  .pack { padding: 18px 12px; border-radius: 16px; background: var(--s2); border: 1px solid var(--line); text-align: center; }
+  .pack b { display: block; font: 600 30px/1 var(--serif); font-variant-numeric: lining-nums; margin-bottom: 6px; }
+  .pack span { font-size: 12px; color: var(--muted); }
+  .steps { display: grid; gap: 8px; margin-top: 16px; }
+  .step { display: flex; gap: 12px; align-items: center; padding: 13px; border-radius: 15px; background: var(--s2); border: 1px solid var(--line); }
+  .step .ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--s3); color: var(--cash); flex: none; transition: .3s; }
+  .step.done .ic { background: var(--green); color: var(--gold2); }
+  .step.busy .ic { animation: blink 1s infinite; }
+  .step .grow { flex: 1; }
+  .step small { display: block; font-size: 12px; color: var(--muted); }
 
-  /* ── toasts / fx / onboarding ── */
+  /* toasts / fx / onboarding */
   #toasts { position: absolute; top: calc(var(--st) + 10px); left: 12px; right: 12px; z-index: 80; display: grid; gap: 8px; pointer-events: none; }
-  .toast { justify-self: center; max-width: 100%; padding: 10px 14px; border-radius: 14px; background: rgba(28,25,38,.96); border: 1px solid var(--line);
-    font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.4); animation: drop .3s ease; }
+  .toast { justify-self: center; max-width: 100%; padding: 11px 15px; border-radius: 14px; background: #1a211c; border: 1px solid var(--line);
+    font-size: 13.5px; font-weight: 600; color: var(--van); box-shadow: 0 12px 30px rgba(0,0,0,.45); animation: drop .3s ease; }
   .toast.out { opacity: 0; transform: translateY(-8px); transition: .3s; }
-  .toast.ok { border-color: rgba(61,255,160,.4); }
-  .toast.bad { border-color: rgba(255,90,106,.45); }
+  .toast.ok { border-color: rgba(147,180,156,.45); }
+  .toast.bad { border-color: rgba(192,116,102,.5); }
+  .toast.gold { border-color: var(--line2); }
   @keyframes drop { from { transform: translateY(-10px); opacity: 0; } }
-  .confetti { position: absolute; top: -12px; width: 8px; height: 12px; border-radius: 2px; z-index: 90; pointer-events: none; animation: fall 1.7s ease-in forwards; }
-  @keyframes fall { to { transform: translate(var(--dx), 105vh) rotate(var(--r)); opacity: .7; } }
-  .onb { position: absolute; inset: 0; z-index: 100; background: var(--bg); display: flex; flex-direction: column; padding: calc(var(--st) + 24px) 22px calc(var(--sb) + 22px); overflow-y: auto; }
-  .onb .logo { font-size: 15px; font-weight: 900; letter-spacing: .3em; color: var(--lime); }
-  .onb .hero { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 24px 0; }
-  .onb .em { font-size: 64px; }
-  .onb h1 { font-size: 34px; line-height: 1.08; }
-  .onb p { color: #cfc9e2; font-size: 16px; }
-  .dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 16px; }
-  .dots i { width: 7px; height: 7px; border-radius: 9px; background: var(--s3); transition: width .2s; }
-  .dots i.on { width: 22px; background: var(--lime); }
+  .dust { position: absolute; top: -10px; width: 5px; height: 5px; transform: rotate(45deg); z-index: 90; pointer-events: none; animation: fall 2.2s ease-in forwards; }
+  @keyframes fall { to { transform: translate(var(--dx), 105vh) rotate(var(--r)); opacity: 0; } }
+  .onb { position: absolute; inset: 0; z-index: 100; background: var(--bg); display: flex; flex-direction: column; padding: calc(var(--st) + 26px) 24px calc(var(--sb) + 22px); overflow-y: auto; }
+  .onb .logo { font: 600 18px/1 var(--serif); letter-spacing: .5em; color: var(--gold2); }
+  .onb .hero { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 24px 0; }
+  .onb .ring { width: 74px; height: 74px; border-radius: 50%; border: 1px solid var(--line2); display: grid; place-items: center; color: var(--gold2); }
+  .onb h1 { font-size: 44px; line-height: 1; text-wrap: balance; }
+  .onb p { color: var(--cash); font-size: 16px; max-width: 34ch; }
+  .dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 18px; }
+  .dots i { width: 6px; height: 6px; border-radius: 9px; background: var(--s3); transition: width .2s; }
+  .dots i.on { width: 22px; background: var(--gold); }
 </style>
 </head>
 <body>
 <div id="app">
   <div class="screens">
     <section class="screen on" id="scr-feed">
-      <button class="pill balance" data-tab="wallet" aria-label="Баланс">✦ <b data-bal>0</b></button>
+      <div class="feed-top">
+        <div class="cats" id="cats"></div>
+        <button class="pill balance" data-tab="wallet" aria-label="Balance"><b data-bal class="num">0</b></button>
+      </div>
       <div class="feed" id="feed"></div>
     </section>
 
     <section class="screen" id="scr-top">
       <div class="page">
-        <h1>Задания</h1>
+        <h1>Dares</h1>
+        <p class="lead">The richest dares across every live stream, and your own backing.</p>
         <div class="seg" id="top-seg">
-          <button class="on" data-seg="hot">🔥 Горячие</button>
-          <button data-seg="mine">Мои ставки</button>
+          <button class="on" data-seg="hot">Live now</button>
+          <button data-seg="mine">My backing</button>
         </div>
         <div class="list" id="top-list"></div>
       </div>
@@ -306,29 +370,30 @@
 
     <section class="screen" id="scr-live">
       <div class="page" id="live-setup">
-        <h1>Выйти в эфир</h1>
-        <p class="muted" style="margin-top:6px">Зрители предложат задания и скинутся в банк. Вы выбираете, что выполнять.</p>
-        <div class="preview"><canvas id="prev-canvas"></canvas><span class="pill">📷 Камера включится при старте</span></div>
-        <label class="field"><span>Название эфира</span><input class="inp" id="lv-title" maxlength="60" placeholder="Например: Гуляю по парку — командуйте" /></label>
-        <div class="field"><span>Категория</span><div class="chips" id="lv-cat"></div></div>
-        <div class="field"><span>Какие задания принимать</span><div class="chips" id="lv-allow"></div></div>
-        <div class="field"><span>Минимальный банк задания</span><div class="chips" id="lv-min"></div></div>
-        <button class="check" id="lv-agree"><i></i><span>Я не выполняю опасные задания, уважаю окружающих и знаю, что могу отказаться от любого задания без штрафа</span></button>
-        <button class="btn lime block" id="lv-start" style="margin-top:18px;height:54px;font-size:16px">● Начать эфир</button>
+        <h1>Go live</h1>
+        <p class="lead">Viewers suggest dares and pool money behind them. You decide what to take on.</p>
+        <div class="preview"><canvas id="prev-canvas"></canvas><span class="pill" id="cam-note">Your camera turns on when you start</span></div>
+        <label class="field"><span>Stream title</span><input class="inp" id="lv-title" maxlength="60" placeholder="e.g. Evening walk along the seafront" /></label>
+        <div class="field"><span>Category</span><div class="chips" id="lv-cat"></div></div>
+        <div class="field"><span>Dares you accept</span><div class="chips" id="lv-allow"></div></div>
+        <div class="field"><span>Minimum dare pot</span><div class="chips" id="lv-min"></div></div>
+        <button class="check" id="lv-adult" hidden><i></i><span>Everyone on camera is over 18 and consents to the broadcast. I won't stream in public places or arrange meetups.</span></button>
+        <button class="check" id="lv-agree"><i></i><span>I won't do dangerous dares, I respect people around me, and I can decline any dare without penalty</span></button>
+        <button class="btn gold block" id="lv-start" style="margin-top:20px;height:54px;font-size:16px">Start streaming</button>
       </div>
       <div class="live-view" id="live-view" hidden>
         <video id="cam" playsinline muted autoplay></video>
         <canvas id="cam-fake"></canvas>
         <div class="shade"></div>
         <div class="lv-top">
-          <span class="live">LIVE <b id="lv-time">0:00</b></span>
-          <span class="pill">👁 <b id="lv-viewers">0</b></span>
-          <span class="pill">✦ <b id="lv-earned" class="spark">0</b></span>
+          <span class="live">LIVE <b id="lv-time" class="num">0:00</b></span>
+          <span class="pill" id="lv-viewers-p"></span>
+          <span class="pill"><b id="lv-earned" class="gold num">$0</b></span>
           <span class="sp"></span>
-          <button class="iconb" id="lv-flip" aria-label="Сменить камеру">⟲</button>
-          <button class="btn sm bad" id="lv-end">Завершить</button>
+          <button class="iconb" id="lv-flip" aria-label="Switch camera"></button>
+          <button class="iconb" id="lv-end" aria-label="End stream"></button>
         </div>
-        <div class="lv-shield"><span class="pill">🛡 Фильтр скрыл: <b id="lv-filtered">0</b></span></div>
+        <div class="lv-shield"><span class="pill" id="lv-shield"></span></div>
         <div class="lv-active" id="lv-active"></div>
         <div class="lv-bottom">
           <div class="chat" id="lv-chat"></div>
@@ -341,47 +406,92 @@
     <section class="screen" id="scr-profile"><div class="page" id="profile"></div></section>
   </div>
 
-  <nav class="tabbar">
-    <button class="tab on" data-tab="feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="m10 9 5 3-5 3z"/></svg>Эфиры</button>
-    <button class="tab" data-tab="top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>Задания</button>
-    <button class="tab-go" data-tab="live" aria-label="Выйти в эфир"><span></span></button>
-    <button class="tab" data-tab="wallet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2M7 6l8-3 1 3"/></svg>Кошелёк</button>
-    <button class="tab" data-tab="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Профиль</button>
-  </nav>
+  <nav class="tabbar" id="tabbar"></nav>
 
   <div class="sheet-wrap" id="sheet"><div class="sheet-bg" data-close></div><div class="sheet"><div class="grab"></div><div class="sheet-body" id="sheet-body"></div></div></div>
-  <div id="toasts"></div>
+  <div id="toasts" role="status" aria-live="polite"></div>
 </div>
 
 <script>
 'use strict';
+/* ═════════ currency ═════════
+   All money in the app goes through this block. To switch to hryvnia, replace CUR with:
+   { sym: '₴', prefix: false, unit: 10, start: 500, dare: [20, 50, 100, 200, 500], back: [20, 50, 100], boost: 50,
+     packs: [200, 500, 1000, 2000], minPayout: 200, liveMin: [20, 50, 100, 200], liveMinAdult: [50, 100, 200, 500] } */
+const CUR = { sym: '$', prefix: true, unit: 1, start: 50, dare: [2, 5, 10, 20, 50], back: [1, 5, 10], boost: 5,
+  packs: [10, 25, 50, 100], minPayout: 20, liveMin: [2, 5, 10, 20], liveMinAdult: [5, 10, 20, 50] };
+
 /* ═════════ helpers ═════════ */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
+const fmt = (n) => Math.round(n).toLocaleString('en-US');
+const money = (n) => {
+  const v = Math.round(n * 100) / 100;
+  const s = Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: Number.isInteger(v) ? 0 : 2, maximumFractionDigits: 2 });
+  return (v < 0 ? '−' : '') + (CUR.prefix ? CUR.sym + s : `${s} ${CUR.sym}`);
+};
 const rnd = (a, b) => a + Math.random() * (b - a);
 const ri = (a, b) => Math.floor(rnd(a, b + 1));
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const uid = () => Math.random().toString(36).slice(2, 10);
 const mmss = (s) => { s = Math.max(0, Math.ceil(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
-const durLabel = (s) => (s < 60 ? `${s} сек` : `${s / 60} мин`);
-const hueOf = (str) => { let h = 0; for (const c of String(str)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
-const nickColor = (n) => `hsl(${hueOf(n)} 85% 70%)`;
-const ago = (t) => { const m = Math.round((Date.now() - t) / 60000); if (m < 1) return 'только что'; if (m < 60) return `${m} мин назад`; const h = Math.round(m / 60); return h < 24 ? `${h} ч назад` : new Date(t).toLocaleDateString('ru-RU'); };
+const durLabel = (s) => (s < 60 ? `${s} sec` : `${s / 60} min`);
+const hash = (str) => { let h = 0; for (const c of String(str)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
+const NICK_COLORS = ['#cdb27c', '#c8b69a', '#93b49c', '#dccdb3', '#b9a07a', '#a9bfa9', '#d4b49c'];
+const nickColor = (n) => NICK_COLORS[hash(n) % NICK_COLORS.length];
+const ago = (t) => { const m = Math.round((Date.now() - t) / 60000); if (m < 1) return 'just now'; if (m < 60) return `${m} min ago`; const h = Math.round(m / 60); return h < 24 ? `${h} h ago` : new Date(t).toLocaleDateString('en-GB'); };
+const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+
+const svg = (p, w = 20) => `<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const IC = {
+  heart: '<path d="M12 20s-7-4.4-8.8-8.7C2 8 4 5 7.2 5c1.9 0 3.3 1 4.8 2.8C13.5 6 14.9 5 16.8 5 20 5 22 8 20.8 11.3 19 15.6 12 20 12 20z"/>',
+  target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/>',
+  share: '<path d="M14 5h5v5M19 5l-8 8M18 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h4"/>',
+  flag: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+  eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  send: '<path d="M4 12h15M13 6l6 6-6 6"/>',
+  lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  shield: '<path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/>',
+  check: '<path d="m5 12 5 5 9-10"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.8 2.6 2.5 3 5.2"/>',
+  flip: '<path d="M3 12a9 9 0 0 1 15.5-6.2L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.2L3 16M3 21v-5h5"/>',
+  stop: '<rect x="7" y="7" width="10" height="10" rx="1.5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  chev: '<path d="m9 6 6 6-6 6"/>',
+  card: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h3"/>',
+  vote: '<path d="M4 11h16v9H4zM8 11V5h8v6M10 8h4"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+  wallet: '<rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M3 10h18M16 15h2M7 6l8-3 1 3"/>',
+  feed: '<rect x="4" y="3" width="16" height="18" rx="3"/><path d="m10 9 5 3-5 3z"/>',
+  sound: '<path d="M4 10v4h4l5 4V6L8 10zM16.5 9a4 4 0 0 1 0 6"/>',
+  vibro: '<rect x="8" y="3" width="8" height="18" rx="2"/><path d="M4 8v8M20 8v8"/>',
+  pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  phone: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+  reset: '<path d="M4 12a8 8 0 1 0 2.3-5.6L4 8.7M4 4v4.7h4.7"/>',
+  face: '<circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8"/>',
+  idcard: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.4 1.7-2 3-2s2.4.6 3 2M14 10h4M14 13h3"/>',
+  coins: '<ellipse cx="9" cy="7" rx="6" ry="2.5"/><path d="M3 7v4c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V7M3 11v4c0 1.4 2.7 2.5 6 2.5 1 0 2-.1 2.8-.3"/><circle cx="17" cy="16" r="4"/>',
+  undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
+  percent: '<path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+  transfer: '<path d="M4 8h14l-3-3M20 16H6l3 3"/>',
+};
+const ico = (n, w) => svg(IC[n], w);
 
 const VOTE_SEC = 10;
-const PASS = 0.6;         // доля «да» для зачёта
-const FEE = 0.2;          // комиссия платформы
+const PASS = 0.6;          // share of "yes" votes needed to count a dare
+const FEE = 0.2;           // platform fee on completed dares
 
 /* ═════════ storage ═════════ */
-const KEY = 'kurazh.v1';
+const KEY = 'kurazh.en.v1';
 const defaults = () => ({
-  user: null, balance: 500, earned: 0, xp: 0,
-  tx: [{ id: uid(), t: Date.now(), amount: 500, title: 'Приветственный бонус' }],
-  backs: [], follows: [],
-  settings: { sound: true, vibro: true },
-  stats: { proposed: 0, backed: 0, won: 0, refunded: 0, streams: 0, liveSec: 0, daresDone: 0 },
+  user: null, balance: CUR.start, earnings: 0, xp: 0, verified: false,
+  tx: [{ id: uid(), t: Date.now(), amount: CUR.start, title: 'Demo account: starting funds', acc: 'main' }],
+  backs: [], follows: [], payouts: [],
+  settings: { sound: true, vibro: true, adult: false },
+  stats: { proposed: 0, backed: 0, won: 0, refunded: 0, streams: 0, liveSec: 0, daresDone: 0, earnedTotal: 0 },
 });
 let S;
 function load() {
@@ -390,105 +500,142 @@ function load() {
     const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
     S = saved ? { ...d, ...saved, settings: { ...d.settings, ...saved.settings }, stats: { ...d.stats, ...saved.stats } } : d;
   } catch { S = d; }
+  for (const p of S.payouts) if (p.status === 'pending' && Date.now() - p.t > 8000) p.status = 'paid';
 }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* приватный режим */ } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* private mode */ } }
+const adultOn = () => S.verified && S.settings.adult;
 
-/* ═════════ safety filter ═════════ */
+/* ═════════ safety filter (English, Ukrainian and Russian input) ═════════ */
 const Safety = (() => {
-  const norm = (s) => ' ' + String(s).toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9]+/g, ' ').trim() + ' ';
-  const RULES = [
-    { cat: 'Опасно для здоровья', hint: 'Никаких высот, огня, дорог, транспорта и рискованных трюков.',
-      stems: ['спрыг', 'крыш', 'высот', 'карниз', 'балкон', 'огон', 'огн', 'зажигал', 'поджиг', 'поджеч', 'подожг', 'поджог', 'лезви', 'порез', 'оруж', 'пистолет', 'задох', 'задуш', 'утоп', 'прорубь', 'ледян', 'таблет', 'лекарств', 'отрав', 'розетк', 'рельс', 'поезд', 'электрич', 'зацеп', 'трасс', 'шоссе', 'перебег', 'перебеж', 'гоняй', 'обморок'],
-      words: ['нож', 'ножа', 'ножом', 'ножи'],
-      phrases: ['прыгни с', 'прыгни со', 'прыгнуть с', 'прыгать с', 'не дыши', 'на красный', 'за руль', 'за рулем', 'съешь мыло', 'съешь бумагу', 'съешь клей', 'бытовую химию', 'под машину'] },
-    { cat: 'Алкоголь и вещества', hint: 'Алкоголь, табак и вещества запрещены.',
-      stems: ['алкогол', 'водк', 'пив', 'коньяк', 'виски', 'бухн', 'бухать', 'бухл', 'напей', 'залпом', 'наркот', 'травк', 'сигарет', 'вейп', 'кальян', 'самогон', 'шампанск', 'текил', 'vodka'],
-      words: ['вино', 'вина', 'вином', 'винишко', 'кури', 'курить', 'покури', 'закури', 'ром', 'рома', 'пьяный', 'напиться'] },
-    { cat: 'Незаконно', hint: 'Кражи, вандализм и нарушения закона запрещены.',
-      stems: ['украд', 'украсть', 'укради', 'украл', 'своруй', 'своров', 'ворова', 'краж', 'стащи', 'взлом', 'вандал', 'граффити', 'зайцем', 'подделай', 'подделк', 'steal'],
-      phrases: ['без билета', 'разбей окно', 'разбей витрину', 'разбей машину', 'не заплатив', 'без оплаты'] },
-    { cat: 'Без согласия людей', hint: 'Окружающих можно вовлекать только вежливо и с их согласия.',
-      stems: ['ударь', 'ударить', 'толкни', 'толкнуть', 'оскорб', 'плюнь', 'облей', 'напугай', 'приставай', 'пранк', 'преследуй', 'дразни'] },
-    { cat: 'Личные данные', hint: 'Нельзя раскрывать адреса, документы, пароли и номера.',
-      stems: ['адрес', 'паспорт', 'пароль', 'геолокац', 'снилс', 'cvv'],
-      phrases: ['номер карты', 'номер телефона', 'пин код', 'где живешь', 'где ты живешь', 'код из смс'] },
-    { cat: '18+', hint: 'Откровенный контент запрещён.',
-      stems: ['разден', 'обнаж', 'интим', 'секс', 'эротик', 'нюд', 'nude', 'nsfw', 'стрипт'],
-      words: ['голый', 'голая', 'голой', 'голым', 'голышом'] },
-    { cat: 'Унижение и травля', hint: 'Задания не должны унижать или травить кого-либо.',
-      stems: ['самоуб', 'суицид', 'убей', 'убить', 'униз', 'униж', 'затрав', 'травл', 'сдохн'] },
+  const norm = (s) => ' ' + String(s).toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-яіїєґ0-9]+/g, ' ').trim() + ' ';
+  // Always on, in every room.
+  const BASE = [
+    { cat: 'Dangerous', hint: 'No heights, fire, roads, vehicles, choking or risky stunts.',
+      stems: ['roof', 'ledge', 'balcon', 'fire', 'lighter', 'burn', 'knife', 'knive', 'blade', 'weapon', 'chok', 'strangl', 'suffocat', 'drown', 'overdose', 'poison', 'railway', 'railroad', 'highway', 'bleach',
+        'спрыг', 'крыш', 'дах', 'высот', 'висот', 'карниз', 'балкон', 'огон', 'огн', 'вогн', 'зажигал', 'поджиг', 'подожг', 'поджог', 'підпал', 'лезви', 'порез', 'оруж', 'зброя', 'пистолет', 'задох', 'задуш', 'удуш', 'утоп', 'таблет', 'отрав', 'розетк', 'рельс', 'поезд', 'потяг', 'электрич', 'трасс', 'шоссе', 'перебег', 'перебеж'],
+      words: ['gun', 'guns', 'pill', 'pills', 'train', 'trains', 'нож', 'ножа', 'ножом', 'ніж'],
+      phrases: ['jump off', 'jump from', 'red light', 'behind the wheel', 'hold your breath', 'eat soap', 'tide pod', 'run across the road', 'cross the road', 'in front of a car',
+        'прыгни с', 'прыгнуть с', 'стрибни з', 'на красный', 'на червоне', 'за руль', 'не дыши', 'бытовую химию'] },
+    { cat: 'Alcohol & drugs', hint: 'Alcohol, tobacco and drugs are banned in every stream.',
+      stems: ['alcohol', 'vodka', 'beer', 'wine', 'whisk', 'tequila', 'booze', 'drunk', 'chug', 'cocaine', 'drug', 'cigarett', 'vape', 'hookah', 'champagne',
+        'алкогол', 'водк', 'горілк', 'пив', 'коньяк', 'виски', 'віскі', 'бухн', 'бухать', 'залпом', 'наркот', 'травк', 'сигарет', 'цигарк', 'вейп', 'кальян', 'самогон', 'шампанск'],
+      words: ['rum', 'weed', 'smoke', 'smoking', 'вино', 'вина', 'вином', 'кури', 'курить', 'покури', 'палити', 'ром', 'пьяный'] },
+    { cat: 'Illegal', hint: 'Theft, vandalism and breaking the law are banned.',
+      stems: ['steal', 'stole', 'shoplift', 'vandal', 'graffiti', 'counterfeit', 'украд', 'украсть', 'укради', 'вкрад', 'поцуп', 'своруй', 'краж', 'стащи', 'взлом', 'злам', 'вандал'],
+      phrases: ['break into', 'without paying', 'fake id', 'без билета', 'без квитка', 'не заплатив', 'разбей окно', 'розбий вікно'] },
+    { cat: 'Without consent', hint: 'You can involve other people only politely and with their consent.',
+      stems: ['punch', 'slap', 'insult', 'spit', 'prank', 'harass', 'stalk', 'douse', 'ударь', 'вдар', 'толкни', 'штовхни', 'оскорб', 'ображ', 'плюнь', 'облей', 'облий', 'напугай', 'пранк'],
+      phrases: ['pour water on', 'scare a', 'hit someone', 'push someone'] },
+    { cat: 'Personal data', hint: 'Never share addresses, documents, passwords or numbers.',
+      stems: ['address', 'passport', 'password', 'адрес', 'паспорт', 'пароль', 'геолокац', 'cvv', 'ssn'],
+      phrases: ['pin code', 'credit card', 'card number', 'phone number', 'where you live', 'where do you live', 'social security', 'номер карт', 'номер телефон', 'где живешь', 'де живеш'] },
+    { cat: 'Humiliation', hint: 'Dares must not humiliate or bully anyone.',
+      stems: ['suicid', 'humiliat', 'bully', 'самоуб', 'суицид', 'убей', 'убить', 'вбий', 'униж', 'принизь', 'травл', 'цькув'],
+      words: ['kill', 'die'] },
   ];
-  const PEOPLE = ['незнаком', 'прохож', 'случайн', 'девушк', 'парн'];
-  const CONTACT = ['поцел', 'обним', 'трог', 'щуп', 'шлеп', 'ущипн', 'лизн', 'понюха', 'засос'];
-  function scan(text) {
+  // General rooms only: explicit content belongs in the 18+ section.
+  const GENERAL = [
+    { cat: '18+', hint: 'Explicit dares are only allowed in the 18+ section.',
+      stems: ['nude', 'naked', 'strip', 'undress', 'topless', 'sex', 'nsfw', 'lingerie', 'underwear', 'erotic', 'разден', 'роздяг', 'обнаж', 'інтим', 'интим', 'секс', 'эротик', 'еротик', 'нюд', 'белье', 'білизн'],
+      words: ['голый', 'голая', 'голий', 'гола'] },
+  ];
+  // 18+ section only: extra hard limits.
+  const ADULT = [
+    { cat: 'Minors', hint: 'Any reference to or roleplay of minors is banned. Violations mean a permanent ban.',
+      stems: ['school', 'teen', 'minor', 'underage', 'child', 'kid', 'loli', 'schoolgirl', 'школ', 'несовершеннолет', 'неповнолітн', 'малолет', 'ребен', 'дитин', 'детск', 'дитяч', 'подрост', 'підліт'],
+      words: ['дети', 'діти', 'девочка', 'дівчинка', 'мальчик', 'хлопчик'] },
+    { cat: 'Meetups', hint: 'Meeting in person and any offline services are banned.',
+      stems: ['meet', 'hotel', 'escort', 'встрет', 'встреч', 'зустр', 'приезж', 'приїзд', 'эскорт', 'ескорт', 'готел', 'отел'],
+      phrases: ['in person', 'come over', 'hourly rate', 'per hour', 'в реале', 'наживо'], words: ['irl'] },
+    { cat: 'Off-platform contacts', hint: 'No contact swapping: all communication stays inside Kurazh.',
+      stems: ['telegram', 'whatsapp', 'snapchat', 'instagram', 'onlyfans', 'discord', 'телеграм', 'ватсап', 'вайбер', 'viber', 'инстаграм', 'інстаграм'],
+      words: ['insta', 'snap', 'kik', 'tg', 'тг', 'dm', 'dms'] },
+    { cat: 'Public places', hint: '18+ streams happen only in private spaces, with no bystanders.',
+      stems: ['street', 'outside', 'public', 'stranger', 'neighbo', 'elevator', 'passerby', 'улиц', 'вулиц', 'подъезд', 'прохож', 'перехож', 'сосед', 'сусід'],
+      words: ['park', 'window', 'car', 'balcony'], phrases: ['під їзд', 'in a car'] },
+  ];
+  const PEOPLE = ['stranger', 'passerby', 'random', 'незнаком', 'незнайом', 'прохож', 'перехож'];
+  const CONTACT = ['kiss', 'hug', 'touch', 'grab', 'lick', 'spank', 'поцел', 'поцілу', 'обним', 'обійм', 'трог', 'торкн', 'щуп', 'шлеп', 'лизн'];
+  function scan(text, mode = 'general') {
     const n = norm(text);
     const words = n.trim().split(' ');
     const has = (st) => words.some((w) => w.startsWith(st));
-    for (const r of RULES) {
+    const rules = [...BASE, ...(mode === 'adult' ? ADULT : GENERAL)];
+    for (const r of rules) {
       if ((r.stems || []).some(has) || (r.words || []).some((w) => words.includes(w)) || (r.phrases || []).some((p) => n.includes(' ' + p + ' '))) {
         return { ok: false, cat: r.cat, hint: r.hint };
       }
     }
-    if (PEOPLE.some(has) && CONTACT.some(has)) return { ok: false, cat: 'Без согласия людей', hint: 'Физический контакт с посторонними запрещён.' };
+    if (PEOPLE.some(has) && CONTACT.some(has)) return { ok: false, cat: 'Without consent', hint: 'No physical contact with strangers.' };
     return { ok: true };
   }
-  function check(text) {
+  function check(text, mode) {
     const raw = String(text || '').trim();
-    if (raw.length < 8) return { ok: false, cat: 'Слишком коротко', hint: 'Опишите задание подробнее — от 8 символов.' };
-    if (raw.length > 140) return { ok: false, cat: 'Слишком длинно', hint: 'Максимум 140 символов.' };
-    if (!/[a-zа-яё]{3}/i.test(raw)) return { ok: false, cat: 'Непонятно', hint: 'Напишите задание словами.' };
-    return scan(raw);
+    if (raw.length < 8) return { ok: false, cat: 'Too short', hint: 'Describe the dare in a bit more detail, at least 8 characters.' };
+    if (raw.length > 140) return { ok: false, cat: 'Too long', hint: '140 characters max.' };
+    if (!/[a-zа-яёіїєґ]{3}/i.test(raw)) return { ok: false, cat: 'Unclear', hint: 'Write the dare in words.' };
+    return scan(raw, mode);
   }
   return { check, scan };
 })();
+const modeOf = (cat) => (cat === 'adult' ? 'adult' : 'general');
 
 /* ═════════ content ═════════ */
-const CATS = { irl: 'Прогулка', sport: 'Спорт', art: 'Творчество', food: 'Кухня', music: 'Музыка', talk: 'Болталка' };
-const TAGS = { phys: '💪 Физические', people: '🤝 С людьми (по согласию)', food: '🍋 Еда', creative: '🎨 Творческие', talk: '💬 Разговорные' };
+const CATS = { all: 'All', irl: 'IRL', sport: 'Sport', art: 'Art', food: 'Food', music: 'Music', talk: 'Talk', adult: '18+' };
+const TAGS = { phys: 'Physical', people: 'With people, with consent', food: 'Food', creative: 'Creative', talk: 'Talk', look: 'Looks & dance' };
 const BANK = {
-  any: [['Говори минуту только рифмами', 'talk'], ['Расскажи самую неловкую историю из школы', 'talk'], ['Изобрази пингвина 30 секунд', 'creative'],
-    ['Сделай 3 разных акцента подряд', 'talk'], ['Объясни квантовую физику как пятилетнему', 'talk'], ['Прочитай последнее сообщение чата голосом диктора', 'talk'],
-    ['Станцуй под первую песню из плейлиста', 'creative'], ['Назови 10 городов на букву «К» за 20 секунд', 'talk'], ['Покажи лучшую пародию на кота', 'creative'],
-    ['Скажи скороговорку 5 раз без ошибок', 'talk']],
-  irl: [['Сделай вежливый комплимент бариста', 'people'], ['Найди 5 красных машин за 2 минуты', 'phys'], ['Спроси у прохожего любимый фильм, если он не против', 'people'],
-    ['Пройди 50 шагов походкой модели', 'phys'], ['Купи самый странный снек в ближайшем магазине', 'food'], ['Сфоткай 3 смешные вывески', 'creative'],
-    ['Найди кота и уговори его на фото', 'creative']],
-  sport: [['20 отжиманий за 40 секунд', 'phys'], ['Планка 1 минуту', 'phys'], ['30 приседаний без остановки', 'phys'],
-    ['Постой на одной ноге с закрытыми глазами 30 секунд', 'phys'], ['Попади мячом в корзину 3 раза подряд', 'phys'], ['50 прыжков на скакалке', 'phys']],
-  art: [['Нарисуй кота-космонавта за 2 минуты', 'creative'], ['Нарисуй автопортрет левой рукой', 'creative'], ['Слепи из пластилина маскота чата', 'creative'],
-    ['Нарисуй то, что опишет топ-донатер', 'creative'], ['Нарисуй карту выдуманной страны за минуту', 'creative']],
-  food: [['Съешь дольку лимона и не поморщись', 'food'], ['Сделай бутерброд с закрытыми глазами', 'food'], ['Угадай 3 специи по запаху', 'food'],
-    ['Приготовь омлет за 3 минуты', 'food'], ['Опиши вкус огурца как ресторанный критик', 'talk']],
-  music: [['Спой «В лесу родилась ёлочка» как оперу', 'creative'], ['Сочини рэп про чат за минуту', 'creative'], ['Сыграй мелодию на стаканах с водой', 'creative'],
-    ['Спой куплет, зажав нос', 'creative'], ['Исполни гимн чата в стиле металл', 'creative']],
-  talk: [['Угадай профессию зрителя по трём вопросам', 'talk'], ['Расскажи сказку, где каждое слово на «П»', 'talk'], ['Продай мне эту ручку за 30 секунд', 'talk']],
+  any: [['Talk only in rhymes for a whole minute', 'talk'], ['Tell your most awkward school story', 'talk'], ['Impersonate a penguin for 30 seconds', 'creative'],
+    ['Do 3 different accents in a row', 'talk'], ["Explain quantum physics like I'm five", 'talk'], ['Read the last chat message like a news anchor', 'talk'],
+    ['Dance to the first song on your playlist', 'creative'], ['Name 10 cities starting with K in 20 seconds', 'talk'], ['Do your best cat impression', 'creative'],
+    ['Say a tongue twister 5 times without a slip', 'talk']],
+  irl: [['Give the barista a polite compliment', 'people'], ['Spot 5 red cars in 2 minutes', 'phys'], ["Ask a passerby for their favourite film, if they're happy to chat", 'people'],
+    ['Walk 50 steps like a runway model', 'phys'], ['Buy the weirdest snack in the nearest shop', 'food'], ['Photograph 3 funny shop signs', 'creative'],
+    ['Find a cat and talk it into a photo', 'creative']],
+  sport: [['20 push-ups in 40 seconds', 'phys'], ['Hold a plank for 1 minute', 'phys'], ['30 squats without stopping', 'phys'],
+    ['Stand on one leg with eyes closed for 30 seconds', 'phys'], ['Sink 3 hoops in a row', 'phys'], ['50 jump-rope skips', 'phys']],
+  art: [['Draw an astronaut cat in 2 minutes', 'creative'], ['Draw a self-portrait with your left hand', 'creative'], ['Sculpt the chat mascot from clay', 'creative'],
+    ['Draw whatever the top backer describes', 'creative'], ['Map an imaginary country in one minute', 'creative']],
+  food: [['Eat a lemon slice without wincing', 'food'], ['Make a sandwich with your eyes closed', 'food'], ['Guess 3 spices by smell alone', 'food'],
+    ['Cook an omelette in 3 minutes', 'food'], ['Review a cucumber like a restaurant critic', 'talk']],
+  music: [['Sing Twinkle Twinkle as an opera aria', 'creative'], ['Write a rap about the chat in a minute', 'creative'], ['Play a tune on water glasses', 'creative'],
+    ['Sing a verse while holding your nose', 'creative'], ['Perform the chat anthem as a ballad', 'creative']],
+  talk: [["Guess a viewer's job in three questions", 'talk'], ['Tell a story where every word starts with P', 'talk'], ['Sell me this pen in 30 seconds', 'talk']],
+  adult: [['A slow dance to a song the chat picks', 'look'], ['Change into an evening look in 3 minutes', 'look'], ['Try on the outfit the top backer picks', 'look'],
+    ['Answer a spicy question from the chat', 'talk'], ['Read a poem in a whisper', 'talk'], ['Tell the story of your boldest date', 'talk'],
+    ['Compliment everyone who chipped in', 'talk'], ['Play the heroine of your favourite film', 'creative'], ['Tango with an imaginary partner', 'creative']],
 };
-// Примеры, которые зрители иногда шлют — их должен отсечь фильтр (текст пользователю не показываем).
-const UNSAFE = ['Прыгни с гаража', 'Выпей бутылку водки залпом', 'Перебеги дорогу на красный', 'Укради шоколадку в магазине', 'Поцелуй незнакомку',
-  'Назови свой домашний адрес', 'Залезь на крышу соседнего дома', 'Покажи паспорт в камеру', 'Обнажись на камеру', 'Облей прохожего водой'];
+// Samples of what viewers sometimes send. The filter must stop them; their text is never shown.
+const UNSAFE = ['Jump off the garage roof', 'Chug a bottle of vodka', 'Run across the road on a red light', 'Steal a candy bar from the shop', 'Kiss a stranger',
+  'Tell us your home address', 'Climb onto the roof next door', 'Show your passport on camera', 'Get naked on camera', 'Pour water on a passerby'];
+const ADULT_UNSAFE = ["Let's meet in person tonight", 'Send me your telegram', 'Go out on the street like that', 'Dress up as a schoolgirl', 'Have a glass of wine on camera',
+  'Tell us your address', 'Show yourself to the neighbours at the window'];
 
 const STREAMERS = [
-  { id: 'nika', name: 'Ника Лисова', cat: 'irl', city: 'Москва', title: 'Гуляю по ночному центру — командуйте 🌃', hue: [285, 230], viewers: 1840 },
-  { id: 'mila', name: 'mila.draws', cat: 'art', city: 'Санкт-Петербург', title: 'Рисую всё, что придумаете, на время ✏️', hue: [195, 250], viewers: 2310 },
-  { id: 'timur', name: 'Тимур Прыгун', cat: 'sport', city: 'Казань', title: 'Зал открыт — проверим мою форму 💪', hue: [18, 350], viewers: 960 },
-  { id: 'vanya', name: 'Ваня Голос', cat: 'music', city: 'Новосибирск', title: 'Пою по заявкам чата 🎤', hue: [320, 270], viewers: 1270 },
-  { id: 'gosha', name: 'Шеф Гоша', cat: 'food', city: 'Екатеринбург', title: 'Готовлю из того, что найду в холодильнике', hue: [38, 8], viewers: 640 },
-  { id: 'dasha', name: 'Даша Квест', cat: 'irl', city: 'Сочи', title: 'Набережная + ваши челленджи 🌊', hue: [170, 215], viewers: 880 },
-  { id: 'lev', name: 'Лев Болтун', cat: 'talk', city: 'Минск', title: 'Болтаем, отвечаю на всё за ✦', hue: [250, 300], viewers: 520 },
+  { id: 'nika', name: 'Nika Lysenko', cat: 'irl', city: 'Kyiv', title: 'Evening walk through the centre. You call the shots', pal: ['#1f3a2c', '#060807'], glow: ['#b8975a', '#c8b69a', '#3c5c49'], viewers: 1840 },
+  { id: 'mila', name: 'Mila Koval', cat: 'art', city: 'Lviv', title: 'Drawing whatever you dream up, against the clock', pal: ['#2a3329', '#070807'], glow: ['#cdb27c', '#93b49c', '#ece2cf'], viewers: 2310 },
+  { id: 'taras', name: 'Taras Boyko', cat: 'sport', city: 'Kharkiv', title: 'Gym is open. Let’s test my form', pal: ['#1b2a22', '#050605'], glow: ['#b8975a', '#6d8a74', '#c8b69a'], viewers: 960 },
+  { id: 'ivan', name: 'Ivan Holos', cat: 'music', city: 'Dnipro', title: 'Singing your requests', pal: ['#26301f', '#070806'], glow: ['#cdb27c', '#c8b69a', '#4c6a55'], viewers: 1270 },
+  { id: 'andriy', name: 'Chef Andriy', cat: 'food', city: 'Odesa', title: 'Cooking with whatever is in the fridge', pal: ['#2e2a1e', '#080706'], glow: ['#b8975a', '#ece2cf', '#6b5a3a'], viewers: 640 },
+  { id: 'daria', name: 'Daria Moroz', cat: 'irl', city: 'Odesa', title: 'Arcadia seafront and your challenges', pal: ['#1a3330', '#050807'], glow: ['#93b49c', '#c8b69a', '#b8975a'], viewers: 880 },
+  { id: 'lev', name: 'Lev Tkachenko', cat: 'talk', city: 'Uzhhorod', title: 'Ask me anything', pal: ['#232b25', '#060706'], glow: ['#c8b69a', '#b8975a', '#3c5c49'], viewers: 520 },
+  { id: 'velvet', name: 'Velvet', cat: 'adult', city: 'Kyiv', title: 'Late-night stream · looks on request', pal: ['#2a1513', '#050404'], glow: ['#b8975a', '#7e2b25', '#c8b69a'], viewers: 4210, mult: 3 },
+  { id: 'noir', name: 'Madame Noir', cat: 'adult', city: 'Lviv', title: 'Candid questions, honest answers', pal: ['#1d1714', '#040403'], glow: ['#cdb27c', '#5a2a24', '#ece2cf'], viewers: 3120, mult: 3 },
+  { id: 'carmen', name: 'Carmen', cat: 'adult', city: 'Odesa', title: 'Dancing to your music', pal: ['#2b1a16', '#060404'], glow: ['#b8975a', '#8e3a2f', '#c8b69a'], viewers: 2580, mult: 3 },
 ];
-const NICK_A = ['кот', 'лис', 'тень', 'пиксель', 'ёж', 'волк', 'сова', 'мята', 'луна', 'шторм', 'енот', 'крош', 'zero', 'neo', 'бро', 'тигр', 'кекс', 'nova'];
-const botNick = () => pick(NICK_A) + pick(['_', '.', '', '']) + (Math.random() < 0.7 ? ri(1, 999) : pick(['ok', 'x', 'pro', 'ru']));
+const NICK_A = ['fox', 'shadow', 'pixel', 'wolf', 'owl', 'mint', 'luna', 'storm', 'raccoon', 'velvet', 'zero', 'neo', 'count', 'tiger', 'muffin', 'nova', 'echo', 'sage'];
+const botNick = () => pick(NICK_A) + pick(['_', '.', '', '']) + (Math.random() < 0.7 ? ri(1, 999) : pick(['ok', 'x', 'pro', 'ua']));
 const CHAT = {
-  idle: ['всем привет 👋', 'го задание!', 'что сегодня делаем?', 'лучший стрим', 'кто из Москвы?', '🔥🔥🔥', 'скиньтесь на моё 😅', 'давай что-нибудь смешное', 'топ', 'ну это база'],
-  doing: ['давай!!', 'успеет?', 'не сможет 😂', 'верю в тебя', '⏱ время!', 'уже почти', 'жми!', '😂😂😂', 'красиво идёт', 'ещё чуть-чуть', '+50 в банк'],
-  voting: ['засчитываю ✅', 'честно сделал', 'не считается 😤', '✅✅✅', 'было близко', 'ну такое…', 'засчитать!'],
-  ok: ['GG', 'заслужил 👏', 'красава', 'легенда', 'следующее!'],
-  bad: ['эх(', 'в следующий раз', 'банк вернули, норм', 'бывает'],
+  idle: ['hi all 👋', 'dare time!', 'what are we doing today?', 'best stream', 'anyone from Kyiv?', 'chip in on mine', 'something funny pls', 'love this', 'classic'],
+  doing: ['go go go', 'will they make it?', 'no way 😂', 'you got this', 'clock is ticking', 'almost there', 'push!', 'smooth', 'a bit more', '+5 to the pot'],
+  voting: ['counts for me', 'fair and square', "doesn't count", 'yes yes yes', 'so close', 'hmm…', 'count it!'],
+  ok: ['bravo 👏', 'earned it', 'beautiful', 'legend', 'next one!'],
+  bad: ['oh well', 'next time', 'refunds came back, fine', 'happens'],
+  adultIdle: ['good evening ✨', 'which look tonight?', 'stunning', 'waiting for the dance', 'best stream of the night', 'shall we chip in for a look?'],
 };
 
 /* ═════════ audio / haptics / ui fx ═════════ */
 let actx = null;
-function beep(f = 660, d = 0.08, type = 'sine', v = 0.05) {
+function beep(f = 660, d = 0.08, type = 'sine', v = 0.04) {
   if (!S.settings.sound) return;
   try {
     actx = actx || new (window.AudioContext || window.webkitAudioContext)();
@@ -497,62 +644,64 @@ function beep(f = 660, d = 0.08, type = 'sine', v = 0.05) {
     o.connect(g).connect(actx.destination);
     g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + d);
     o.start(); o.stop(actx.currentTime + d);
-  } catch { /* нет аудио */ }
+  } catch { /* no audio */ }
 }
-const chime = () => { beep(660, 0.09); setTimeout(() => beep(990, 0.14), 90); };
+const chime = () => { beep(587, 0.12); setTimeout(() => beep(880, 0.18), 110); };
 function buzz(p) { if (S.settings.vibro && navigator.vibrate) { try { navigator.vibrate(p); } catch { /* ignore */ } } }
 function toast(msg, kind = '') {
   const el = document.createElement('div');
   el.className = 'toast ' + kind; el.textContent = msg;
   const box = $('#toasts'); box.appendChild(el);
   while (box.children.length > 3) box.firstChild.remove();
-  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 2600);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 2800);
 }
-function confetti(n = 46) {
-  const app = $('#app'), cols = ['#c6ff3d', '#ff3d8b', '#41e2ff', '#fff', '#ffd23d'];
+function goldDust(n = 28) {
+  const app = $('#app'), cols = ['#b8975a', '#cdb27c', '#ece2cf', '#c8b69a'];
   for (let i = 0; i < n; i++) {
     const c = document.createElement('i');
-    c.className = 'confetti';
-    c.style.left = rnd(0, 100) + '%'; c.style.background = pick(cols);
-    c.style.setProperty('--dx', rnd(-80, 80) + 'px'); c.style.setProperty('--r', rnd(-720, 720) + 'deg');
-    c.style.animationDelay = rnd(0, 0.35) + 's';
-    app.appendChild(c); setTimeout(() => c.remove(), 2300);
+    c.className = 'dust';
+    c.style.left = rnd(4, 96) + '%'; c.style.background = pick(cols);
+    c.style.setProperty('--dx', rnd(-50, 50) + 'px'); c.style.setProperty('--r', rnd(-360, 360) + 'deg');
+    c.style.animationDelay = rnd(0, 0.5) + 's';
+    app.appendChild(c); setTimeout(() => c.remove(), 2900);
   }
 }
 
-/* ═════════ wallet core ═════════ */
-function addTx(amount, title) {
-  S.balance += amount;
-  S.tx.unshift({ id: uid(), t: Date.now(), amount, title });
-  S.tx.length = Math.min(S.tx.length, 120);
+/* ═════════ money core ═════════ */
+function addTx(amount, title, acc = 'main') {
+  if (acc === 'earn') S.earnings = Math.round((S.earnings + amount) * 100) / 100; else S.balance = Math.round((S.balance + amount) * 100) / 100;
+  S.tx.unshift({ id: uid(), t: Date.now(), amount, title, acc });
+  S.tx.length = Math.min(S.tx.length, 150);
   save(); refreshBalance();
 }
 function gainXp(n) { S.xp += n; save(); }
 const level = (xp) => Math.floor(Math.sqrt(xp / 40)) + 1;
 const lvlFloor = (l) => 40 * (l - 1) ** 2;
-function refreshBalance() { $$('[data-bal]').forEach((e) => (e.textContent = fmt(S.balance))); if (cur === 'wallet') renderWallet(); }
+function refreshBalance() { $$('[data-bal]').forEach((e) => (e.textContent = money(S.balance))); if (cur === 'wallet') renderWallet(); }
 function needMoney(amount) {
   if (S.balance >= amount) return false;
-  toast(`Не хватает ✦ — нужно ${fmt(amount)}, у вас ${fmt(S.balance)}`, 'bad');
+  toast(`Not enough funds: you need ${money(amount)}, your balance is ${money(S.balance)}`, 'bad');
   openTopup();
   return true;
 }
 
 /* ═════════ streams simulation ═════════ */
-function makeBokeh(hue) {
-  return Array.from({ length: 14 }, () => ({ x: Math.random(), y: rnd(0, 0.75), r: rnd(0.03, 0.12), h: hue[0] + rnd(-35, 35), a: rnd(0.12, 0.4), s: rnd(0.15, 0.55), p: rnd(0, 6.3) }));
+function makeBokeh(glow) {
+  return Array.from({ length: 12 }, () => ({ x: Math.random(), y: rnd(0, 0.72), r: rnd(0.04, 0.13), c: pick(glow), a: rnd(0.07, 0.22), s: rnd(0.12, 0.45), p: rnd(0, 6.3) }));
 }
+const U = CUR.unit;
+function bankFor(cat) { return cat === 'adult' ? BANK.adult : [...(BANK[cat] || []), ...BANK.any]; }
 function botDare(st) {
   const taken = new Set([...st.dares.map((d) => d.text), st.active?.d.text]);
-  const pool = [...(BANK[st.cat] || []), ...BANK.any].filter(([t]) => !taken.has(t));
-  const [text, tag] = pick(pool.length ? pool : BANK.any);
-  return { id: uid(), text, tag, pool: ri(3, 30) * 10, backers: ri(1, 14), time: pick([30, 30, 60, 60, 120]), by: botNick(), mine: false, my: 0 };
+  const pool = bankFor(st.cat).filter(([t]) => !taken.has(t));
+  const [text, tag] = pick(pool.length ? pool : bankFor(st.cat));
+  return { id: uid(), text, tag, pool: ri(3, 30) * U * (st.mult || 1), backers: ri(1, 14), time: pick([30, 30, 60, 60, 120]), by: botNick(), mine: false, my: 0 };
 }
 const streams = STREAMERS.map((m) => {
-  const st = { ...m, likes: ri(2000, 30000), dares: [], active: null, cooldown: ri(3, 9), chat: [], bokeh: makeBokeh(m.hue) };
+  const st = { ...m, likes: ri(2000, 30000), dares: [], active: null, cooldown: ri(3, 9), chat: [], bokeh: makeBokeh(m.glow), liked: false };
   for (let i = 0, n = ri(2, 4); i < n; i++) st.dares.push(botDare(st));
-  if (Math.random() < 0.6) { const d = topDare(st); st.dares = st.dares.filter((x) => x !== d); st.active = { d, phase: 'doing', t: ri(10, d.time), total: d.time }; }
-  for (let i = 0; i < 5; i++) st.chat.push({ nick: botNick(), text: pick(CHAT.idle) });
+  if (Math.random() < 0.6) { const d = topDare(st); st.dares = st.dares.filter((x) => x !== d); st.active = { d, phase: 'doing', t: ri(10, d.time), total: d.time, yes: 0, no: 0, myVote: null }; }
+  for (let i = 0; i < 5; i++) st.chat.push({ nick: botNick(), text: pick(st.cat === 'adult' ? CHAT.adultIdle : CHAT.idle) });
   return st;
 });
 const byId = (id) => streams.find((s) => s.id === id);
@@ -567,55 +716,57 @@ function myBacks(dareId) { return S.backs.filter((b) => b.dareId === dareId && b
 function startDare(st, d) {
   st.dares = st.dares.filter((x) => x !== d);
   st.active = { d, phase: 'doing', t: d.time, total: d.time, yes: 0, no: 0, myVote: null };
-  pushChat(st, { sys: true, text: `▶ ${st.name} принял(а) задание «${d.text}» — банк ${fmt(d.pool)} ✦` });
-  if (d.my > 0) { toast(`🔥 ${st.name} выполняет ваше задание!`, 'ok'); buzz([40, 60, 40]); chime(); }
+  pushChat(st, { sys: true, text: `${st.name} takes on “${d.text}” · pot ${money(d.pool)}` });
+  if (d.my > 0) { toast(`${st.name} is doing your dare`, 'gold'); buzz([40, 60, 40]); chime(); }
 }
 function declineDare(st, d) {
   st.dares = st.dares.filter((x) => x !== d);
-  pushChat(st, { sys: true, text: `✋ ${st.name} отказался(ась) от «${d.text}». Банк вернули зрителям.` });
-  settle(d, false, st, 'отказ стримера');
+  pushChat(st, { sys: true, text: `${st.name} passed on “${d.text}”. Backers were refunded.` });
+  settle(d, false, st, 'the streamer passed');
 }
 function settle(d, success, st, why) {
   const mine = myBacks(d.id);
   if (!mine.length) return;
   const sum = mine.reduce((a, b) => a + b.amount, 0);
   for (const b of mine) b.status = success ? 'paid' : 'refunded';
-  if (success) { S.stats.won++; gainXp(20); toast(`✅ Засчитано! Ваши ${fmt(sum)} ✦ ушли ${st.name}`, 'ok'); }
-  else { S.stats.refunded++; addTx(sum, `Возврат (${why}): «${d.text}»`); toast(`↩ Возврат ${fmt(sum)} ✦ — ${why}`); }
+  if (success) { S.stats.won++; gainXp(20); toast(`Counted. Your ${money(sum)} went to ${st.name}`, 'ok'); }
+  else { S.stats.refunded++; addTx(sum, `Refund (${why}): “${d.text}”`); toast(`Refunded ${money(sum)} · ${why}`); }
   save();
 }
 function finishVote(st) {
   const a = st.active, total = a.yes + a.no;
   a.success = total > 0 && a.yes / total >= PASS;
   a.phase = 'result'; a.t = 5;
-  pushChat(st, { sys: true, text: a.success ? `✅ Засчитано ${Math.round((a.yes / total) * 100)}% — ${fmt(a.d.pool)} ✦ уходят стримеру` : `❌ Не засчитано — банк ${fmt(a.d.pool)} ✦ возвращается` });
+  pushChat(st, { sys: true, text: a.success ? `Counted (${Math.round((a.yes / total) * 100)}%) · ${money(a.d.pool)} goes to the streamer` : `Not counted · ${money(a.d.pool)} goes back to backers` });
   const involved = a.d.my > 0 || a.myVote !== null;
-  settle(a.d, a.success, st, 'не засчитано');
-  if (st === curStream() && cur === 'feed') { if (a.success) { confetti(involved ? 60 : 26); chime(); } else beep(220, 0.25, 'triangle'); }
+  settle(a.d, a.success, st, 'not counted');
+  if (st === curStream() && cur === 'feed') { if (a.success) { if (involved) goldDust(); chime(); } else beep(220, 0.25, 'triangle'); }
 }
 function tickStream(st, visible) {
   st.viewers = Math.max(40, Math.round(st.viewers * rnd(0.988, 1.014) + rnd(-4, 6)));
   const a = st.active;
-  if (Math.random() < (visible ? 0.7 : 0.15)) pushChat(st, { nick: botNick(), text: pick(a ? (a.phase === 'result' ? CHAT[a.success ? 'ok' : 'bad'] : CHAT[a.phase]) : CHAT.idle) });
+  const lines = a ? (a.phase === 'result' ? CHAT[a.success ? 'ok' : 'bad'] : CHAT[a.phase]) : (st.cat === 'adult' ? CHAT.adultIdle : CHAT.idle);
+  if (Math.random() < (visible ? 0.7 : 0.15)) pushChat(st, { nick: botNick(), text: pick(lines) });
   if (st.dares.length < 7 && Math.random() < 0.07) {
     const d = botDare(st); st.dares.push(d);
-    if (visible) pushChat(st, { sys: true, text: `🎯 Новое задание от ${d.by}: «${d.text}» — ${fmt(d.pool)} ✦` });
+    if (visible) pushChat(st, { sys: true, text: `New dare from ${d.by}: “${d.text}” · ${money(d.pool)}` });
   }
-  if (st.dares.length && Math.random() < 0.35) { const d = pick(st.dares); d.pool += pick([10, 20, 20, 50, 100]); d.backers++; }
-  for (const d of st.dares) if (d.mine && Math.random() < 0.3) { d.pool += pick([10, 20, 30, 50]); d.backers++; }
+  const m = (st.mult || 1) * U;
+  if (st.dares.length && Math.random() < 0.35) { const d = pick(st.dares); d.pool += pick([1, 2, 5, 5, 10]) * m; d.backers++; }
+  for (const d of st.dares) if (d.mine && Math.random() < 0.3) { d.pool += pick([1, 2, 5, 10]) * m; d.backers++; }
   if (!a) {
     if (--st.cooldown > 0 || !st.dares.length) return;
     const top = topDare(st);
-    if (top.pool < 60) { st.cooldown = 3; return; }
+    if (top.pool < 6 * m) { st.cooldown = 3; return; }
     if (Math.random() < 0.1) { declineDare(st, top); st.cooldown = 3; } else startDare(st, top);
     return;
   }
   a.t--;
   if (a.phase === 'doing') {
-    if (Math.random() < 0.3) { a.d.pool += pick([10, 20, 50]); a.d.backers++; }
+    if (Math.random() < 0.3) { a.d.pool += pick([1, 2, 5]) * m; a.d.backers++; }
     if (a.t <= 0) {
-      a.phase = 'voting'; a.t = VOTE_SEC; a.yes = a.yes || 0; a.no = a.no || 0; a.p = rnd(0.5, 0.95);
-      pushChat(st, { sys: true, text: '🗳 Время вышло! Голосуйте: засчитать?' });
+      a.phase = 'voting'; a.t = VOTE_SEC; a.p = rnd(0.5, 0.95);
+      pushChat(st, { sys: true, text: 'Time’s up. Vote: does it count?' });
       if (visible) { beep(520, 0.1); buzz(30); }
     }
   } else if (a.phase === 'voting') {
@@ -628,27 +779,27 @@ function tickStream(st, visible) {
 /* ═════════ viewer actions ═════════ */
 function backDare(st, d, amount) {
   if (needMoney(amount)) return false;
-  addTx(-amount, `В банк «${d.text}» · ${st.name}`);
+  addTx(-amount, `Into the pot: “${d.text}” · ${st.name}`);
   if (!d.my) d.backers++;
   d.pool += amount; d.my += amount;
   const ex = myBacks(d.id)[0];
   if (ex) ex.amount += amount;
   else S.backs.unshift({ id: uid(), dareId: d.id, streamId: st.id, streamer: st.name, text: d.text, amount, status: 'pending', t: Date.now(), mine: d.mine });
   S.stats.backed++; gainXp(5); save();
-  pushChat(st, { nick: S.user.nick, me: true, text: `+${fmt(amount)} ✦ в «${d.text}»` });
+  pushChat(st, { nick: S.user.nick, me: true, text: `+${money(amount)} on “${d.text}”` });
   beep(880, 0.06); buzz(15);
   return true;
 }
 function proposeDare(st, text, amount, time) {
-  const r = Safety.check(text);
-  if (!r.ok) { toast(`🛡 ${r.cat}: ${r.hint}`, 'bad'); return false; }
+  const r = Safety.check(text, modeOf(st.cat));
+  if (!r.ok) { toast(`${r.cat}. ${r.hint}`, 'bad'); return false; }
   if (needMoney(amount)) return false;
   const d = { id: uid(), text: text.trim().replace(/\s+/g, ' '), tag: 'talk', pool: 0, backers: 0, time, by: S.user.nick, mine: true, my: 0 };
   st.dares.push(d);
   backDare(st, d, amount);
   S.stats.proposed++; gainXp(10); save();
-  pushChat(st, { sys: true, text: `🎯 Новое задание от ${S.user.nick}: «${d.text}» — ${fmt(d.pool)} ✦` });
-  toast('Задание отправлено! Чем больше банк — тем выше шанс 🔥', 'ok');
+  pushChat(st, { sys: true, text: `New dare from ${S.user.nick}: “${d.text}” · ${money(d.pool)}` });
+  toast('Dare sent. A bigger pot means a better chance', 'gold');
   return true;
 }
 function vote(st, yes) {
@@ -659,30 +810,45 @@ function vote(st, yes) {
   updateCard(st, true);
 }
 
-/* ═════════ feed rendering ═════════ */
+/* ═════════ feed ═════════ */
 const feedEl = $('#feed');
-let curIdx = 0;
-const curStream = () => streams[curIdx];
+let feedCat = 'all', feedList = [], curIdx = 0, io = null;
+const curStream = () => feedList[curIdx];
+const avaHTML = (st, size) => `<div class="ava ${st.cat === 'adult' ? 'adult-ava' : ''}"${size ? ` style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.46)}px"` : ''}>${esc(st.name[0].toUpperCase())}</div>`;
+function renderCats() {
+  $('#cats').innerHTML = Object.entries(CATS).map(([k, v]) => {
+    if (k === 'adult') return `<button class="chip x18 ${feedCat === k ? 'on' : ''}" data-cat="adult">${adultOn() ? '' : ico('lock', 13)}18+</button>`;
+    return `<button class="chip ${feedCat === k ? 'on' : ''}" data-cat="${k}">${v}</button>`;
+  }).join('');
+}
+$('#cats').addEventListener('click', (e) => {
+  const c = e.target.closest('[data-cat]'); if (!c) return;
+  const k = c.dataset.cat;
+  if (k === 'adult' && !adultOn()) { requireAdult(() => setCat('adult')); return; }
+  setCat(k);
+});
+function setCat(k) { feedCat = k; renderCats(); buildFeed(); }
+const followHTML = (on) => (on ? ico('check', 14) : `${ico('plus', 14)}<span class="fl">&nbsp;Follow</span>`);
 function cardHTML(st) {
   const fol = S.follows.includes(st.id);
   return `<article class="card" data-id="${st.id}">
     <canvas></canvas><div class="shade"></div>
     <div class="c-top">
-      <div class="ava" style="background:linear-gradient(135deg,hsl(${st.hue[0]} 90% 70%),hsl(${st.hue[1]} 90% 60%))">${esc(st.name[0].toUpperCase())}</div>
-      <div class="who"><b>${esc(st.name)}</b><small><span class="live">LIVE</span>👁 <span data-k="v">${fmt(st.viewers)}</span> · ${esc(CATS[st.cat])}</small></div>
-      <button class="follow ${fol ? 'on' : ''}" data-act="follow">${fol ? '✓' : '+<span class="fl"> Следить</span>'}</button>
+      ${avaHTML(st)}
+      <div class="who"><b>${esc(st.name)}</b><small><span class="live">LIVE</span>${st.cat === 'adult' ? '<span class="adult">18+</span>' : ''}${ico('eye', 14)}<span data-k="v" class="num">${fmt(st.viewers)}</span>· ${esc(st.city)}</small></div>
+      <button class="follow ${fol ? 'on' : ''}" data-act="follow" aria-label="Follow">${followHTML(fol)}</button>
     </div>
     <div class="banner" data-el="banner"></div>
     <div class="c-bottom">
-      <div class="c-title">${esc(st.title)} <span class="muted">· ${esc(st.city)}</span></div>
+      <div class="c-title">${esc(st.title)}</div>
       <div class="chat" data-el="chat"></div>
-      <form class="say" data-act="say"><input enterkeyhint="send" maxlength="120" placeholder="Написать в чат…" aria-label="Сообщение" /><button aria-label="Отправить">➤</button></form>
+      <form class="say" data-act="say"><input enterkeyhint="send" maxlength="120" placeholder="Say something" aria-label="Chat message" /><button aria-label="Send">${ico('send', 18)}</button></form>
     </div>
     <div class="rail">
-      <button class="rbtn" data-act="like"><span>❤️</span><b data-k="likes">${fmt(st.likes)}</b></button>
-      <button class="rbtn main" data-act="dares"><span>🎯<i class="cnt" data-k="dc">${st.dares.length}</i></span>Задания</button>
-      <button class="rbtn" data-act="share"><span>↗</span>Поделиться</button>
-      <button class="rbtn" data-act="report"><span>⚑</span>Жалоба</button>
+      <button class="rbtn ${st.liked ? 'liked' : ''}" data-act="like" aria-label="Like"><span>${ico('heart', 21)}</span><b data-k="likes" class="num">${fmt(st.likes)}</b></button>
+      <button class="rbtn main" data-act="dares" aria-label="Dares"><span>${ico('target', 22)}<i class="cnt" data-k="dc">${st.dares.length}</i></span>Dares</button>
+      <button class="rbtn" data-act="share" aria-label="Share"><span>${ico('share', 19)}</span>Share</button>
+      <button class="rbtn" data-act="report" aria-label="Report"><span>${ico('flag', 19)}</span>Report</button>
     </div>
   </article>`;
 }
@@ -691,27 +857,27 @@ function bannerHTML(st) {
   const a = st.active;
   if (!a) {
     const top = topDare(st);
-    return `<div class="bn idle"><div class="bn-row"><span class="tag">⏳ Стример выбирает задание</span><span class="muted">в очереди: <b data-k="q">${st.dares.length}</b></span></div>
-      ${top ? `<div class="bn-text">Лидирует «${esc(top.text)}» — <b class="spark" data-k="tp">${fmt(top.pool)}</b> ✦</div>` : ''}
-      <button class="btn sm lime" data-act="dares">🎯 Предложить задание</button></div>`;
+    return `<div class="bn idle"><div class="bn-row"><span class="tag">Picking the next dare</span><span>queued <b data-k="q">${st.dares.length}</b></span></div>
+      ${top ? `<div class="bn-text">Leading: “${esc(top.text)}” · <span class="money" data-k="tp">${money(top.pool)}</span></div>` : ''}
+      <button class="btn sm gold" data-act="dares">${ico('target', 16)}Suggest a dare</button></div>`;
   }
   const d = a.d;
   if (a.phase === 'doing') {
-    return `<div class="bn"><div class="bn-row"><span class="tag hot">● Выполняет${d.mine ? ' ваше' : ''}</span><span class="timer" data-k="t">${mmss(a.t)}</span></div>
-      <div class="bn-text">«${esc(d.text)}»</div><div class="bar"><i data-k="bar" style="width:${(a.t / a.total) * 100}%"></i></div>
-      <div class="bn-row"><span>Банк <b class="spark" data-k="pool">${fmt(d.pool)}</b> ✦ · <span data-k="bk">${d.backers}</span> 👥${d.my ? ` · ваши <b data-k="my">${fmt(d.my)}</b>` : ''}</span>
-      <button class="btn sm lime" data-act="boost">+50 ✦</button></div></div>`;
+    return `<div class="bn hot"><div class="bn-row"><span class="tag hot">${d.mine ? 'Doing your dare' : 'Live dare'}</span><span class="timer" data-k="t">${mmss(a.t)}</span></div>
+      <div class="bn-text">“${esc(d.text)}”</div><div class="bar"><i data-k="bar" style="width:${(a.t / a.total) * 100}%"></i></div>
+      <div class="bn-row"><span style="display:flex;gap:6px;align-items:center"><span class="money" data-k="pool">${money(d.pool)}</span>· <span data-k="bk">${d.backers}</span>${ico('users', 14)}${d.my ? `· yours <b data-k="my">${money(d.my)}</b>` : ''}</span>
+      <button class="btn sm gold" data-act="boost">+${money(CUR.boost)}</button></div></div>`;
   }
   if (a.phase === 'voting') {
     const dis = a.myVote !== null ? 'disabled' : '';
-    return `<div class="bn"><div class="bn-row"><span class="tag cyan">🗳 Засчитать задание?</span><span class="timer" data-k="t">${mmss(a.t)}</span></div>
-      <div class="bn-text">«${esc(d.text)}» · <span class="spark">${fmt(d.pool)} ✦</span></div>
-      <div class="votes"><button class="vbtn yes ${a.myVote === true ? 'sel' : ''}" data-act="yes" ${dis}><i data-k="yb"></i><span>✓ Да</span><b data-k="yp">0%</b></button>
-      <button class="vbtn no ${a.myVote === false ? 'sel' : ''}" data-act="no" ${dis}><i data-k="nb"></i><span>✕ Нет</span><b data-k="np">0%</b></button></div>
-      <div class="muted small">${a.myVote !== null ? 'Ваш голос учтён. ' : ''}Нужно ≥${PASS * 100}% «да», иначе банк вернётся зрителям</div></div>`;
+    return `<div class="bn hot"><div class="bn-row"><span class="tag vote">Does it count?</span><span class="timer" data-k="t">${mmss(a.t)}</span></div>
+      <div class="bn-text">“${esc(d.text)}” · <span class="money">${money(d.pool)}</span></div>
+      <div class="votes"><button class="vbtn yes ${a.myVote === true ? 'sel' : ''}" data-act="yes" ${dis}><i data-k="yb"></i><span>${ico('check', 16)}Yes</span><b data-k="yp">0%</b></button>
+      <button class="vbtn no ${a.myVote === false ? 'sel' : ''}" data-act="no" ${dis}><i data-k="nb"></i><span>${ico('x', 16)}No</span><b data-k="np">0%</b></button></div>
+      <div class="muted small">${a.myVote !== null ? 'Your vote is in. ' : ''}It needs at least ${PASS * 100}% yes, otherwise backers get their money back</div></div>`;
   }
-  return `<div class="bn result ${a.success ? 'ok' : 'bad'}"><div class="big">${a.success ? '✅ Засчитано!' : '❌ Не засчитано'}</div>
-    <div class="muted">«${esc(d.text)}»</div><div style="margin-top:4px">${a.success ? `<b class="spark">${fmt(d.pool)} ✦</b> уходят стримеру` : `Банк <b>${fmt(d.pool)} ✦</b> возвращён зрителям`}</div></div>`;
+  return `<div class="bn result ${a.success ? 'ok' : 'bad'}"><div class="big">${a.success ? 'Counted' : 'Not counted'}</div>
+    <div class="muted">“${esc(d.text)}”</div><div style="margin-top:6px">${a.success ? `<span class="money">${money(d.pool)}</span> goes to the streamer` : `<span class="money">${money(d.pool)}</span> refunded to backers`}</div></div>`;
 }
 function updateCard(st, force) {
   const card = feedEl.querySelector(`[data-id="${st.id}"]`);
@@ -721,8 +887,8 @@ function updateCard(st, force) {
   const bn = card.querySelector('[data-el="banner"]'), key = bannerKey(st);
   if (force || bn.dataset.key !== key) { bn.dataset.key = key; bn.innerHTML = bannerHTML(st); }
   const a = st.active;
-  if (!a) { set('q', st.dares.length); const top = topDare(st); if (top) set('tp', fmt(top.pool)); return; }
-  set('t', mmss(a.t)); set('pool', fmt(a.d.pool)); set('bk', a.d.backers); set('my', fmt(a.d.my));
+  if (!a) { set('q', st.dares.length); const top = topDare(st); if (top) set('tp', money(top.pool)); return; }
+  set('t', mmss(a.t)); set('pool', money(a.d.pool)); set('bk', a.d.backers); set('my', money(a.d.my));
   const tm = card.querySelector('[data-k="t"]'); if (tm) tm.classList.toggle('low', a.phase !== 'result' && a.t <= 5);
   const bar = card.querySelector('[data-k="bar"]'); if (bar) bar.style.width = (a.t / a.total) * 100 + '%';
   if (a.phase === 'voting') {
@@ -731,18 +897,23 @@ function updateCard(st, force) {
     card.querySelector('[data-k="yb"]').style.width = yp + '%'; card.querySelector('[data-k="nb"]').style.width = 100 - yp + '%';
   }
 }
+const chatHTML = (list) => list.map((m) => (m.sys ? `<div class="msg sys">${esc(m.text)}</div>` : `<div class="msg ${m.me ? 'me' : ''}"><b style="color:${nickColor(m.nick)}">${esc(m.nick)}</b>${esc(m.text)}</div>`)).join('');
 function renderChat(st) {
+  if (!st) return;
   const card = feedEl.querySelector(`[data-id="${st.id}"]`);
   if (card) card.querySelector('[data-el="chat"]').innerHTML = chatHTML(st.chat.slice(-8));
 }
-const chatHTML = (list) => list.map((m) => (m.sys ? `<div class="msg sys">${esc(m.text)}</div>` : `<div class="msg ${m.me ? 'me' : ''}"><b style="color:${nickColor(m.nick)}">${esc(m.nick)}</b>${esc(m.text)}</div>`)).join('');
 function buildFeed() {
-  feedEl.innerHTML = streams.map(cardHTML).join('');
-  streams.forEach((st) => { updateCard(st, true); renderChat(st); });
-  const io = new IntersectionObserver((ents) => {
+  feedList = streams.filter((s) => (feedCat === 'all' ? s.cat !== 'adult' : s.cat === feedCat));
+  if (io) io.disconnect();
+  curIdx = 0; feedEl.scrollTop = 0;
+  if (!feedList.length) { feedEl.innerHTML = `<div class="empty-feed"><div><h2>Quiet right now</h2><p style="margin-top:8px">Nobody is live in ${CATS[feedCat]}. Try All.</p></div></div>`; return; }
+  feedEl.innerHTML = feedList.map(cardHTML).join('');
+  feedList.forEach((st) => { updateCard(st, true); renderChat(st); });
+  io = new IntersectionObserver((ents) => {
     for (const e of ents) if (e.isIntersecting) {
-      const i = streams.findIndex((s) => s.id === e.target.dataset.id);
-      if (i !== curIdx) { curIdx = i; renderChat(streams[i]); }
+      const i = feedList.findIndex((s) => s.id === e.target.dataset.id);
+      if (i >= 0 && i !== curIdx) { curIdx = i; renderChat(feedList[i]); }
     }
   }, { root: feedEl, threshold: 0.6 });
   $$('.card', feedEl).forEach((c) => io.observe(c));
@@ -751,14 +922,14 @@ feedEl.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-act]'); if (!btn || btn.tagName === 'FORM') return;
   const st = byId(e.target.closest('.card').dataset.id), act = btn.dataset.act;
   if (act === 'dares') openDares(st);
-  else if (act === 'boost' && st.active) { backDare(st, st.active.d, 50) && updateCard(st, true); }
+  else if (act === 'boost' && st.active) { backDare(st, st.active.d, CUR.boost) && updateCard(st, true); }
   else if (act === 'yes' || act === 'no') vote(st, act === 'yes');
   else if (act === 'like') like(st, btn);
   else if (act === 'follow') {
     const on = !S.follows.includes(st.id);
     S.follows = on ? [...S.follows, st.id] : S.follows.filter((x) => x !== st.id); save();
-    btn.classList.toggle('on', on); btn.innerHTML = on ? '✓' : '+<span class="fl"> Следить</span>';
-    if (on) toast(`Вы следите за ${st.name}`);
+    btn.classList.toggle('on', on); btn.innerHTML = followHTML(on);
+    if (on) toast(`You're following ${st.name}`);
   } else if (act === 'share') share(st);
   else if (act === 'report') openReport(st);
 });
@@ -766,56 +937,59 @@ feedEl.addEventListener('submit', (e) => {
   e.preventDefault();
   const inp = e.target.querySelector('input'), text = inp.value.trim(); if (!text) return;
   const st = byId(e.target.closest('.card').dataset.id);
-  const r = Safety.scan(text);
-  if (!r.ok) { toast(`🛡 Сообщение скрыто фильтром: ${r.cat}`, 'bad'); return; }
+  const r = Safety.scan(text, modeOf(st.cat));
+  if (!r.ok) { toast(`Message hidden by the filter: ${r.cat}`, 'bad'); return; }
   pushChat(st, { nick: S.user.nick, me: true, text }); inp.value = '';
 });
 function like(st, btn) {
-  st.likes++; btn.querySelector('[data-k="likes"]').textContent = fmt(st.likes); buzz(8);
-  const h = document.createElement('div'); h.className = 'heart'; h.textContent = pick(['❤️', '💖', '🔥', '💜']);
-  h.style.setProperty('--dx', rnd(-50, 10) + 'px'); btn.closest('.card').appendChild(h); setTimeout(() => h.remove(), 1400);
+  st.likes++; st.liked = true; btn.classList.add('liked'); btn.querySelector('[data-k="likes"]').textContent = fmt(st.likes); buzz(8);
+  const h = document.createElement('div'); h.className = 'heart'; h.innerHTML = ico('heart', 26);
+  h.style.setProperty('--dx', rnd(-50, 10) + 'px'); btn.closest('.card').appendChild(h); setTimeout(() => h.remove(), 1500);
 }
 async function share(st) {
-  const data = { title: 'Кураж', text: `${st.name} в эфире: ${st.title}`, url: location.href };
-  try { if (navigator.share) { await navigator.share(data); return; } await navigator.clipboard.writeText(`${data.text} — ${data.url}`); toast('Ссылка скопирована'); }
-  catch { /* пользователь отменил */ }
+  const data = { title: 'Kurazh', text: `${st.name} is live: ${st.title}`, url: location.href };
+  try { if (navigator.share) { await navigator.share(data); return; } await navigator.clipboard.writeText(`${data.text} — ${data.url}`); toast('Link copied'); }
+  catch { toast("Couldn't share. Copy the page address instead"); }
 }
 
 /* ═════════ sheets ═════════ */
 let sheetCtx = null;
 function openSheet(html, ctx = {}) {
-  const old = $('#sheet-body'), body = old.cloneNode(false); // чистый узел — без старых обработчиков
+  const old = $('#sheet-body'), body = old.cloneNode(false); // a fresh node, without old listeners
   old.replaceWith(body); body.innerHTML = html; $('#sheet').classList.add('open'); sheetCtx = ctx;
+  return body;
 }
 function closeSheet() { $('#sheet').classList.remove('open'); sheetCtx = null; }
 $('#sheet').addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeSheet(); });
-const sheetHead = (title, sub = '') => `<div class="sh-head"><div><h2>${title}</h2>${sub ? `<div class="muted small" style="margin-top:2px">${sub}</div>` : ''}</div><button class="x" data-close aria-label="Закрыть">✕</button></div>`;
+const sheetHead = (title, sub = '') => `<div class="sh-head"><div><h2>${title}</h2>${sub ? `<div class="sub">${sub}</div>` : ''}</div><button class="x" data-close aria-label="Close">${ico('x', 16)}</button></div>`;
+const chipRow = (id, vals, on, label, cls = '') => `<div class="chips" id="${id}">${vals.map((v) => `<button type="button" class="chip ${cls} ${v === on ? 'on' : ''}" data-v="${v}">${label(v)}</button>`).join('')}</div>`;
 
 function openDares(st) {
-  const ideas = [...(BANK[st.cat] || []), ...BANK.any].sort(() => Math.random() - 0.5).slice(0, 6);
-  openSheet(`${sheetHead(`Задания · ${esc(st.name)}`, 'Деньги хранятся в банке и уходят стримеру только после зачёта')}
-    <div id="d-active" style="margin-top:12px"></div>
-    <div class="bn-row" style="margin:14px 0 8px"><b>В очереди</b><span class="chips" id="d-amt">${[20, 50, 100].map((v, i) => `<button class="chip ${i === 1 ? 'on' : ''}" data-v="${v}" style="height:30px;padding:0 10px;font-size:13px">+${v}</button>`).join('')}</span></div>
+  const mode = modeOf(st.cat), m = st.mult || 1;
+  const ideas = [...bankFor(st.cat)].sort(() => Math.random() - 0.5).slice(0, 6);
+  const amounts = CUR.dare.map((v) => v * (m > 1 ? 2 : 1));
+  const body = openSheet(`${sheetHead(`Dares · ${esc(st.name)}`, 'Money waits in the dare’s pot and goes to the streamer only once it counts')}
+    <div id="d-active" style="margin-top:14px"></div>
+    <div class="bn-row" style="margin:16px 0 9px"><span class="tag">Queue</span>${chipRow('d-amt', CUR.back, CUR.back[1], (v) => `+${money(v)}`, 'money')}</div>
     <div class="list" id="d-list"></div>
-    <h3>Предложить своё</h3>
+    <h3>Suggest your own</h3>
     <form id="d-form">
-      <textarea class="inp" id="d-text" maxlength="140" placeholder="Например: спой куплет как оперный певец"></textarea>
-      <div class="ideas">${ideas.map(([t]) => `<button type="button" data-idea="${esc(t)}">💡 ${esc(t)}</button>`).join('')}</div>
-      <div class="safe-hint" id="d-hint">🛡 Каждое задание проверяет фильтр безопасности</div>
-      <div class="field"><span>Банк от вас</span><div class="chips" id="d-pool">${[20, 50, 100, 250, 500].map((v) => `<button type="button" class="chip ${v === 100 ? 'on' : ''}" data-v="${v}">${v} ✦</button>`).join('')}</div></div>
-      <div class="field"><span>Время на выполнение</span><div class="chips" id="d-time">${[30, 60, 120, 300].map((v) => `<button type="button" class="chip ${v === 60 ? 'on' : ''}" data-v="${v}">${durLabel(v)}</button>`).join('')}</div></div>
-      <button class="btn lime block" style="margin-top:18px" id="d-send">Предложить за 100 ✦</button>
-      <div class="muted small" style="margin-top:10px;text-align:center">Баланс: ✦ <b data-bal>${fmt(S.balance)}</b> · Если стример откажется или задание не засчитают — вернём всё</div>
+      <textarea class="inp" id="d-text" maxlength="140" placeholder="${mode === 'adult' ? 'e.g. A slow dance to your favourite song' : 'e.g. Sing a verse like an opera star'}"></textarea>
+      <div class="ideas">${ideas.map(([t]) => `<button type="button" data-idea="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+      <div class="safe-hint" id="d-hint">${ico('shield', 14)}Every dare goes through the safety filter</div>
+      <div class="field"><span>Your stake</span>${chipRow('d-pool', amounts, amounts[1], money, 'money')}</div>
+      <div class="field"><span>Time limit</span>${chipRow('d-time', [30, 60, 120, 300], 60, durLabel)}</div>
+      <button class="btn gold block" style="margin-top:20px" id="d-send">Suggest for ${money(amounts[1])}</button>
+      <div class="muted small" style="margin-top:10px;text-align:center">Balance <b data-bal>${money(S.balance)}</b>. If the streamer passes or the dare doesn't count, you get your money back.</div>
     </form>`, { type: 'dares', id: st.id, sig: '' });
-  const body = $('#sheet-body');
   const val = (sel) => +body.querySelector(`${sel} .chip.on`).dataset.v;
   const upd = () => {
     const txt = $('#d-text').value, hint = $('#d-hint');
-    $('#d-send').textContent = `Предложить за ${val('#d-pool')} ✦`;
-    if (!txt.trim()) { hint.className = 'safe-hint'; hint.textContent = '🛡 Каждое задание проверяет фильтр безопасности'; return; }
-    const r = Safety.check(txt);
+    $('#d-send').textContent = `Suggest for ${money(val('#d-pool'))}`;
+    if (!txt.trim()) { hint.className = 'safe-hint'; hint.innerHTML = `${ico('shield', 14)}Every dare goes through the safety filter`; return; }
+    const r = Safety.check(txt, mode);
     hint.className = 'safe-hint ' + (r.ok ? 'ok' : 'bad');
-    hint.textContent = r.ok ? '✓ Задание прошло проверку' : `✕ ${r.cat}. ${r.hint}`;
+    hint.innerHTML = r.ok ? `${ico('check', 14)}This dare passes the check` : `${ico('x', 14)}${esc(r.cat)}. ${esc(r.hint)}`;
   };
   body.addEventListener('click', (e) => {
     const chip = e.target.closest('.chip');
@@ -843,9 +1017,9 @@ function renderDaresSheet(force) {
     if (force || act.dataset.k !== k) {
       act.dataset.k = k;
       act.innerHTML = a && a.phase === 'doing'
-        ? `<div class="drow" style="border:1px solid rgba(255,61,139,.4)"><div class="grow"><div class="m"><span class="st go">● СЕЙЧАС</span><span data-k="at">${mmss(a.t)}</span></div><div class="t">${esc(a.d.text)}</div><div class="m">банк <span class="pool" data-k="ap">${fmt(a.d.pool)} ✦</span></div></div><button class="btn sm lime" data-back="active">Докинуть</button></div>`
-        : a ? `<div class="drow"><div class="grow"><div class="m"><span class="st vote">${a.phase === 'voting' ? 'ГОЛОСОВАНИЕ' : 'ИТОГ'}</span></div><div class="t">${esc(a.d.text)}</div></div></div>` : '';
-    } else if (a) { const at = act.querySelector('[data-k="at"]'), ap = act.querySelector('[data-k="ap"]'); if (at) at.textContent = mmss(a.t); if (ap) ap.textContent = `${fmt(a.d.pool)} ✦`; }
+        ? `<div class="drow now"><div class="grow"><div class="m" style="margin:0 0 5px"><span class="st go">NOW</span><span data-k="at" class="num">${mmss(a.t)}</span></div><div class="t">${esc(a.d.text)}</div><div class="m"><span class="money" data-k="ap">${money(a.d.pool)}</span></div></div><button class="btn sm gold" data-back="active">Add</button></div>`
+        : a ? `<div class="drow"><div class="grow"><div class="m" style="margin:0 0 5px"><span class="st vote">${a.phase === 'voting' ? 'VOTING' : 'RESULT'}</span></div><div class="t">${esc(a.d.text)}</div></div></div>` : '';
+    } else if (a) { const at = act.querySelector('[data-k="at"]'), ap = act.querySelector('[data-k="ap"]'); if (at) at.textContent = mmss(a.t); if (ap) ap.textContent = money(a.d.pool); }
   }
   const list = $('#d-list'); if (!list) return;
   const sig = st.dares.map((d) => d.id).sort().join();
@@ -853,41 +1027,111 @@ function renderDaresSheet(force) {
     sheetCtx.sig = sig;
     const sorted = [...st.dares].sort((x, y) => y.pool - x.pool);
     list.innerHTML = sorted.length ? sorted.map((d, i) => `<div class="drow" data-row="${d.id}"><div class="grow">
-        <div class="t">${i === 0 ? '👑 ' : ''}${esc(d.text)}</div>
-        <div class="m"><span class="pool" data-k="p">${fmt(d.pool)} ✦</span><span data-k="b">${d.backers} 👥</span><span>⏱ ${durLabel(d.time)}</span>${d.mine ? '<span class="st mine">ВАШЕ</span>' : `<span>от ${esc(d.by)}</span>`}${d.my ? `<span class="st back">вклад ${fmt(d.my)}</span>` : ''}</div>
-      </div><button class="btn sm ghost" data-back="${d.id}">＋</button></div>`).join('')
-      : '<div class="empty" style="padding:20px"><div>🎯</div>Пока пусто — предложите первое задание</div>';
+        ${i === 0 ? '<div class="crown" style="margin-bottom:4px">Top of the queue</div>' : ''}<div class="t">${esc(d.text)}</div>
+        <div class="m"><span class="money" data-k="p">${money(d.pool)}</span><span data-k="b">${ico('users', 13)}${d.backers}</span><span>${ico('clock', 13)}${durLabel(d.time)}</span>${d.mine ? '<span class="st mine">YOURS</span>' : `<span>by ${esc(d.by)}</span>`}${d.my ? `<span class="st back">you ${money(d.my)}</span>` : ''}</div>
+      </div><button class="btn sm ghost" data-back="${d.id}" aria-label="Add money">${ico('plus', 16)}</button></div>`).join('')
+      : `<div class="empty" style="padding:20px"><div class="ring">${ico('target', 24)}</div>Nothing yet. Suggest the first dare</div>`;
   } else {
-    for (const d of st.dares) { const r = list.querySelector(`[data-row="${d.id}"]`); if (r) { r.querySelector('[data-k="p"]').textContent = `${fmt(d.pool)} ✦`; r.querySelector('[data-k="b"]').textContent = `${d.backers} 👥`; } }
+    for (const d of st.dares) { const r = list.querySelector(`[data-row="${d.id}"]`); if (r) { r.querySelector('[data-k="p"]').textContent = money(d.pool); r.querySelector('[data-k="b"]').innerHTML = `${ico('users', 13)}${d.backers}`; } }
   }
 }
 function openReport(st) {
-  const reasons = ['Опасное задание', 'Принуждение или травля', 'Неприемлемый контент', 'Мошенничество', 'Другое'];
-  openSheet(`${sheetHead('Пожаловаться', esc(st.name))}<div class="menu" style="margin-top:14px">${reasons.map((r) => `<button data-r>${r}<span class="muted">›</span></button>`).join('')}</div>
-    <p class="muted small" style="margin-top:12px">Модераторы видят эфир в реальном времени и могут остановить задание или трансляцию.</p>`, { type: 'report' });
-  $('#sheet-body').addEventListener('click', (e) => { if (e.target.closest('[data-r]')) { closeSheet(); toast('Жалоба отправлена модераторам. Спасибо!', 'ok'); } });
+  const reasons = ['Dangerous dare', 'Coercion or bullying', 'Looks like a minor', 'Inappropriate content', 'Scam', 'Something else'];
+  const body = openSheet(`${sheetHead('Report', esc(st.name))}<div class="menu" style="margin-top:16px">${reasons.map((r) => `<button data-r><span class="grow">${r}</span>${ico('chev', 16)}</button>`).join('')}</div>
+    <p class="muted small" style="margin-top:12px">Moderators watch streams in real time and can stop a dare or the whole broadcast. Reports from the 18+ section are reviewed first.</p>`, { type: 'report' });
+  body.addEventListener('click', (e) => { if (e.target.closest('[data-r]')) { closeSheet(); toast('Report sent to moderators', 'ok'); } });
 }
 function openRules() {
-  openSheet(`${sheetHead('Правила и безопасность')}<ol class="rules" style="margin-top:14px">
-    <li><b>Запрещено</b>: опасное для жизни и здоровья (высоты, огонь, дороги, транспорт), алкоголь и вещества, кражи и вандализм, контакт с посторонними без согласия, раскрытие личных данных, 18+, унижение и травля.</li>
-    <li>Каждое задание и сообщение проверяет <b>фильтр безопасности</b>; стример дополнительно выбирает, какие типы заданий принимает.</li>
-    <li>Деньги зрителей лежат в <b>банке задания</b> и уходят стримеру только если ≥${PASS * 100}% зрителей проголосовали «засчитать».</li>
-    <li>Отказ стримера, таймаут или «не засчитано» — <b>полный возврат</b> всем, кто скинулся.</li>
-    <li>Стример может отказаться от любого задания <b>без штрафа</b>. Никто не обязан ничего выполнять.</li>
-    <li>Комиссия платформы — ${FEE * 100}% от банка выполненного задания.</li>
-    <li>Сервис для пользователей <b>18+</b>. Кнопка «Жалоба» есть на каждом эфире.</li>
-  </ol><div class="note">Это демо-версия: эфиры зрителей смоделированы, ✦ ненастоящие, реальные деньги не списываются.</div>`, { type: 'rules' });
+  openSheet(`${sheetHead('Rules & safety')}<ol class="rules" style="margin-top:16px">
+    <li><b>Banned everywhere:</b> anything dangerous to life or health, alcohol and drugs, theft and vandalism, touching strangers without consent, sharing personal data, humiliation and bullying.</li>
+    <li>Every dare, message and nickname goes through the <b>safety filter</b>. Streamers choose which dares they accept and can decline any of them without penalty.</li>
+    <li><b>Real money, no tokens.</b> It waits in the dare’s pot and goes to the streamer only if at least ${PASS * 100}% of viewers vote that it counts. A pass, a timeout or a “no” means a full refund.</li>
+    <li>Streamers receive the pot minus a ${FEE * 100}% fee. Withdrawals to a card need identity verification.</li>
+  </ol>
+  <h3>18+ section</h3>
+  <ol class="rules">
+    <li>Entry only after identity and age verification, for viewers and streamers alike.</li>
+    <li>Everyone on camera is over 18 and consents. Any depiction of minors means a permanent ban.</li>
+    <li>Private spaces only: no streets, public places or bystanders.</li>
+    <li>No meeting in person, no offline services, no swapping contacts outside Kurazh.</li>
+    <li>Recording or sharing streams without the streamer’s consent is banned.</li>
+  </ol>
+  <div class="note">Demo version: other streams are simulated, the money is practice money, and no real payments happen.</div>`, { type: 'rules' });
 }
 function openTopup() {
-  const packs = [[100, '99 ₽'], [550, '490 ₽', '+10%'], [1200, '990 ₽', '+20%'], [3200, '2 490 ₽', '+28%']];
-  openSheet(`${sheetHead('Пополнить ✦', 'Искры — внутренняя валюта для банков заданий')}
-    <div class="packs">${packs.map(([n, p, b]) => `<button class="pack" data-pack="${n}">${b ? `<em>${b}</em>` : ''}<b>✦ ${fmt(n)}</b><span class="muted">${p}</span></button>`).join('')}</div>
-    <div class="note">Демо: оплата имитируется, реальные деньги не списываются. В рабочей версии здесь будет платёжный провайдер и проверка возраста.</div>`, { type: 'topup' });
-  $('#sheet-body').addEventListener('click', (e) => {
+  const body = openSheet(`${sheetHead('Add funds', 'Credited one to one, with no bonuses or exchange rates')}
+    <div class="packs">${CUR.packs.map((n) => `<button class="pack" data-pack="${n}"><b>${money(n)}</b><span>card, Apple Pay or Google Pay</span></button>`).join('')}</div>
+    <div class="note">Demo: the payment is simulated and nothing is charged. In production a licensed payment provider handles it, and the app never sees card details.</div>`, { type: 'topup' });
+  body.addEventListener('click', (e) => {
     const p = e.target.closest('[data-pack]'); if (!p || p.disabled) return;
-    p.disabled = true; p.querySelector('.muted').textContent = 'Оплата…';
-    setTimeout(() => { addTx(+p.dataset.pack, 'Пополнение (демо)'); closeSheet(); toast(`+${fmt(+p.dataset.pack)} ✦ зачислено`, 'ok'); chime(); }, 900);
+    p.disabled = true; p.querySelector('span').textContent = 'Processing…';
+    setTimeout(() => { addTx(+p.dataset.pack, 'Top-up (demo)'); closeSheet(); toast(`${money(+p.dataset.pack)} added`, 'ok'); chime(); }, 900);
   });
+}
+function openVerify(next) {
+  const steps = [['idcard', 'ID document', 'Passport, ID card or driving licence'], ['face', 'Selfie video', 'Confirms it’s really you, live on camera'], ['check', 'Decision', 'Usually under a minute']];
+  const body = openSheet(`${sheetHead('Verify your identity', 'Needed for withdrawals and the 18+ section')}
+    <div class="steps">${steps.map(([i, t, d], k) => `<div class="step" data-s="${k}"><span class="ic">${ico(i, 20)}</span><div class="grow"><b>${t}</b><small>${d}</small></div></div>`).join('')}</div>
+    <div class="note">Demo: nothing is photographed or sent. In production a certified KYC provider runs the check, and documents are never stored in the app.</div>
+    <button class="btn gold block" style="margin-top:16px" id="kyc-go">Start verification</button>`, { type: 'verify' });
+  $('#kyc-go').addEventListener('click', async (e) => {
+    e.currentTarget.disabled = true; e.currentTarget.textContent = 'Checking…';
+    for (let k = 0; k < steps.length; k++) {
+      const s = body.querySelector(`[data-s="${k}"]`); s.classList.add('busy');
+      await new Promise((r) => setTimeout(r, 800));
+      s.classList.remove('busy'); s.classList.add('done'); beep(700 + k * 120, 0.06);
+    }
+    S.verified = true; S.verifiedAt = Date.now(); save();
+    toast('Identity verified', 'ok'); chime();
+    setTimeout(() => { closeSheet(); refreshViews(); next?.(); }, 500);
+  });
+}
+function openAdultGate(next) {
+  let agree = false;
+  openSheet(`${sheetHead('18+ section', 'Streams for adults. Verified members only.')}
+    <ol class="rules" style="margin-top:16px">
+      <li>Every streamer in this section has passed age and identity verification.</li>
+      <li>Meeting in person, offline services and swapping contacts are banned, and such messages are blocked.</li>
+      <li>Screen recording and sharing streams without consent is banned.</li>
+      <li>If something looks wrong, tap Report. These reports are reviewed first.</li>
+    </ol>
+    <button class="check" id="ag-chk"><i></i><span>I am over 18 and accept the rules of this section</span></button>
+    <button class="btn gold block" style="margin-top:16px" id="ag-go">Enter</button>`, { type: 'adult' });
+  $('#ag-chk').addEventListener('click', () => { agree = !agree; $('#ag-chk').classList.toggle('on', agree); });
+  $('#ag-go').addEventListener('click', () => {
+    if (!agree) return toast('Confirm your age and the section rules', 'bad');
+    S.settings.adult = true; save(); closeSheet(); refreshViews(); next?.();
+  });
+}
+function requireAdult(next) {
+  if (!S.verified) { openVerify(() => openAdultGate(next)); return; }
+  openAdultGate(next);
+}
+function openWithdraw() {
+  if (!S.verified) { openVerify(openWithdraw); return; }
+  if (S.earnings < CUR.minPayout) { toast(`Withdrawals start at ${money(CUR.minPayout)}. Available now: ${money(S.earnings)}`); return; }
+  const all = Math.floor(S.earnings);
+  const opts = [...new Set([CUR.minPayout, CUR.minPayout * 2.5, CUR.minPayout * 10].filter((v) => v < all).concat([all]))];
+  const body = openSheet(`${sheetHead('Withdraw to card', `Available ${money(S.earnings)}`)}
+    <div class="field"><span>Amount</span>${chipRow('w-amt', opts, all, (v) => (v === all ? `All · ${money(v)}` : money(v)), 'money')}</div>
+    <div class="field"><span>To</span><div class="row">${ico('card', 22)}<div class="grow"><div class="t">Demo card •• 0000</div><div class="m">No fee · 1–2 business days</div></div></div></div>
+    <button class="btn gold block" style="margin-top:18px" id="w-go">Withdraw</button>
+    <div class="note">Demo: no money is sent anywhere. In production a payout partner handles it and takes care of tax reporting.</div>`, { type: 'withdraw' });
+  const val = () => +body.querySelector('#w-amt .chip.on').dataset.v;
+  body.addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) c.parentElement.querySelectorAll('.chip').forEach((x) => x.classList.toggle('on', x === c)); });
+  $('#w-go').addEventListener('click', () => {
+    const amt = Math.min(val(), all);
+    const p = { id: uid(), t: Date.now(), amount: amt, status: 'pending' };
+    S.payouts.unshift(p); addTx(-amt, 'Withdrawal to card •• 0000', 'earn');
+    closeSheet(); toast(`Withdrawal of ${money(amt)} requested`, 'ok');
+    setTimeout(() => { p.status = 'paid'; save(); if (cur === 'wallet') renderWallet(); }, 6000);
+  });
+}
+function transferEarnings() {
+  if (S.earnings <= 0) return toast('Nothing to move yet');
+  const amt = S.earnings;
+  addTx(-amt, 'Moved to main balance', 'earn'); addTx(amt, 'Moved from earnings');
+  toast(`${money(amt)} moved to your balance`, 'ok');
 }
 
 /* ═════════ top dares tab ═════════ */
@@ -899,6 +1143,7 @@ $('#top-seg').addEventListener('click', (e) => {
 function hotItems() {
   const items = [];
   for (const st of streams) {
+    if (st.cat === 'adult' && !adultOn()) continue;
     if (st.active && st.active.phase !== 'result') items.push({ st, d: st.active.d, phase: st.active.phase, t: st.active.t });
     for (const d of st.dares) items.push({ st, d, phase: 'queue' });
   }
@@ -907,27 +1152,27 @@ function hotItems() {
 function renderTop(force) {
   const list = $('#top-list');
   if (topSeg === 'mine') {
-    const msig = S.backs.map((b) => b.status + b.amount).join();
+    const msig = 'm' + S.backs.map((b) => b.status + b.amount).join();
     if (!force && msig === topSig) return;
     topSig = msig;
     list.innerHTML = S.backs.length ? S.backs.map((b) => {
-      const [cls, lbl] = { pending: ['q', 'В банке'], paid: ['ok', 'Засчитано'], refunded: ['back', 'Возврат'] }[b.status];
-      return `<button class="row" data-go="${b.streamId}"><div class="grow"><div class="t">${esc(b.text)}</div><div class="m"><span class="st ${cls}">${lbl}</span>${b.mine ? '<span class="st mine">ВАШЕ</span>' : ''}${esc(b.streamer)} · ${ago(b.t)}</div></div><div class="amt">${fmt(b.amount)} <span class="spark">✦</span></div></button>`;
-    }).join('') : '<div class="empty"><div>🎯</div>Вы ещё не скидывались на задания.<br>Откройте эфир и нажмите «Задания».</div>';
+      const [cls, lbl] = { pending: ['q', 'IN THE POT'], paid: ['ok', 'COUNTED'], refunded: ['back', 'REFUNDED'] }[b.status];
+      return `<button class="row" data-go="${b.streamId}"><div class="grow"><div class="t">${esc(b.text)}</div><div class="m"><span class="st ${cls}">${lbl}</span>${b.mine ? '<span class="st mine">YOURS</span>' : ''}${esc(b.streamer)} · ${ago(b.t)}</div></div><div class="amt money">${money(b.amount)}</div></button>`;
+    }).join('') : `<div class="empty"><div class="ring">${ico('target', 24)}</div>You haven't backed any dares yet.<br>Open a stream and tap Dares.</div>`;
     return;
   }
   const items = hotItems(), sig = items.map((i) => i.d.id + i.phase).join();
   if (force || sig !== topSig) {
     topSig = sig;
     list.innerHTML = items.map(({ st, d, phase, t }) => `<button class="row" data-go="${st.id}" data-d="${d.id}">
-      <div class="ava" style="width:36px;height:36px;font-size:14px;background:linear-gradient(135deg,hsl(${st.hue[0]} 90% 70%),hsl(${st.hue[1]} 90% 60%))">${esc(st.name[0].toUpperCase())}</div>
-      <div class="grow"><div class="t">${esc(d.text)}</div><div class="m">${phase === 'doing' ? `<span class="st go" data-k="t">● ${mmss(t)}</span>` : phase === 'voting' ? '<span class="st vote">ГОЛОСОВАНИЕ</span>' : '<span class="st q">В очереди</span>'}${d.mine ? '<span class="st mine">ВАШЕ</span>' : ''}${esc(st.name)} · ${d.backers} 👥</div></div>
-      <div class="amt" data-k="p">${fmt(d.pool)} <span class="spark">✦</span></div></button>`).join('');
+      ${avaHTML(st, 38)}
+      <div class="grow"><div class="t">${esc(d.text)}</div><div class="m">${phase === 'doing' ? `<span class="st go" data-k="t">${mmss(t)}</span>` : phase === 'voting' ? '<span class="st vote">VOTING</span>' : '<span class="st q">QUEUED</span>'}${st.cat === 'adult' ? '<span class="adult" style="height:19px">18+</span>' : ''}${d.mine ? '<span class="st mine">YOURS</span>' : ''}${esc(st.name)}</div></div>
+      <div class="amt money" data-k="p">${money(d.pool)}</div></button>`).join('');
   } else {
     for (const { st, d, phase } of items) {
       const r = list.querySelector(`[data-d="${d.id}"]`); if (!r) continue;
-      r.querySelector('[data-k="p"]').innerHTML = `${fmt(d.pool)} <span class="spark">✦</span>`;
-      const t = r.querySelector('[data-k="t"]'); if (t && phase === 'doing') t.textContent = `● ${mmss(st.active.t)}`;
+      r.querySelector('[data-k="p"]').textContent = money(d.pool);
+      const t = r.querySelector('[data-k="t"]'); if (t && phase === 'doing') t.textContent = mmss(st.active.t);
     }
   }
 }
@@ -936,97 +1181,133 @@ $('#top-list').addEventListener('click', (e) => {
   goToStream(r.dataset.go, topSeg === 'hot');
 });
 function goToStream(id, sheet) {
+  const st = byId(id);
+  if (st.cat === 'adult' && !adultOn()) { requireAdult(() => goToStream(id, sheet)); return; }
   show('feed');
-  const i = streams.findIndex((s) => s.id === id);
+  const want = st.cat === 'adult' ? 'adult' : 'all';
+  if (feedCat !== want && feedCat !== st.cat) setCat(want);
+  const i = feedList.findIndex((s) => s.id === id);
   curIdx = i; feedEl.scrollTo({ top: i * feedEl.clientHeight, behavior: 'auto' });
-  renderChat(streams[i]);
-  if (sheet) openDares(streams[i]);
+  renderChat(st);
+  if (sheet) openDares(st);
 }
 
 /* ═════════ wallet & profile ═════════ */
 function renderWallet() {
-  $('#wallet').innerHTML = `<h1>Кошелёк</h1>
-    <div class="wcard"><div class="muted">Баланс</div><div class="num">${fmt(S.balance)} <small>✦</small></div>
-      <div class="wbtns"><button class="btn lime" data-w="top">＋ Пополнить</button><button class="btn ghost" data-w="out">Вывести</button></div></div>
-    <div class="grid2" style="margin-top:10px"><div class="stat"><b class="spark">${fmt(S.earned)}</b><span>заработано в эфирах</span></div>
-      <div class="stat"><b>${fmt(S.backs.filter((b) => b.status === 'pending').reduce((a, b) => a + b.amount, 0))}</b><span>сейчас в банках заданий</span></div></div>
-    <h3>История</h3>
-    <div class="list">${S.tx.map((t) => `<div class="row"><div class="grow"><div class="t" style="font-weight:600;font-size:14px">${esc(t.title)}</div><div class="m">${ago(t.t)}</div></div><div class="amt" style="color:${t.amount > 0 ? 'var(--ok)' : 'var(--text)'}">${t.amount > 0 ? '+' : '−'}${fmt(Math.abs(t.amount))}</div></div>`).join('')}</div>`;
+  const pend = S.backs.filter((b) => b.status === 'pending').reduce((a, b) => a + b.amount, 0);
+  $('#wallet').innerHTML = `<h1>Wallet</h1>
+    <div class="acct"><div class="lbl">Balance</div><div class="sum num">${money(S.balance)}</div>
+      <div class="hint">For dares and backing streamers${pend ? ` · another ${money(pend)} is waiting in dare pots` : ''}</div>
+      <div class="wbtns"><button class="btn gold" data-w="top">${ico('plus', 18)}Add funds</button><button class="btn ghost" data-w="rules">How it works</button></div></div>
+    <div class="acct dark"><div class="lbl">Stream earnings</div><div class="sum num">${money(S.earnings)}</div>
+      <div class="hint">After the ${FEE * 100}% fee · withdraw from ${money(CUR.minPayout)}${S.verified ? '' : ' once your identity is verified'}</div>
+      <div class="wbtns"><button class="btn green" data-w="out">${ico('card', 18)}Withdraw</button><button class="btn ghost" data-w="move">${ico('transfer', 18)}To balance</button></div></div>
+    <h3>How money works</h3>
+    <div class="facts">
+      <div>${ico('coins', 18)}<span><b>Real money, no tokens.</b> Top-ups are credited one to one, with no in-app currency or exchange rate.</span></div>
+      <div>${ico('vote', 18)}<span><b>The dare’s pot.</b> Money waits while viewers vote. If it counts, the streamer gets it.</span></div>
+      <div>${ico('undo', 18)}<span><b>Full refund</b> if the streamer passes, runs out of time, or the dare doesn’t count.</span></div>
+      <div>${ico('percent', 18)}<span><b>${FEE * 100}% fee</b> on completed dares only, paid on the streamer’s side.</span></div>
+    </div>
+    ${S.payouts.length ? `<h3>Withdrawals</h3><div class="list">${S.payouts.map((p) => `<div class="row">${ico('card', 20)}<div class="grow"><div class="t">${money(p.amount)} to card •• 0000</div><div class="m">${ago(p.t)}</div></div><span class="st ${p.status === 'paid' ? 'ok' : 'q'}">${p.status === 'paid' ? 'PAID' : 'PROCESSING'}</span></div>`).join('')}</div>` : ''}
+    <h3>History</h3>
+    <div class="list">${S.tx.map((t) => `<div class="row"><div class="grow"><div class="t" style="font-weight:500;font-size:14px">${esc(t.title)}</div><div class="m">${ago(t.t)}${t.acc === 'earn' ? ' · <span class="gold">earnings</span>' : ''}</div></div><div class="amt num" style="font-weight:700;color:${t.amount > 0 ? 'var(--ok)' : 'var(--van)'}">${t.amount > 0 ? '+' : ''}${money(t.amount)}</div></div>`).join('')}</div>`;
 }
 $('#wallet').addEventListener('click', (e) => {
   const b = e.target.closest('[data-w]'); if (!b) return;
-  if (b.dataset.w === 'top') openTopup();
-  else openSheet(`${sheetHead('Вывод средств')}<p style="margin-top:12px;color:#ddd8ee">Вывести можно ✦, заработанные в своих эфирах: <b class="spark">${fmt(S.earned)} ✦</b>.</p>
-    <div class="note">В рабочей версии вывод доступен после подтверждения личности и возраста (KYC) и подключения платёжного партнёра. В демо вывод отключён.</div>
-    <button class="btn ghost block" style="margin-top:16px" data-close>Понятно</button>`, { type: 'out' });
+  ({ top: openTopup, out: openWithdraw, move: transferEarnings, rules: openRules })[b.dataset.w]();
 });
 function renderProfile() {
-  const u = S.user || { nick: 'гость' }, l = level(S.xp), lo = lvlFloor(l), hi = lvlFloor(l + 1);
+  const u = S.user || { nick: 'guest' }, l = level(S.xp), lo = lvlFloor(l), hi = lvlFloor(l + 1);
   const st = S.stats;
-  $('#profile').innerHTML = `<h1>Профиль</h1>
-    <div class="me-head"><div class="ava" style="background:linear-gradient(135deg,${nickColor(u.nick)},var(--pink))">${esc(u.nick[0].toUpperCase())}</div>
-      <div><h2>${esc(u.nick)}</h2><div class="muted">Уровень ${l} · ${S.xp} XP</div></div></div>
-    <div class="lvl"><div class="bn-row small muted"><span>До уровня ${l + 1}</span><span>${hi - S.xp} XP</span></div><div class="bar"><i style="width:${((S.xp - lo) / (hi - lo)) * 100}%"></i></div></div>
-    <h3>Как зритель</h3>
-    <div class="grid2"><div class="stat"><b>${st.proposed}</b><span>предложено заданий</span></div><div class="stat"><b>${st.backed}</b><span>вкладов в банки</span></div>
-      <div class="stat"><b>${st.won}</b><span>засчитано с вашим вкладом</span></div><div class="stat"><b>${st.refunded}</b><span>возвратов</span></div></div>
-    <h3>Как стример</h3>
-    <div class="grid2"><div class="stat"><b>${st.streams}</b><span>эфиров</span></div><div class="stat"><b>${st.daresDone}</b><span>выполнено заданий</span></div>
-      <div class="stat"><b>${Math.round(st.liveSec / 60)}</b><span>минут в эфире</span></div><div class="stat"><b class="spark">${fmt(S.earned)}</b><span>заработано ✦</span></div></div>
-    <h3>Настройки</h3>
+  $('#profile').innerHTML = `<h1>Profile</h1>
+    <div class="me-head"><div class="ava">${esc(u.nick[0].toUpperCase())}</div>
+      <div><h2>${esc(u.nick)}</h2><div class="muted small">Level ${l} · ${S.xp} XP</div>
+      ${S.verified ? `<span class="badge ok">${ico('shield', 13)}Identity verified</span>` : '<span class="badge no">Identity not verified</span>'}</div></div>
+    <div class="lvl"><div class="bn-row small"><span>To level ${l + 1}</span><span>${hi - S.xp} XP</span></div><div class="bar"><i style="width:${((S.xp - lo) / (hi - lo)) * 100}%"></i></div></div>
+    <h3>As a viewer</h3>
+    <div class="grid2"><div class="stat"><b>${st.proposed}</b><span>dares suggested</span></div><div class="stat"><b>${st.backed}</b><span>times backed</span></div>
+      <div class="stat"><b>${st.won}</b><span>counted with your money</span></div><div class="stat"><b>${st.refunded}</b><span>refunds</span></div></div>
+    <h3>As a streamer</h3>
+    <div class="grid2"><div class="stat"><b>${st.streams}</b><span>streams</span></div><div class="stat"><b>${st.daresDone}</b><span>dares completed</span></div>
+      <div class="stat"><b>${Math.round(st.liveSec / 60)}</b><span>minutes live</span></div><div class="stat"><b class="gold">${money(st.earnedTotal)}</b><span>earned in total</span></div></div>
+    <h3>Account</h3>
     <div class="menu">
-      <button data-p="rules">🛡 Правила и безопасность<span class="muted">›</span></button>
-      <button data-p="nick">✏️ Изменить ник<span class="muted">›</span></button>
-      <button data-p="sound">🔊 Звуки<i class="switch ${S.settings.sound ? 'on' : ''}"></i></button>
-      <button data-p="vibro">📳 Вибрация<i class="switch ${S.settings.vibro ? 'on' : ''}"></i></button>
-      <button data-p="install">📲 Установить на телефон<span class="muted">›</span></button>
-      <button data-p="reset" style="color:var(--bad)">Сбросить демо-данные<span></span></button>
+      ${S.verified ? '' : `<button data-p="verify">${ico('idcard', 20)}<span class="grow">Verify identity<small>For withdrawals and the 18+ section</small></span>${ico('chev', 16)}</button>`}
+      <button data-p="adult"><span class="adult" style="margin-left:-1px">18+</span><span class="grow">Adult section<small>${adultOn() ? 'Visible' : 'Hidden from the feed'}</small></span><i class="switch ${adultOn() ? 'on' : ''}"></i></button>
+      <button data-p="rules">${ico('shield', 20)}<span class="grow">Rules & safety</span>${ico('chev', 16)}</button>
+      <button data-p="nick">${ico('pen', 20)}<span class="grow">Change nickname</span>${ico('chev', 16)}</button>
     </div>
-    <p class="muted small" style="margin-top:16px;text-align:center">Кураж · демо-версия · данные хранятся только на этом устройстве</p>`;
+    <h3>App</h3>
+    <div class="menu">
+      <button data-p="sound">${ico('sound', 20)}<span class="grow">Sounds</span><i class="switch ${S.settings.sound ? 'on' : ''}"></i></button>
+      <button data-p="vibro">${ico('vibro', 20)}<span class="grow">Vibration</span><i class="switch ${S.settings.vibro ? 'on' : ''}"></i></button>
+      <button data-p="install" data-pwa>${ico('phone', 20)}<span class="grow">Install on your phone</span>${ico('chev', 16)}</button>
+      <button data-p="reset" style="color:var(--bad)">${ico('reset', 20)}<span class="grow">Reset demo data</span></button>
+    </div>
+    <p class="muted small" style="margin-top:18px;text-align:center">Kurazh · demo · data stays on this device</p>`;
 }
 $('#profile').addEventListener('click', (e) => {
   const b = e.target.closest('[data-p]'); if (!b) return;
   const p = b.dataset.p;
   if (p === 'rules') openRules();
-  else if (p === 'sound' || p === 'vibro') { S.settings[p] = !S.settings[p]; save(); renderProfile(); }
+  else if (p === 'verify') openVerify();
+  else if (p === 'adult') {
+    if (adultOn()) { S.settings.adult = false; save(); if (feedCat === 'adult') setCat('all'); refreshViews(); toast('18+ section hidden'); }
+    else requireAdult(() => toast('18+ section unlocked. Find it in the stream feed', 'gold'));
+  } else if (p === 'sound' || p === 'vibro') { S.settings[p] = !S.settings[p]; save(); renderProfile(); }
   else if (p === 'nick') {
-    openSheet(`${sheetHead('Новый ник')}<form id="nick-f"><input class="inp" id="nick-i" maxlength="20" value="${esc(S.user.nick)}" style="margin-top:14px" /><button class="btn lime block" style="margin-top:12px">Сохранить</button></form>`, { type: 'nick' });
-    $('#nick-f').addEventListener('submit', (ev) => {
+    const body = openSheet(`${sheetHead('New nickname')}<form id="nick-f"><input class="inp" id="nick-i" maxlength="20" value="${esc(S.user.nick)}" style="margin-top:16px" aria-label="Nickname" /><button class="btn gold block" style="margin-top:12px">Save</button></form>`, { type: 'nick' });
+    body.querySelector('#nick-f').addEventListener('submit', (ev) => {
       ev.preventDefault(); const v = $('#nick-i').value.trim();
-      if (v.length < 2) return toast('Минимум 2 символа', 'bad');
-      if (!Safety.scan(v).ok) return toast('🛡 Такой ник не пропустит фильтр', 'bad');
-      S.user.nick = v; save(); closeSheet(); renderProfile(); toast('Ник обновлён', 'ok');
+      if (v.length < 2) return toast('At least 2 characters', 'bad');
+      if (!Safety.scan(v).ok) return toast("The filter won't allow that nickname", 'bad');
+      S.user.nick = v; save(); closeSheet(); renderProfile(); toast('Nickname updated', 'ok');
     });
   } else if (p === 'install') {
     if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; return; }
-    openSheet(`${sheetHead('Установить на телефон')}<ol class="rules" style="margin-top:14px"><li><b>iPhone (Safari):</b> «Поделиться» → «На экран „Домой“».</li><li><b>Android (Chrome):</b> меню ⋮ → «Установить приложение» или «Добавить на главный экран».</li></ol><p class="muted small">После установки Кураж открывается на весь экран, как обычное приложение, и работает без интернета.</p>`, { type: 'install' });
+    openSheet(`${sheetHead('Install on your phone')}<ol class="rules" style="margin-top:16px"><li><b>iPhone (Safari):</b> Share → Add to Home Screen.</li><li><b>Android (Chrome):</b> menu ⋮ → Install app.</li></ol><p class="muted small" style="margin-top:12px">Once installed, Kurazh opens full screen and works offline.</p>`, { type: 'install' });
   } else if (p === 'reset') {
-    openSheet(`${sheetHead('Сбросить данные?')}<p style="margin-top:12px;color:#ddd8ee">Баланс, история, ставки и статистика на этом устройстве удалятся. Это нельзя отменить.</p>
-      <div class="wbtns" style="margin-top:16px"><button class="btn ghost" data-close>Отмена</button><button class="btn bad" id="reset-ok">Сбросить</button></div>`, { type: 'reset' });
-    $('#reset-ok').addEventListener('click', () => { try { localStorage.removeItem(KEY); } catch { /* ignore */ } location.reload(); });
+    const body = openSheet(`${sheetHead('Reset data?')}<p style="margin-top:14px;color:var(--cash)">Your balance, earnings, history, backing and stats on this device will be deleted. This can’t be undone.</p>
+      <div class="wbtns" style="margin-top:18px"><button class="btn ghost" data-close>Cancel</button><button class="btn bad" id="reset-ok">Reset</button></div>`, { type: 'reset' });
+    body.querySelector('#reset-ok').addEventListener('click', () => { try { localStorage.removeItem(KEY); } catch { /* ignore */ } location.reload(); });
   }
 });
 let deferredInstall = null;
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstall = e; });
+function refreshViews() { renderCats(); if (cur === 'profile') renderProfile(); if (cur === 'wallet') renderWallet(); if (cur === 'live' && !L.on) renderSetup(); if (cur === 'top') renderTop(true); }
 
 /* ═════════ go live (streamer mode) ═════════ */
-const L = { on: false, cat: 'talk', allow: { phys: true, people: true, food: true, creative: true, talk: true }, minPool: 50, agree: false, facing: 'user' };
+const L = { on: false, cat: 'talk', allow: { phys: true, people: true, food: true, creative: true, talk: true, look: true }, minPool: CUR.liveMin[0], agree: false, adultOk: false, facing: 'user' };
+const liveTags = () => (L.cat === 'adult' ? ['look', 'creative', 'talk'] : ['phys', 'people', 'food', 'creative', 'talk']);
 function renderSetup() {
-  $('#lv-cat').innerHTML = Object.entries(CATS).map(([k, v]) => `<button class="chip ${k === L.cat ? 'on' : ''}" data-v="${k}">${v}</button>`).join('');
-  $('#lv-allow').innerHTML = Object.entries(TAGS).map(([k, v]) => `<button class="chip ${L.allow[k] ? 'on' : ''}" data-v="${k}">${v}</button>`).join('');
-  $('#lv-min').innerHTML = [30, 50, 100, 200].map((v) => `<button class="chip ${v === L.minPool ? 'on' : ''}" data-v="${v}">от ${v} ✦</button>`).join('');
+  $('#lv-cat').innerHTML = Object.entries(CATS).filter(([k]) => k !== 'all').map(([k, v]) =>
+    `<button class="chip ${k === L.cat ? 'on' : ''}" data-v="${k}">${k === 'adult' && !S.verified ? ico('lock', 13) : ''}${v}</button>`).join('');
+  $('#lv-allow').innerHTML = liveTags().map((k) => `<button class="chip ${L.allow[k] ? 'on' : ''}" data-v="${k}">${TAGS[k]}</button>`).join('');
+  const mins = L.cat === 'adult' ? CUR.liveMinAdult : CUR.liveMin;
+  if (!mins.includes(L.minPool)) L.minPool = mins[0];
+  $('#lv-min').innerHTML = mins.map((v) => `<button class="chip money ${v === L.minPool ? 'on' : ''}" data-v="${v}">from ${money(v)}</button>`).join('');
   $('#lv-agree').classList.toggle('on', L.agree);
+  $('#lv-adult').hidden = L.cat !== 'adult';
+  $('#lv-adult').classList.toggle('on', L.adultOk);
 }
-$('#lv-cat').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) { L.cat = c.dataset.v; renderSetup(); } });
+$('#lv-cat').addEventListener('click', (e) => {
+  const c = e.target.closest('.chip'); if (!c) return;
+  if (c.dataset.v === 'adult' && !S.verified) { openVerify(() => { L.cat = 'adult'; renderSetup(); }); return; }
+  L.cat = c.dataset.v; renderSetup();
+});
 $('#lv-min').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) { L.minPool = +c.dataset.v; renderSetup(); } });
 $('#lv-allow').addEventListener('click', (e) => {
   const c = e.target.closest('.chip'); if (!c) return;
   L.allow[c.dataset.v] = !L.allow[c.dataset.v];
-  if (!Object.values(L.allow).some(Boolean)) { L.allow[c.dataset.v] = true; toast('Оставьте хотя бы один тип заданий'); }
+  if (!liveTags().some((k) => L.allow[k])) { L.allow[c.dataset.v] = true; toast('Keep at least one type of dare'); }
   renderSetup();
 });
 $('#lv-agree').addEventListener('click', () => { L.agree = !L.agree; renderSetup(); });
+$('#lv-adult').addEventListener('click', () => { L.adultOk = !L.adultOk; renderSetup(); });
 $('#lv-start').addEventListener('click', startLive);
+$('#lv-flip').innerHTML = ico('flip', 17);
+$('#lv-end').innerHTML = ico('stop', 17);
 
 async function startCam() {
   const v = $('#cam');
@@ -1042,82 +1323,93 @@ async function startCam() {
   return L.camOk;
 }
 async function startLive() {
-  if (!L.agree) { toast('Подтвердите правила безопасности', 'bad'); $('#lv-agree').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
-  const title = $('#lv-title').value.trim() || `${S.user.nick} в эфире`;
-  if (!Safety.scan(title).ok) { toast('🛡 Название не прошло фильтр', 'bad'); return; }
-  Object.assign(L, { on: true, title, sec: 0, viewers: ri(3, 12), earned: 0, done: 0, filtered: 0, incoming: [], active: null, chat: [], fake: { hue: [hueOf(S.user.nick), hueOf(S.user.nick) + 60], bokeh: makeBokeh([hueOf(S.user.nick), 0]) } });
+  if (L.cat === 'adult' && !S.verified) { openVerify(); return; }
+  if (L.cat === 'adult' && !L.adultOk) { toast('Confirm the 18+ stream conditions', 'bad'); return; }
+  if (!L.agree) { toast('Please accept the safety rules', 'bad'); $('#lv-agree').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+  const title = $('#lv-title').value.trim() || `${S.user.nick} is live`;
+  if (!Safety.scan(title, modeOf(L.cat)).ok) { toast("That title didn't pass the safety filter", 'bad'); return; }
+  const glow = L.cat === 'adult' ? ['#b8975a', '#7e2b25', '#c8b69a'] : ['#b8975a', '#c8b69a', '#3c5c49'];
+  Object.assign(L, { on: true, title, sec: 0, viewers: ri(3, 12), earned: 0, done: 0, filtered: 0, incoming: [], active: null, chat: [], peak: 0,
+    fake: { pal: L.cat === 'adult' ? ['#2a1513', '#050404'] : ['#1f3a2c', '#060807'], glow, bokeh: makeBokeh(glow) } });
   $('#live-setup').hidden = true; $('#live-view').hidden = false; document.body.classList.add('is-live');
-  renderLiveActive(true); renderIncoming(true); renderLiveChat();
+  renderLiveActive(true); renderIncoming(true); renderLiveChat(); renderLiveTop();
   const ok = await startCam();
-  liveChat({ sys: true, text: ok ? '🎥 Эфир начался! Зрители подключаются…' : '🎥 Камера недоступна — эфир в демо-режиме с заставкой' });
-  liveChat({ sys: true, text: `🛡 Фильтр безопасности включён · минимальный банк ${L.minPool} ✦` });
+  liveChat({ sys: true, text: ok ? 'You’re live. Viewers are joining…' : 'Camera unavailable, streaming with a cover screen' });
+  liveChat({ sys: true, text: `Safety filter on · dares from ${money(L.minPool)}` });
   chime(); buzz(40);
 }
 function endLive() {
-  if (L.active && L.active.phase !== 'result') { toast('Сначала завершите текущее задание', 'bad'); return; }
+  if (L.active && L.active.phase !== 'result') { toast('Finish the current dare first', 'bad'); return; }
   if (L.stream) L.stream.getTracks().forEach((t) => t.stop());
   L.stream = null; L.on = false;
   S.stats.streams++; S.stats.liveSec += L.sec; gainXp(15); save();
   $('#live-view').hidden = true; $('#live-setup').hidden = false; document.body.classList.remove('is-live');
-  openSheet(`${sheetHead('Эфир завершён 🎬')}
-    <div class="grid2" style="margin-top:14px"><div class="stat"><b>${mmss(L.sec)}</b><span>длительность</span></div><div class="stat"><b>${fmt(L.peak || L.viewers)}</b><span>пик зрителей</span></div>
-    <div class="stat"><b>${L.done}</b><span>выполнено заданий</span></div><div class="stat"><b class="spark">${fmt(L.earned)}</b><span>заработано ✦</span></div></div>
-    <div class="note">🛡 Фильтр скрыл заданий: <b>${L.filtered}</b>. Комиссия платформы ${FEE * 100}% уже учтена.</div>
-    <button class="btn lime block" style="margin-top:16px" data-close>Отлично</button>`, { type: 'summary' });
-  if (L.earned) confetti(40);
+  openSheet(`${sheetHead('Stream ended')}
+    <div class="grid2" style="margin-top:16px"><div class="stat"><b class="num">${mmss(L.sec)}</b><span>duration</span></div><div class="stat"><b class="num">${fmt(L.peak || L.viewers)}</b><span>peak viewers</span></div>
+    <div class="stat"><b>${L.done}</b><span>dares completed</span></div><div class="stat"><b class="gold">${money(L.earned)}</b><span>earned</span></div></div>
+    <div class="note">The filter hid <b>${L.filtered}</b> dares. The ${FEE * 100}% fee is already deducted, and the money is in Stream earnings in your wallet.</div>
+    <div class="wbtns" style="margin-top:16px"><button class="btn ghost" data-close>Close</button><button class="btn gold" data-tab="wallet">Open wallet</button></div>`, { type: 'summary' });
+  if (L.earned) goldDust();
 }
 $('#lv-end').addEventListener('click', endLive);
-$('#lv-flip').addEventListener('click', async () => { L.facing = L.facing === 'user' ? 'environment' : 'user'; if (!(await startCam())) toast('Камера недоступна'); });
+$('#lv-flip').addEventListener('click', async () => { L.facing = L.facing === 'user' ? 'environment' : 'user'; if (!(await startCam())) toast('Camera unavailable'); });
 
 function liveChat(m) { L.chat.push(m); if (L.chat.length > 20) L.chat.shift(); renderLiveChat(); }
 function renderLiveChat() { $('#lv-chat').innerHTML = chatHTML(L.chat.slice(-6)); }
+function renderLiveTop() {
+  $('#lv-time').textContent = mmss(L.sec);
+  $('#lv-viewers-p').innerHTML = `${ico('eye', 15)}<b class="num">${fmt(L.viewers)}</b>`;
+  $('#lv-earned').textContent = money(L.earned);
+  $('#lv-shield').innerHTML = `${ico('shield', 14)}Filter blocked: <b>${L.filtered}</b>${L.cat === 'adult' ? ' · <span class="gold">18+</span>' : ''}`;
+}
 function genIncoming() {
+  const mode = modeOf(L.cat);
   if (Math.random() < 0.22) {
-    const r = Safety.check(pick(UNSAFE));
-    if (!r.ok) { L.filtered++; toast(`🛡 Фильтр скрыл задание: ${r.cat}`); return; }
+    const r = Safety.check(pick(L.cat === 'adult' ? ADULT_UNSAFE : UNSAFE), mode);
+    if (!r.ok) { L.filtered++; toast(`Filter blocked a dare: ${r.cat}`); return; }
   }
   const taken = new Set([...L.incoming.map((d) => d.text), L.active?.d.text]);
-  const pool = [...(BANK[L.cat] || []), ...BANK.any].filter(([t]) => !taken.has(t));
+  const pool = bankFor(L.cat).filter(([t]) => !taken.has(t));
   if (!pool.length) return;
   const [text, tag] = pick(pool);
   if (!L.allow[tag]) { L.filtered++; return; }
-  const d = { id: uid(), text, tag, pool: Math.max(L.minPool, ri(3, 20) * 10), backers: ri(1, 8), time: pick([30, 30, 60, 60, 120]), by: botNick() };
+  const m = (L.cat === 'adult' ? 3 : 1) * U;
+  const d = { id: uid(), text, tag, pool: Math.max(L.minPool, ri(2, 20) * m), backers: ri(1, 8), time: pick([30, 30, 60, 60, 120]), by: botNick() };
   L.incoming.push(d); beep(740, 0.05);
-  liveChat({ sys: true, text: `🎯 ${d.by} предлагает: «${d.text}» — ${fmt(d.pool)} ✦` });
+  liveChat({ sys: true, text: `${d.by} suggests “${d.text}” · ${money(d.pool)}` });
 }
 function liveTick() {
   L.sec++;
   const target = 8 + L.sec * 0.6 + L.done * 25;
   L.viewers = Math.max(1, Math.round(L.viewers + (target - L.viewers) * 0.05 + rnd(-2, 3)));
-  L.peak = Math.max(L.peak || 0, L.viewers);
-  const a = L.active;
-  if (Math.random() < 0.45) liveChat({ nick: botNick(), text: pick(a ? (a.phase === 'result' ? CHAT[a.success ? 'ok' : 'bad'] : CHAT[a.phase]) : CHAT.idle) });
+  L.peak = Math.max(L.peak, L.viewers);
+  const a = L.active, m = (L.cat === 'adult' ? 3 : 1) * U;
+  const lines = a ? (a.phase === 'result' ? CHAT[a.success ? 'ok' : 'bad'] : CHAT[a.phase]) : (L.cat === 'adult' ? CHAT.adultIdle : CHAT.idle);
+  if (Math.random() < 0.45) liveChat({ nick: botNick(), text: pick(lines) });
   if (!a && L.incoming.length < 3 && Math.random() < (L.sec < 6 ? 0.5 : 0.2)) genIncoming();
-  for (const d of L.incoming) if (Math.random() < 0.25) { d.pool += pick([10, 20, 50]); d.backers++; }
+  for (const d of L.incoming) if (Math.random() < 0.25) { d.pool += pick([1, 2, 5]) * m; d.backers++; }
   if (a) {
     a.t--;
     if (a.phase === 'doing') {
-      if (Math.random() < 0.3) { a.d.pool += pick([10, 20, 50]); a.d.backers++; }
-      if (a.t <= 0) liveResolve(false, 'время вышло');
+      if (Math.random() < 0.3) { a.d.pool += pick([1, 2, 5]) * m; a.d.backers++; }
+      if (a.t <= 0) liveResolve(false, 'time ran out');
       else if (a.t === 5) { beep(440, 0.08); buzz(20); }
     } else if (a.phase === 'voting') {
       for (let i = 0, n = ri(1, Math.max(2, Math.round(L.viewers / 6))); i < n; i++) Math.random() < a.p ? a.yes++ : a.no++;
-      if (a.t <= 0) { const tot = a.yes + a.no; liveResolve(tot > 0 && a.yes / tot >= PASS, 'зрители не засчитали'); }
+      if (a.t <= 0) { const tot = a.yes + a.no; liveResolve(tot > 0 && a.yes / tot >= PASS, 'viewers voted no'); }
     } else if (a.t <= 0) L.active = null;
   }
-  $('#lv-time').textContent = mmss(L.sec); $('#lv-viewers').textContent = fmt(L.viewers);
-  $('#lv-earned').textContent = fmt(L.earned); $('#lv-filtered').textContent = L.filtered;
-  renderLiveActive(); renderIncoming();
+  renderLiveTop(); renderLiveActive(); renderIncoming();
 }
 function liveResolve(success, why) {
   const a = L.active; a.phase = 'result'; a.success = success; a.t = 4; a.why = why;
   if (success) {
-    const fee = Math.round(a.d.pool * FEE), net = a.d.pool - fee;
-    a.net = net; L.earned += net; L.done++; S.earned += net; S.stats.daresDone++;
-    addTx(net, `Эфир: «${a.d.text}» (−${fee} комиссия)`); gainXp(25);
-    liveChat({ sys: true, text: `✅ Засчитано! +${fmt(net)} ✦ на ваш баланс` }); confetti(60); chime(); buzz([40, 50, 80]);
+    const fee = Math.round(a.d.pool * FEE * 100) / 100, net = Math.round((a.d.pool - fee) * 100) / 100;
+    a.net = net; L.earned += net; L.done++; S.stats.daresDone++; S.stats.earnedTotal += net;
+    addTx(net, `Stream: “${a.d.text}” (fee ${money(fee)})`, 'earn'); gainXp(25);
+    liveChat({ sys: true, text: `Counted · +${money(net)} to Stream earnings` }); goldDust(); chime(); buzz([40, 50, 80]);
   } else {
-    liveChat({ sys: true, text: `↩ Не засчитано (${why}) — банк ${fmt(a.d.pool)} ✦ вернули зрителям` }); beep(220, 0.25, 'triangle');
+    liveChat({ sys: true, text: `Not counted (${why}) · ${money(a.d.pool)} refunded to viewers` }); beep(220, 0.25, 'triangle');
   }
   renderLiveActive(true);
 }
@@ -1125,20 +1417,20 @@ function renderLiveActive(force) {
   const el = $('#lv-active'), a = L.active, k = a ? `${a.phase}:${a.d.id}` : `idle:${L.incoming.length ? 1 : 0}`;
   if (force || el.dataset.k !== k) {
     el.dataset.k = k;
-    if (!a) el.innerHTML = L.incoming.length ? '' : '<div class="bn idle"><div class="bn-text">⏳ Ждём задания от зрителей… Поболтайте с чатом, пока они придумывают.</div></div>';
-    else if (a.phase === 'doing') el.innerHTML = `<div class="bn"><div class="bn-row"><span class="tag hot">● Вы выполняете</span><span class="timer" data-k="t">${mmss(a.t)}</span></div>
-      <div class="bn-text">«${esc(a.d.text)}»</div><div class="bar"><i data-k="bar" style="width:${(a.t / a.total) * 100}%"></i></div>
-      <div class="bn-row"><span>Банк <b class="spark" data-k="pool">${fmt(a.d.pool)}</b> ✦ · вам после комиссии ≈ <b data-k="net">${fmt(a.d.pool * (1 - FEE))}</b></span></div>
-      <div class="lv-acts"><button class="btn lime" data-l="done">✓ Готово</button><button class="btn ghost" data-l="quit">Сдаться</button></div></div>`;
-    else if (a.phase === 'voting') el.innerHTML = `<div class="bn"><div class="bn-row"><span class="tag cyan">🗳 Зрители голосуют</span><span class="timer" data-k="t">${mmss(a.t)}</span></div>
-      <div class="bn-text">«${esc(a.d.text)}»</div><div class="votes"><div class="vbtn yes"><i data-k="yb"></i><span>✓ Да</span><b data-k="yp">0%</b></div><div class="vbtn no"><i data-k="nb"></i><span>✕ Нет</span><b data-k="np">0%</b></div></div></div>`;
-    else el.innerHTML = `<div class="bn result ${a.success ? 'ok' : 'bad'}"><div class="big">${a.success ? `✅ +${fmt(a.net)} ✦` : '↩ Не засчитано'}</div><div class="muted">${a.success ? 'Деньги зачислены на баланс' : `${esc(a.why)} — банк вернулся зрителям`}</div></div>`;
+    if (!a) el.innerHTML = L.incoming.length ? '' : '<div class="bn idle"><div class="bn-text">Waiting for dares from viewers. Chat with them while they come up with something.</div></div>';
+    else if (a.phase === 'doing') el.innerHTML = `<div class="bn hot"><div class="bn-row"><span class="tag hot">You’re on</span><span class="timer" data-k="t">${mmss(a.t)}</span></div>
+      <div class="bn-text">“${esc(a.d.text)}”</div><div class="bar"><i data-k="bar" style="width:${(a.t / a.total) * 100}%"></i></div>
+      <div class="bn-row"><span>Pot <span class="money" data-k="pool">${money(a.d.pool)}</span></span><span>you get ≈ <b class="gold" data-k="net">${money(a.d.pool * (1 - FEE))}</b></span></div>
+      <div class="lv-acts"><button class="btn gold" data-l="done">${ico('check', 18)}Done</button><button class="btn ghost" data-l="quit">Give up</button></div></div>`;
+    else if (a.phase === 'voting') el.innerHTML = `<div class="bn hot"><div class="bn-row"><span class="tag vote">Viewers are voting</span><span class="timer" data-k="t">${mmss(a.t)}</span></div>
+      <div class="bn-text">“${esc(a.d.text)}”</div><div class="votes"><div class="vbtn yes"><i data-k="yb"></i><span>${ico('check', 16)}Yes</span><b data-k="yp">0%</b></div><div class="vbtn no"><i data-k="nb"></i><span>${ico('x', 16)}No</span><b data-k="np">0%</b></div></div></div>`;
+    else el.innerHTML = `<div class="bn result ${a.success ? 'ok' : 'bad'}"><div class="big">${a.success ? `+${money(a.net)}` : 'Not counted'}</div><div class="muted">${a.success ? 'Added to Stream earnings' : `${esc(a.why)}, so viewers were refunded`}</div></div>`;
   }
   if (!a) return;
   const q = (s) => el.querySelector(`[data-k="${s}"]`);
   if (q('t')) { q('t').textContent = mmss(a.t); q('t').classList.toggle('low', a.t <= 5); }
   if (q('bar')) q('bar').style.width = (a.t / a.total) * 100 + '%';
-  if (q('pool')) { q('pool').textContent = fmt(a.d.pool); q('net').textContent = fmt(a.d.pool * (1 - FEE)); }
+  if (q('pool')) { q('pool').textContent = money(a.d.pool); q('net').textContent = money(a.d.pool * (1 - FEE)); }
   if (a.phase === 'voting') {
     const tot = Math.max(1, a.yes + a.no), yp = Math.round((a.yes / tot) * 100);
     q('yp').textContent = yp + '%'; q('np').textContent = 100 - yp + '%'; q('yb').style.width = yp + '%'; q('nb').style.width = 100 - yp + '%';
@@ -1149,11 +1441,11 @@ function renderIncoming(force) {
   if (force || el.dataset.sig !== sig) {
     el.dataset.sig = sig;
     el.innerHTML = hide ? '' : L.incoming.map((d) => `<div class="icard" data-i="${d.id}"><div class="grow"><div class="t">${esc(d.text)}</div>
-      <div class="m"><b class="spark" data-k="p">${fmt(d.pool)} ✦</b> · ⏱ ${durLabel(d.time)} · от ${esc(d.by)}</div></div>
-      <div class="acts"><button class="no" data-l="decline" aria-label="Отказаться">✕</button><button class="yes" data-l="accept" aria-label="Принять">✓</button></div></div>`).join('');
+      <div class="m"><span class="money" data-k="p">${money(d.pool)}</span>· ${durLabel(d.time)} · ${esc(d.by)}</div></div>
+      <div class="acts"><button class="no" data-l="decline" aria-label="Decline">${ico('x', 18)}</button><button class="yes" data-l="accept" aria-label="Accept">${ico('check', 18)}</button></div></div>`).join('');
     return;
   }
-  for (const d of L.incoming) { const r = el.querySelector(`[data-i="${d.id}"] [data-k="p"]`); if (r) r.textContent = `${fmt(d.pool)} ✦`; }
+  for (const d of L.incoming) { const r = el.querySelector(`[data-i="${d.id}"] [data-k="p"]`); if (r) r.textContent = money(d.pool); }
 }
 $('#live-view').addEventListener('click', (e) => {
   const b = e.target.closest('[data-l]'); if (!b) return;
@@ -1163,13 +1455,13 @@ $('#live-view').addEventListener('click', (e) => {
     L.incoming = L.incoming.filter((x) => x !== d);
     if (act === 'accept') {
       L.active = { d, phase: 'doing', t: d.time, total: d.time, yes: 0, no: 0 };
-      liveChat({ sys: true, text: `▶ Вы приняли «${d.text}». Время пошло!` }); buzz(30); beep(880, 0.08);
-    } else { liveChat({ sys: true, text: `✋ Вы отказались от «${d.text}» — банк вернули зрителям` }); }
+      liveChat({ sys: true, text: `You accepted “${d.text}”. The clock is running` }); buzz(30); beep(880, 0.08);
+    } else { liveChat({ sys: true, text: `You passed on “${d.text}” · backers were refunded` }); }
     renderLiveActive(true); renderIncoming(true);
   } else if (act === 'done' && L.active?.phase === 'doing') {
     Object.assign(L.active, { phase: 'voting', t: 8, p: rnd(0.78, 0.96) });
-    liveChat({ sys: true, text: '🗳 Стример говорит «готово»! Голосуем: засчитать?' }); renderLiveActive(true);
-  } else if (act === 'quit' && L.active?.phase === 'doing') liveResolve(false, 'вы сдались');
+    liveChat({ sys: true, text: 'The streamer says done. Vote: does it count?' }); renderLiveActive(true);
+  } else if (act === 'quit' && L.active?.phase === 'doing') liveResolve(false, 'you gave up');
 });
 
 /* ═════════ canvas scenes ═════════ */
@@ -1179,39 +1471,40 @@ function drawScene(cv, sc, t) {
   if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
   const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
   const g = c.createLinearGradient(0, 0, w * 0.4, h);
-  g.addColorStop(0, `hsl(${sc.hue[0]} 55% 17%)`); g.addColorStop(1, `hsl(${sc.hue[1]} 60% 5%)`);
+  g.addColorStop(0, sc.pal[0]); g.addColorStop(1, sc.pal[1]);
   c.fillStyle = g; c.fillRect(0, 0, w, h);
-  c.globalCompositeOperation = 'lighter';
   for (const b of sc.bokeh) {
-    const x = (b.x + Math.sin(t * b.s + b.p) * 0.04) * w, y = (b.y + Math.cos(t * b.s * 0.8 + b.p) * 0.03) * h, r = b.r * Math.max(w, h);
+    const x = (b.x + Math.sin(t * b.s + b.p) * 0.035) * w, y = (b.y + Math.cos(t * b.s * 0.8 + b.p) * 0.025) * h, r = b.r * Math.max(w, h);
     const rg = c.createRadialGradient(x, y, 0, x, y, r);
-    rg.addColorStop(0, `hsla(${b.h},90%,65%,${b.a})`); rg.addColorStop(1, `hsla(${b.h},90%,65%,0)`);
+    rg.addColorStop(0, hexA(b.c, b.a)); rg.addColorStop(1, hexA(b.c, 0));
     c.fillStyle = rg; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
   }
-  c.globalCompositeOperation = 'source-over';
-  const cx = w / 2 + Math.sin(t * 0.6) * w * 0.025, hr = Math.min(w, h) * 0.14, hy = h * 0.6 + Math.sin(t * 1.1) * 3, sy = hy + hr * 1.7;
-  c.fillStyle = 'rgba(5,4,10,.93)';
+  const cx = w / 2 + Math.sin(t * 0.6) * w * 0.022, hr = Math.min(w, h) * 0.14, hy = h * 0.6 + Math.sin(t * 1.1) * 3, sy = hy + hr * 1.7;
+  c.fillStyle = 'rgba(5,6,5,.94)';
   c.beginPath(); c.ellipse(cx, sy + h * 0.32, w * 0.44, h * 0.34, 0, 0, Math.PI * 2); c.fill();
   c.fillRect(cx - hr * 0.42, hy, hr * 0.84, hr * 1.9);
   c.beginPath(); c.arc(cx, hy, hr, 0, Math.PI * 2); c.fill();
-  c.strokeStyle = `hsla(${sc.hue[0]},95%,72%,.55)`; c.lineWidth = 2.5;
+  c.strokeStyle = hexA(sc.glow[0], 0.45); c.lineWidth = 1.6;
   c.beginPath(); c.arc(cx, hy, hr, Math.PI * 1.05, Math.PI * 1.72); c.stroke();
   c.beginPath(); c.ellipse(cx, sy + h * 0.32, w * 0.44, h * 0.34, 0, Math.PI * 1.1, Math.PI * 1.4); c.stroke();
-  c.fillStyle = 'rgba(255,255,255,.035)';
-  for (let i = 0; i < 70; i++) c.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5);
+  c.fillStyle = 'rgba(236,226,207,.03)';
+  for (let i = 0; i < 90; i++) c.fillRect(Math.random() * w, Math.random() * h, 1.2, 1.2);
 }
-const prevScene = { hue: [150, 260], bokeh: makeBokeh([150, 0]) };
+const prevScene = { pal: ['#1f3a2c', '#060807'], glow: ['#b8975a', '#c8b69a', '#3c5c49'], bokeh: makeBokeh(['#b8975a', '#c8b69a', '#3c5c49']) };
 let lastFrame = 0;
 function frame(ts) {
   requestAnimationFrame(frame);
   if (document.hidden || ts - lastFrame < 33) return;
   lastFrame = ts; const t = ts / 1000;
-  if (cur === 'feed') { const card = feedEl.children[curIdx]; if (card) drawScene(card.querySelector('canvas'), curStream(), t); }
+  if (cur === 'feed') { const card = feedEl.children[curIdx]; const st = curStream(); if (card && st) drawScene(card.querySelector('canvas'), st, t); }
   if (cur === 'live') { if (L.on) { if (!L.camOk) drawScene($('#cam-fake'), L.fake, t); } else drawScene($('#prev-canvas'), prevScene, t); }
 }
 
 /* ═════════ navigation ═════════ */
 let cur = 'feed';
+const TABS = [['feed', 'feed', 'Live'], ['top', 'target', 'Dares'], ['live'], ['wallet', 'wallet', 'Wallet'], ['profile', 'user', 'Profile']];
+$('#tabbar').innerHTML = TABS.map(([k, i, l]) => (k === 'live' ? '<button class="tab-go" data-tab="live" aria-label="Go live"><span></span></button>'
+  : `<button class="tab ${k === 'feed' ? 'on' : ''}" data-tab="${k}">${ico(i, 23)}${l}</button>`)).join('');
 function show(tab) {
   if (L.on && tab !== 'live') return;
   cur = tab;
@@ -1231,23 +1524,24 @@ document.addEventListener('click', (e) => {
 /* ═════════ onboarding ═════════ */
 function onboarding() {
   const steps = [
-    { em: '📺', h: 'Смотри живые эфиры', p: 'Стримеры гуляют, рисуют, поют и готовят прямо сейчас. Листай вверх, чтобы переключать эфиры.' },
-    { em: '🎯', h: 'Предлагай задания', p: 'Придумай задание и положи ✦ в банк. Другие зрители докидывают — самое богатое задание стример берёт первым.' },
-    { em: '🗳', h: 'Зачёт решает чат', p: `Когда время выходит, зрители голосуют. ≥${PASS * 100}% «да» — банк уходит стримеру, иначе все получают деньги назад.` },
-    { em: '🛡', h: 'Кураж, а не риск', p: 'Опасные, незаконные и унизительные задания блокирует фильтр. Стример всегда может отказаться без штрафа.' },
+    { ic: 'feed', h: 'Live, right now', p: 'Streamers are out walking, drawing, singing and cooking. Swipe up to switch streams.' },
+    { ic: 'target', h: 'Dares with a price', p: 'Suggest a dare and put money in its pot. Other viewers add theirs, and the streamer takes on the richest one.' },
+    { ic: 'vote', h: 'Fair by design', p: `Real money, no tokens. The streamer is paid only if at least ${PASS * 100}% of viewers say the dare counts. Otherwise everyone gets a full refund.` },
+    { ic: 'shield', h: 'Bold, not reckless', p: 'The filter blocks dangerous, illegal and humiliating dares. Streamers can turn down any dare.' },
   ];
   const el = document.createElement('div'); el.className = 'onb'; $('#app').appendChild(el);
   let i = 0, agree = false;
   const render = () => {
     const last = i === steps.length;
-    el.innerHTML = `<div class="logo">КУРАЖ</div>
-      <div class="hero">${last ? `<div class="em">⚡</div><h1>Как тебя зовут в чате?</h1>
-        <input class="inp" id="onb-nick" maxlength="20" placeholder="Ник" autocomplete="nickname" />
-        <button class="check ${agree ? 'on' : ''}" id="onb-agree"><i></i><span>Мне есть 18 лет, я принимаю правила безопасности</span></button>`
-      : `<div class="em">${steps[i].em}</div><h1>${steps[i].h}</h1><p>${steps[i].p}</p>`}</div>
+    el.innerHTML = `<div class="logo">KURAZH</div>
+      <div class="hero">${last ? `<div class="ring">${ico('user', 30)}</div><h1>What should chat call you?</h1>
+        <input class="inp" id="onb-nick" maxlength="20" placeholder="Nickname" autocomplete="nickname" aria-label="Nickname" />
+        <button class="check ${agree ? 'on' : ''}" id="onb-agree"><i></i><span>I am over 18 and accept the safety rules</span></button>
+        <p class="small" style="font-size:13px">Your demo account starts with ${money(CUR.start)} of practice money.</p>`
+      : `<div class="ring">${ico(steps[i].ic, 30)}</div><h1>${steps[i].h}</h1><p>${steps[i].p}</p>`}</div>
       <div class="dots">${[...steps, 0].map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div>
-      <button class="btn lime block" id="onb-next" style="height:54px;font-size:16px">${last ? 'Погнали ⚡' : 'Дальше'}</button>
-      ${last ? '' : '<button class="btn block" id="onb-skip" style="margin-top:6px;background:none;color:var(--muted)">Пропустить</button>'}`;
+      <button class="btn gold block" id="onb-next" style="height:54px;font-size:16px">${last ? 'Get started' : 'Next'}</button>
+      ${last ? '' : '<button class="btn block" id="onb-skip" style="margin-top:6px;background:none;color:var(--muted)">Skip</button>'}`;
     const nick = $('#onb-nick', el);
     if (nick) { nick.value = el.dataset.nick || ''; nick.addEventListener('input', () => (el.dataset.nick = nick.value)); }
     $('#onb-agree', el)?.addEventListener('click', () => { agree = !agree; render(); });
@@ -1255,10 +1549,10 @@ function onboarding() {
     $('#onb-next', el).addEventListener('click', () => {
       if (!last) { i++; render(); return; }
       const v = (el.dataset.nick || '').trim();
-      if (v.length < 2) return toast('Ник — минимум 2 символа', 'bad');
-      if (!Safety.scan(v).ok) return toast('🛡 Такой ник не пропустит фильтр', 'bad');
-      if (!agree) return toast('Подтвердите возраст и правила', 'bad');
-      S.user = { nick: v, joined: Date.now() }; save(); el.remove(); toast(`Привет, ${v}! На счёт зачислено 500 ✦ 🎁`, 'ok'); chime();
+      if (v.length < 2) return toast('Nickname needs at least 2 characters', 'bad');
+      if (!Safety.scan(v).ok) return toast("The filter won't allow that nickname", 'bad');
+      if (!agree) return toast('Confirm your age and the rules', 'bad');
+      S.user = { nick: v, joined: Date.now() }; save(); el.remove(); toast(`Welcome, ${v}`, 'gold'); chime();
     });
   };
   render();
@@ -1266,11 +1560,13 @@ function onboarding() {
 
 /* ═════════ boot ═════════ */
 load();
+renderCats();
 buildFeed();
 refreshBalance();
 setInterval(() => {
-  streams.forEach((st, i) => tickStream(st, i === curIdx && cur === 'feed'));
-  if (cur === 'feed') streams.forEach((st) => updateCard(st));
+  const vis = curStream();
+  streams.forEach((st) => tickStream(st, st === vis && cur === 'feed'));
+  if (cur === 'feed') feedList.forEach((st) => updateCard(st));
   if (cur === 'top') renderTop();
   renderDaresSheet();
   if (L.on) liveTick();
@@ -1278,7 +1574,7 @@ setInterval(() => {
 requestAnimationFrame(frame);
 if (!S.user) onboarding();
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
-window.Kurazh = { Safety, BANK, UNSAFE, S: () => S, streams, L };
+window.Kurazh = { Safety, BANK, UNSAFE, ADULT_UNSAFE, S: () => S, streams, L, money };
 </script>
 </body>
 </html>
