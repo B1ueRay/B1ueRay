@@ -4,6 +4,8 @@ A runnable, production-oriented **development MVP** for premium fictional adult 
 
 The previous profile README is preserved in `docs/original-profile.md`; the previous standalone demo remains in `index.html`.
 
+**Кураж** — a separate mobile PWA demo (live streams where viewers fund dares and streamers complete them) lives in [`kurazh/`](kurazh/README.md). It is plain static files with no build step.
+
 ## Quick start — Docker
 
 **Windows:** follow the [step-by-step Russian guide](docs/windows.md). The PowerShell launcher creates local secrets and starts the complete application without installing Node.js separately.

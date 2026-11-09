@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#07060b" />
+<meta name="description" content="Кураж — живые эфиры, где зрители предлагают задания и скидываются в банк, а стримеры решаются их выполнить." />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Кураж" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<title>Кураж — эфиры с заданиями</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #07060b; --s1: #111019; --s2: #191723; --s3: #252232; --line: rgba(255,255,255,.09);
+    --text: #f5f2ff; --muted: #9b95b3; --lime: #c6ff3d; --pink: #ff3d8b; --cyan: #41e2ff;
+    --ok: #3dffa0; --bad: #ff5a6a; --nav: 64px;
+    --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px);
+  }
+  html, body { height: 100%; background: var(--bg); color: var(--text); overflow: hidden; overscroll-behavior: none;
+    font: 15px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; touch-action: manipulation; }
+  button:disabled { opacity: .45; cursor: default; }
+  input, textarea { font: inherit; color: inherit; }
+  b { font-weight: 700; }
+  [hidden] { display: none !important; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12px; }
+
+  #app { position: relative; height: 100dvh; max-width: 480px; margin: 0 auto; overflow: hidden; background: var(--bg); }
+  .screens { position: absolute; inset: 0 0 calc(var(--nav) + var(--sb)) 0; }
+  body.is-live .screens { bottom: 0; }
+  body.is-live .tabbar { display: none; }
+  .screen { position: absolute; inset: 0; display: none; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .screen.on { display: block; }
+  #scr-feed { overflow: hidden; }
+  .page { padding: calc(var(--st) + 18px) 16px 28px; }
+  h1 { font-size: 28px; font-weight: 850; letter-spacing: -.02em; }
+  h2 { font-size: 20px; font-weight: 800; letter-spacing: -.01em; }
+  h3 { font-size: 15px; font-weight: 700; margin: 22px 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-size: 12px; }
+
+  /* ── buttons & chips ── */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 48px; padding: 0 18px;
+    border-radius: 14px; background: var(--s3); font-weight: 700; transition: transform .12s, background .2s; }
+  .btn:active { transform: scale(.97); }
+  .btn.lime { background: var(--lime); color: #0c0f02; }
+  .btn.pink { background: var(--pink); color: #fff; }
+  .btn.bad { background: rgba(255,90,106,.16); color: var(--bad); }
+  .btn.ghost { background: rgba(255,255,255,.06); border: 1px solid var(--line); }
+  .btn.sm { height: 34px; padding: 0 12px; border-radius: 11px; font-size: 13px; }
+  .btn.block { width: 100%; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { height: 36px; padding: 0 14px; border-radius: 999px; background: var(--s2); border: 1px solid var(--line);
+    font-size: 14px; font-weight: 600; }
+  .chip.on { background: var(--lime); color: #0c0f02; border-color: var(--lime); }
+  .pill { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 10px; border-radius: 999px;
+    background: rgba(8,7,14,.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 13px; font-weight: 600; }
+  .live { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 6px;
+    background: var(--pink); color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .06em; }
+  .live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: blink 1.2s infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+  .ava { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; font-weight: 800;
+    color: #0b0a10; font-size: 16px; }
+  .spark { color: var(--lime); }
+
+  /* ── tab bar ── */
+  .tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--nav) + var(--sb)); padding-bottom: var(--sb);
+    display: flex; background: rgba(9,8,14,.94); border-top: 1px solid var(--line); z-index: 20; }
+  .tab { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    font-size: 10.5px; font-weight: 600; color: var(--muted); }
+  .tab svg { width: 24px; height: 24px; }
+  .tab.on { color: var(--text); }
+  .tab.on svg { color: var(--lime); }
+  .tab-go { flex: 1; display: grid; place-items: center; }
+  .tab-go span { display: grid; place-items: center; width: 52px; height: 38px; border-radius: 13px;
+    background: linear-gradient(135deg, var(--lime), #7dff6b); color: #0b0f02; box-shadow: 0 0 24px rgba(198,255,61,.35); }
+  .tab-go span::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--pink); box-shadow: 0 0 0 3px #0b0f02; }
+
+  /* ── feed ── */
+  .feed { height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; }
+  .feed::-webkit-scrollbar { display: none; }
+  .card { position: relative; height: 100%; scroll-snap-align: start; scroll-snap-stop: always; overflow: hidden; background: #000; }
+  .card canvas, .live-view canvas, .live-view video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .shade { position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 26%, rgba(0,0,0,0) 48%, rgba(0,0,0,.78) 100%); }
+  .c-top { position: absolute; top: calc(var(--st) + 12px); left: 12px; right: 110px; display: flex; gap: 10px; align-items: center; }
+  .c-top .who { flex: 1; min-width: 0; }
+  .c-top .who b { display: block; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .c-top .who small { display: flex; gap: 6px; align-items: center; color: rgba(255,255,255,.78); font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; }
+  .follow { flex: none; height: 28px; padding: 0 10px; border-radius: 9px; background: var(--pink); color: #fff; font-size: 12px; font-weight: 700; }
+  .follow.on { background: rgba(255,255,255,.14); }
+  .balance { position: absolute; top: calc(var(--st) + 14px); right: 12px; z-index: 5; height: 34px; font-size: 14px; }
+  .balance b { color: var(--lime); }
+  .banner { position: absolute; top: calc(var(--st) + 66px); left: 12px; right: 12px; }
+  .bn { background: rgba(10,9,16,.62); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line);
+    border-radius: 16px; padding: 10px 12px; display: grid; gap: 8px; animation: pop .25s ease; }
+  @keyframes pop { from { transform: translateY(-6px); opacity: 0; } }
+  .bn-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
+  .bn-text { font-size: 16px; font-weight: 700; line-height: 1.25; }
+  .bn.idle .bn-text { font-size: 13px; font-weight: 500; color: rgba(255,255,255,.85); }
+  .tag { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .tag.hot { color: var(--pink); }
+  .tag.cyan { color: var(--cyan); }
+  .timer { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 18px; }
+  .timer.low { color: var(--bad); }
+  .bar { height: 5px; border-radius: 9px; background: rgba(255,255,255,.12); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--pink), var(--lime)); transition: width 1s linear; }
+  .votes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .vbtn { position: relative; height: 48px; border-radius: 13px; overflow: hidden; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 14px; font-weight: 800; background: rgba(255,255,255,.07); border: 1px solid var(--line); }
+  .vbtn i { position: absolute; left: 0; top: 0; bottom: 0; z-index: 0; transition: width .6s; }
+  .vbtn span, .vbtn b { position: relative; z-index: 1; }
+  .vbtn.yes i { background: rgba(61,255,160,.25); }
+  .vbtn.no i { background: rgba(255,90,106,.25); }
+  .vbtn.sel { border-color: var(--text); }
+  .vbtn:disabled { opacity: 1; }
+  .bn.result { text-align: center; padding: 14px; }
+  .bn.result .big { font-size: 20px; font-weight: 850; }
+  .bn.result.ok { border-color: rgba(61,255,160,.5); }
+  .bn.result.bad { border-color: rgba(255,90,106,.5); }
+  .rail { position: absolute; right: 8px; bottom: 14px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
+  .rbtn { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; }
+  .rbtn > span { position: relative; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%;
+    background: rgba(8,7,14,.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 21px; }
+  .rbtn.main > span { background: var(--lime); color: #0b0f02; }
+  .rbtn .cnt { position: absolute; top: -3px; right: -3px; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px;
+    background: var(--pink); color: #fff; font-size: 11px; display: grid; place-items: center; }
+  .c-bottom { position: absolute; left: 12px; right: 70px; bottom: 14px; }
+  .c-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; text-shadow: 0 1px 6px rgba(0,0,0,.6); }
+  .chat { display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; height: 132px; overflow: hidden; margin-bottom: 8px;
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 40%); mask-image: linear-gradient(180deg, transparent, #000 40%); }
+  .msg { font-size: 13px; line-height: 1.3; text-shadow: 0 1px 4px rgba(0,0,0,.7); animation: rise .25s ease; overflow-wrap: anywhere; }
+  .msg b { margin-right: 5px; }
+  .msg.sys { align-self: flex-start; background: rgba(198,255,61,.14); border: 1px solid rgba(198,255,61,.25); padding: 4px 8px; border-radius: 9px; text-shadow: none; }
+  .msg.me b { color: var(--lime) !important; }
+  @keyframes rise { from { transform: translateY(6px); opacity: 0; } }
+  .say { display: flex; gap: 6px; }
+  .say input { flex: 1; min-width: 0; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: rgba(8,7,14,.55);
+    padding: 0 12px; outline: none; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); font-size: 16px; }
+  .say button { width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,.12); font-size: 16px; }
+  .heart { position: absolute; right: 22px; bottom: 210px; font-size: 26px; pointer-events: none; animation: fly 1.4s ease-out forwards; }
+  @media (max-width: 400px) { .follow .fl { display: none; } .follow { width: 30px; padding: 0; } .c-top { right: 96px; } }
+  @media (max-height: 700px) {
+    .rail { gap: 8px; }
+    .rbtn { font-size: 0; }
+    .rbtn b { font-size: 11px; }
+    .rbtn > span { width: 40px; height: 40px; font-size: 18px; }
+    .chat { height: 96px; }
+    .bn { padding: 8px 10px; gap: 6px; }
+    .bn-text { font-size: 15px; }
+  }
+  @keyframes fly { to { transform: translate(var(--dx), -220px) scale(1.4); opacity: 0; } }
+
+  /* ── lists ── */
+  .seg { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--s1); margin: 16px 0; }
+  .seg button { flex: 1; height: 38px; border-radius: 11px; font-weight: 700; font-size: 14px; color: var(--muted); }
+  .seg button.on { background: var(--s3); color: var(--text); }
+  .list { display: grid; gap: 10px; }
+  .row { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 16px; background: var(--s1); border: 1px solid var(--line); text-align: left; width: 100%; }
+  .row .grow { flex: 1; min-width: 0; }
+  .row .t { font-weight: 700; line-height: 1.25; }
+  .row .m { font-size: 12px; color: var(--muted); margin-top: 3px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .row .amt { flex: none; text-align: right; font-weight: 800; }
+  .st { display: inline-block; padding: 2px 7px; border-radius: 6px; font-size: 11px; font-weight: 800; }
+  .st.q { background: rgba(255,255,255,.08); color: var(--muted); }
+  .st.go { background: rgba(255,61,139,.18); color: var(--pink); }
+  .st.vote { background: rgba(65,226,255,.16); color: var(--cyan); }
+  .st.ok { background: rgba(61,255,160,.15); color: var(--ok); }
+  .st.back { background: rgba(255,255,255,.08); color: #d8d3ea; }
+  .st.mine { background: rgba(198,255,61,.16); color: var(--lime); }
+  .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+  .empty div { font-size: 42px; margin-bottom: 8px; }
+
+  /* ── wallet / profile ── */
+  .wcard { margin-top: 16px; padding: 20px; border-radius: 22px; position: relative; overflow: hidden;
+    background: radial-gradient(120% 140% at 100% 0%, rgba(255,61,139,.35), transparent 55%), radial-gradient(120% 120% at 0% 100%, rgba(198,255,61,.22), transparent 55%), var(--s2);
+    border: 1px solid var(--line); }
+  .wcard .num { font-size: 42px; font-weight: 900; letter-spacing: -.03em; margin: 4px 0 14px; }
+  .wcard .num small { font-size: 22px; color: var(--lime); }
+  .wbtns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .note { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: rgba(65,226,255,.08); border: 1px solid rgba(65,226,255,.2); font-size: 12.5px; color: #bfefff; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat { padding: 14px; border-radius: 16px; background: var(--s1); border: 1px solid var(--line); }
+  .stat b { display: block; font-size: 22px; font-weight: 850; }
+  .stat span { font-size: 12px; color: var(--muted); }
+  .me-head { display: flex; gap: 14px; align-items: center; margin-top: 16px; }
+  .me-head .ava { width: 64px; height: 64px; font-size: 26px; }
+  .lvl { margin-top: 14px; }
+  .lvl .bar { height: 8px; margin-top: 6px; }
+  .menu { display: grid; border-radius: 16px; overflow: hidden; background: var(--s1); border: 1px solid var(--line); }
+  .menu > * { display: flex; justify-content: space-between; align-items: center; height: 52px; padding: 0 14px; text-align: left; border-bottom: 1px solid var(--line); width: 100%; }
+  .menu > *:last-child { border-bottom: 0; }
+  .switch { position: relative; width: 46px; height: 28px; border-radius: 99px; background: var(--s3); transition: background .2s; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform .2s; }
+  .switch.on { background: var(--lime); }
+  .switch.on::after { transform: translateX(18px); background: #0b0f02; }
+
+  /* ── go live ── */
+  .preview { position: relative; height: 200px; border-radius: 20px; overflow: hidden; background: var(--s1); border: 1px solid var(--line); margin-top: 16px; }
+  .preview canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .preview .pill { position: absolute; left: 12px; bottom: 12px; }
+  .field { display: block; margin-top: 16px; }
+  .field > span { display: block; font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+  .inp { width: 100%; height: 48px; border-radius: 14px; border: 1px solid var(--line); background: var(--s1); padding: 0 14px; outline: none; font-size: 16px; }
+  textarea.inp { height: 84px; padding: 12px 14px; resize: none; line-height: 1.35; }
+  .inp:focus { border-color: rgba(198,255,61,.6); }
+  .check { display: flex; gap: 10px; align-items: flex-start; margin-top: 16px; font-size: 14px; text-align: left; }
+  .check i { flex: none; width: 22px; height: 22px; border-radius: 7px; border: 2px solid var(--muted); display: grid; place-items: center; font-style: normal; font-size: 13px; color: #0b0f02; margin-top: 1px; }
+  .check.on i { background: var(--lime); border-color: var(--lime); }
+  .check.on i::before { content: "✓"; font-weight: 900; }
+  .live-view { position: absolute; inset: 0; background: #000; overflow: hidden; }
+  .live-view video { transform: scaleX(-1); }
+  .live-view video.rear { transform: none; }
+  .lv-top { position: absolute; top: calc(var(--st) + 12px); left: 12px; right: 12px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .lv-top .sp { flex: 1; }
+  .lv-top .iconb { width: 34px; height: 34px; border-radius: 50%; background: rgba(8,7,14,.55); font-size: 17px; }
+  .lv-shield { position: absolute; top: calc(var(--st) + 54px); left: 12px; }
+  .lv-active { position: absolute; top: calc(var(--st) + 92px); left: 12px; right: 12px; }
+  .lv-bottom { position: absolute; left: 12px; right: 12px; bottom: calc(var(--sb) + 14px); display: grid; gap: 10px; }
+  .lv-bottom .chat { height: 110px; margin: 0; width: 78%; }
+  .inc { display: grid; gap: 8px; }
+  .icard { display: flex; gap: 10px; align-items: center; padding: 10px; border-radius: 15px; background: rgba(10,9,16,.7);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); animation: rise .25s ease; }
+  .icard .grow { flex: 1; min-width: 0; }
+  .icard .t { font-weight: 700; font-size: 14px; line-height: 1.25; }
+  .icard .m { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .icard .acts { display: flex; gap: 6px; }
+  .icard .acts button { width: 40px; height: 40px; border-radius: 12px; font-size: 17px; font-weight: 800; }
+  .icard .yes { background: var(--lime); color: #0b0f02; }
+  .icard .no { background: rgba(255,255,255,.1); }
+  .lv-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* ── sheet ── */
+  .sheet-wrap { position: absolute; inset: 0; z-index: 50; pointer-events: none; }
+  .sheet-bg { position: absolute; inset: 0; background: rgba(0,0,0,.55); opacity: 0; transition: opacity .25s; }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 88%; display: flex; flex-direction: column; background: var(--s1);
+    border-radius: 24px 24px 0 0; border-top: 1px solid var(--line); transform: translateY(100%); transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+  .sheet-wrap.open { pointer-events: auto; }
+  .sheet-wrap.open .sheet-bg { opacity: 1; }
+  .sheet-wrap.open .sheet { transform: none; }
+  .grab { width: 40px; height: 5px; border-radius: 9px; background: var(--s3); margin: 10px auto 2px; flex: none; }
+  .sheet-body { overflow-y: auto; padding: 8px 16px calc(var(--sb) + 20px); -webkit-overflow-scrolling: touch; }
+  .sh-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 6px 0 4px; }
+  .x { width: 34px; height: 34px; border-radius: 50%; background: var(--s3); font-size: 15px; flex: none; }
+  .safe-hint { margin-top: 8px; font-size: 12.5px; color: var(--muted); min-height: 18px; }
+  .safe-hint.ok { color: var(--ok); }
+  .safe-hint.bad { color: var(--bad); }
+  .ideas { display: flex; gap: 6px; overflow-x: auto; margin-top: 8px; padding-bottom: 2px; scrollbar-width: none; }
+  .ideas::-webkit-scrollbar { display: none; }
+  .ideas button { flex: none; height: 30px; padding: 0 10px; border-radius: 99px; background: var(--s2); border: 1px solid var(--line); font-size: 12.5px; }
+  .drow { display: flex; gap: 10px; align-items: center; padding: 11px 12px; border-radius: 15px; background: var(--s2); }
+  .drow .grow { flex: 1; min-width: 0; }
+  .drow .t { font-weight: 700; line-height: 1.25; }
+  .drow .m { font-size: 12px; color: var(--muted); margin-top: 3px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .drow .pool { color: var(--lime); font-weight: 800; }
+  .rules li { margin: 0 0 10px 18px; }
+  .rules { font-size: 14px; color: #ddd8ee; }
+  .packs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .pack { padding: 16px 12px; border-radius: 16px; background: var(--s2); border: 1px solid var(--line); text-align: center; position: relative; }
+  .pack b { display: block; font-size: 24px; font-weight: 900; }
+  .pack em { position: absolute; top: 8px; right: 8px; font-style: normal; font-size: 10.5px; font-weight: 800; color: #0b0f02; background: var(--lime); padding: 2px 6px; border-radius: 6px; }
+
+  /* ── toasts / fx / onboarding ── */
+  #toasts { position: absolute; top: calc(var(--st) + 10px); left: 12px; right: 12px; z-index: 80; display: grid; gap: 8px; pointer-events: none; }
+  .toast { justify-self: center; max-width: 100%; padding: 10px 14px; border-radius: 14px; background: rgba(28,25,38,.96); border: 1px solid var(--line);
+    font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,.4); animation: drop .3s ease; }
+  .toast.out { opacity: 0; transform: translateY(-8px); transition: .3s; }
+  .toast.ok { border-color: rgba(61,255,160,.4); }
+  .toast.bad { border-color: rgba(255,90,106,.45); }
+  @keyframes drop { from { transform: translateY(-10px); opacity: 0; } }
+  .confetti { position: absolute; top: -12px; width: 8px; height: 12px; border-radius: 2px; z-index: 90; pointer-events: none; animation: fall 1.7s ease-in forwards; }
+  @keyframes fall { to { transform: translate(var(--dx), 105vh) rotate(var(--r)); opacity: .7; } }
+  .onb { position: absolute; inset: 0; z-index: 100; background: var(--bg); display: flex; flex-direction: column; padding: calc(var(--st) + 24px) 22px calc(var(--sb) + 22px); overflow-y: auto; }
+  .onb .logo { font-size: 15px; font-weight: 900; letter-spacing: .3em; color: var(--lime); }
+  .onb .hero { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 24px 0; }
+  .onb .em { font-size: 64px; }
+  .onb h1 { font-size: 34px; line-height: 1.08; }
+  .onb p { color: #cfc9e2; font-size: 16px; }
+  .dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 16px; }
+  .dots i { width: 7px; height: 7px; border-radius: 9px; background: var(--s3); transition: width .2s; }
+  .dots i.on { width: 22px; background: var(--lime); }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="screens">
+    <section class="screen on" id="scr-feed">
+      <button class="pill balance" data-tab="wallet" aria-label="Баланс">✦ <b data-bal>0</b></button>
+      <div class="feed" id="feed"></div>
+    </section>
+
+    <section class="screen" id="scr-top">
+      <div class="page">
+        <h1>Задания</h1>
+        <div class="seg" id="top-seg">
+          <button class="on" data-seg="hot">🔥 Горячие</button>
+          <button data-seg="mine">Мои ставки</button>
+        </div>
+        <div class="list" id="top-list"></div>
+      </div>
+    </section>
+
+    <section class="screen" id="scr-live">
+      <div class="page" id="live-setup">
+        <h1>Выйти в эфир</h1>
+        <p class="muted" style="margin-top:6px">Зрители предложат задания и скинутся в банк. Вы выбираете, что выполнять.</p>
+        <div class="preview"><canvas id="prev-canvas"></canvas><span class="pill">📷 Камера включится при старте</span></div>
+        <label class="field"><span>Название эфира</span><input class="inp" id="lv-title" maxlength="60" placeholder="Например: Гуляю по парку — командуйте" /></label>
+        <div class="field"><span>Категория</span><div class="chips" id="lv-cat"></div></div>
+        <div class="field"><span>Какие задания принимать</span><div class="chips" id="lv-allow"></div></div>
+        <div class="field"><span>Минимальный банк задания</span><div class="chips" id="lv-min"></div></div>
+        <button class="check" id="lv-agree"><i></i><span>Я не выполняю опасные задания, уважаю окружающих и знаю, что могу отказаться от любого задания без штрафа</span></button>
+        <button class="btn lime block" id="lv-start" style="margin-top:18px;height:54px;font-size:16px">● Начать эфир</button>
+      </div>
+      <div class="live-view" id="live-view" hidden>
+        <video id="cam" playsinline muted autoplay></video>
+        <canvas id="cam-fake"></canvas>
+        <div class="shade"></div>
+        <div class="lv-top">
+          <span class="live">LIVE <b id="lv-time">0:00</b></span>
+          <span class="pill">👁 <b id="lv-viewers">0</b></span>
+          <span class="pill">✦ <b id="lv-earned" class="spark">0</b></span>
+          <span class="sp"></span>
+          <button class="iconb" id="lv-flip" aria-label="Сменить камеру">⟲</button>
+          <button class="btn sm bad" id="lv-end">Завершить</button>
+        </div>
+        <div class="lv-shield"><span class="pill">🛡 Фильтр скрыл: <b id="lv-filtered">0</b></span></div>
+        <div class="lv-active" id="lv-active"></div>
+        <div class="lv-bottom">
+          <div class="chat" id="lv-chat"></div>
+          <div class="inc" id="lv-incoming"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="scr-wallet"><div class="page" id="wallet"></div></section>
+    <section class="screen" id="scr-profile"><div class="page" id="profile"></div></section>
+  </div>
+
+  <nav class="tabbar">
+    <button class="tab on" data-tab="feed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="m10 9 5 3-5 3z"/></svg>Эфиры</button>
+    <button class="tab" data-tab="top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>Задания</button>
+    <button class="tab-go" data-tab="live" aria-label="Выйти в эфир"><span></span></button>
+    <button class="tab" data-tab="wallet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2M7 6l8-3 1 3"/></svg>Кошелёк</button>
+    <button class="tab" data-tab="profile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Профиль</button>
+  </nav>
+
+  <div class="sheet-wrap" id="sheet"><div class="sheet-bg" data-close></div><div class="sheet"><div class="grab"></div><div class="sheet-body" id="sheet-body"></div></div></div>
+  <div id="toasts"></div>
+</div>
+
+<script>
+'use strict';
+/* ═════════ helpers ═════════ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
+const rnd = (a, b) => a + Math.random() * (b - a);
+const ri = (a, b) => Math.floor(rnd(a, b + 1));
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const uid = () => Math.random().toString(36).slice(2, 10);
+const mmss = (s) => { s = Math.max(0, Math.ceil(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+const durLabel = (s) => (s < 60 ? `${s} сек` : `${s / 60} мин`);
+const hueOf = (str) => { let h = 0; for (const c of String(str)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
+const nickColor = (n) => `hsl(${hueOf(n)} 85% 70%)`;
+const ago = (t) => { const m = Math.round((Date.now() - t) / 60000); if (m < 1) return 'только что'; if (m < 60) return `${m} мин назад`; const h = Math.round(m / 60); return h < 24 ? `${h} ч назад` : new Date(t).toLocaleDateString('ru-RU'); };
+
+const VOTE_SEC = 10;
+const PASS = 0.6;         // доля «да» для зачёта
+const FEE = 0.2;          // комиссия платформы
+
+/* ═════════ storage ═════════ */
+const KEY = 'kurazh.v1';
+const defaults = () => ({
+  user: null, balance: 500, earned: 0, xp: 0,
+  tx: [{ id: uid(), t: Date.now(), amount: 500, title: 'Приветственный бонус' }],
+  backs: [], follows: [],
+  settings: { sound: true, vibro: true },
+  stats: { proposed: 0, backed: 0, won: 0, refunded: 0, streams: 0, liveSec: 0, daresDone: 0 },
+});
+let S;
+function load() {
+  const d = defaults();
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    S = saved ? { ...d, ...saved, settings: { ...d.settings, ...saved.settings }, stats: { ...d.stats, ...saved.stats } } : d;
+  } catch { S = d; }
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { /* приватный режим */ } }
+
+/* ═════════ safety filter ═════════ */
+const Safety = (() => {
+  const norm = (s) => ' ' + String(s).toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-я0-9]+/g, ' ').trim() + ' ';
+  const RULES = [
+    { cat: 'Опасно для здоровья', hint: 'Никаких высот, огня, дорог, транспорта и рискованных трюков.',
+      stems: ['спрыг', 'крыш', 'высот', 'карниз', 'балкон', 'огон', 'огн', 'зажигал', 'поджиг', 'поджеч', 'подожг', 'поджог', 'лезви', 'порез', 'оруж', 'пистолет', 'задох', 'задуш', 'утоп', 'прорубь', 'ледян', 'таблет', 'лекарств', 'отрав', 'розетк', 'рельс', 'поезд', 'электрич', 'зацеп', 'трасс', 'шоссе', 'перебег', 'перебеж', 'гоняй', 'обморок'],
+      words: ['нож', 'ножа', 'ножом', 'ножи'],
+      phrases: ['прыгни с', 'прыгни со', 'прыгнуть с', 'прыгать с', 'не дыши', 'на красный', 'за руль', 'за рулем', 'съешь мыло', 'съешь бумагу', 'съешь клей', 'бытовую химию', 'под машину'] },
+    { cat: 'Алкоголь и вещества', hint: 'Алкоголь, табак и вещества запрещены.',
+      stems: ['алкогол', 'водк', 'пив', 'коньяк', 'виски', 'бухн', 'бухать', 'бухл', 'напей', 'залпом', 'наркот', 'травк', 'сигарет', 'вейп', 'кальян', 'самогон', 'шампанск', 'текил', 'vodka'],
+      words: ['вино', 'вина', 'вином', 'винишко', 'кури', 'курить', 'покури', 'закури', 'ром', 'рома', 'пьяный', 'напиться'] },
+    { cat: 'Незаконно', hint: 'Кражи, вандализм и нарушения закона запрещены.',
+      stems: ['украд', 'украсть', 'укради', 'украл', 'своруй', 'своров', 'ворова', 'краж', 'стащи', 'взлом', 'вандал', 'граффити', 'зайцем', 'подделай', 'подделк', 'steal'],
+      phrases: ['без билета', 'разбей окно', 'разбей витрину', 'разбей машину', 'не заплатив', 'без оплаты'] },
+    { cat: 'Без согласия людей', hint: 'Окружающих можно вовлекать только вежливо и с их согласия.',
+      stems: ['ударь', 'ударить', 'толкни', 'толкнуть', 'оскорб', 'плюнь', 'облей', 'напугай', 'приставай', 'пранк', 'преследуй', 'дразни'] },
+    { cat: 'Личные данные', hint: 'Нельзя раскрывать адреса, документы, пароли и номера.',
+      stems: ['адрес', 'паспорт', 'пароль', 'геолокац', 'снилс', 'cvv'],
+      phrases: ['номер карты', 'номер телефона', 'пин код', 'где живешь', 'где ты живешь', 'код из смс'] },
+    { cat: '18+', hint: 'Откровенный контент запрещён.',
+      stems: ['разден', 'обнаж', 'интим', 'секс', 'эротик', 'нюд', 'nude', 'nsfw', 'стрипт'],
+      words: ['голый', 'голая', 'голой', 'голым', 'голышом'] },
+    { cat: 'Унижение и травля', hint: 'Задания не должны унижать или травить кого-либо.',
+      stems: ['самоуб', 'суицид', 'убей', 'убить', 'униз', 'униж', 'затрав', 'травл', 'сдохн'] },
+  ];
+  const PEOPLE = ['незнаком', 'прохож', 'случайн', 'девушк', 'парн'];
+  const CONTACT = ['поцел', 'обним', 'трог', 'щуп', 'шлеп', 'ущипн', 'лизн', 'понюха', 'засос'];
+  function scan(text) {
+    const n = norm(text);
+    const words = n.trim().split(' ');
+    const has = (st) => words.some((w) => w.startsWith(st));
+    for (const r of RULES) {
+      if ((r.stems || []).some(has) || (r.words || []).some((w) => words.includes(w)) || (r.phrases || []).some((p) => n.includes(' ' + p + ' '))) {
+        return { ok: false, cat: r.cat, hint: r.hint };
+      }
+    }
+    if (PEOPLE.some(has) && CONTACT.some(has)) return { ok: false, cat: 'Без согласия людей', hint: 'Физический контакт с посторонними запрещён.' };
+    return { ok: true };
+  }
+  function check(text) {
+    const raw = String(text || '').trim();
+    if (raw.length < 8) return { ok: false, cat: 'Слишком коротко', hint: 'Опишите задание подробнее — от 8 символов.' };
+    if (raw.length > 140) return { ok: false, cat: 'Слишком длинно', hint: 'Максимум 140 символов.' };
+    if (!/[a-zа-яё]{3}/i.test(raw)) return { ok: false, cat: 'Непонятно', hint: 'Напишите задание словами.' };
+    return scan(raw);
+  }
+  return { check, scan };
+})();
+
+/* ═════════ content ═════════ */
+const CATS = { irl: 'Прогулка', sport: 'Спорт', art: 'Творчество', food: 'Кухня', music: 'Музыка', talk: 'Болталка' };
+const TAGS = { phys: '💪 Физические', people: '🤝 С людьми (по согласию)', food: '🍋 Еда', creative: '🎨 Творческие', talk: '💬 Разговорные' };
+const BANK = {
+  any: [['Говори минуту только рифмами', 'talk'], ['Расскажи самую неловкую историю из школы', 'talk'], ['Изобрази пингвина 30 секунд', 'creative'],
+    ['Сделай 3 разных акцента подряд', 'talk'], ['Объясни квантовую физику как пятилетнему', 'talk'], ['Прочитай последнее сообщение чата голосом диктора', 'talk'],
+    ['Станцуй под первую песню из плейлиста', 'creative'], ['Назови 10 городов на букву «К» за 20 секунд', 'talk'], ['Покажи лучшую пародию на кота', 'creative'],
+    ['Скажи скороговорку 5 раз без ошибок', 'talk']],
+  irl: [['Сделай вежливый комплимент бариста', 'people'], ['Найди 5 красных машин за 2 минуты', 'phys'], ['Спроси у прохожего любимый фильм, если он не против', 'people'],
+    ['Пройди 50 шагов походкой модели', 'phys'], ['Купи самый странный снек в ближайшем магазине', 'food'], ['Сфоткай 3 смешные вывески', 'creative'],
+    ['Найди кота и уговори его на фото', 'creative']],
+  sport: [['20 отжиманий за 40 секунд', 'phys'], ['Планка 1 минуту', 'phys'], ['30 приседаний без остановки', 'phys'],
+    ['Постой на одной ноге с закрытыми глазами 30 секунд', 'phys'], ['Попади мячом в корзину 3 раза подряд', 'phys'], ['50 прыжков на скакалке', 'phys']],
+  art: [['Нарисуй кота-космонавта за 2 минуты', 'creative'], ['Нарисуй автопортрет левой рукой', 'creative'], ['Слепи из пластилина маскота чата', 'creative'],
+    ['Нарисуй то, что опишет топ-донатер', 'creative'], ['Нарисуй карту выдуманной страны за минуту', 'creative']],
+  food: [['Съешь дольку лимона и не поморщись', 'food'], ['Сделай бутерброд с закрытыми глазами', 'food'], ['Угадай 3 специи по запаху', 'food'],
+    ['Приготовь омлет за 3 минуты', 'food'], ['Опиши вкус огурца как ресторанный критик', 'talk']],
+  music: [['Спой «В лесу родилась ёлочка» как оперу', 'creative'], ['Сочини рэп про чат за минуту', 'creative'], ['Сыграй мелодию на стаканах с водой', 'creative'],
+    ['Спой куплет, зажав нос', 'creative'], ['Исполни гимн чата в стиле металл', 'creative']],
+  talk: [['Угадай профессию зрителя по трём вопросам', 'talk'], ['Расскажи сказку, где каждое слово на «П»', 'talk'], ['Продай мне эту ручку за 30 секунд', 'talk']],
+};
+// Примеры, которые зрители иногда шлют — их должен отсечь фильтр (текст пользователю не показываем).
+const UNSAFE = ['Прыгни с гаража', 'Выпей бутылку водки залпом', 'Перебеги дорогу на красный', 'Укради шоколадку в магазине', 'Поцелуй незнакомку',
+  'Назови свой домашний адрес', 'Залезь на крышу соседнего дома', 'Покажи паспорт в камеру', 'Обнажись на камеру', 'Облей прохожего водой'];
+
+const STREAMERS = [
+  { id: 'nika', name: 'Ника Лисова', cat: 'irl', city: 'Москва', title: 'Гуляю по ночному центру — командуйте 🌃', hue: [285, 230], viewers: 1840 },
+  { id: 'mila', name: 'mila.draws', cat: 'art', city: 'Санкт-Петербург', title: 'Рисую всё, что придумаете, на время ✏️', hue: [195, 250], viewers: 2310 },
+  { id: 'timur', name: 'Тимур Прыгун', cat: 'sport', city: 'Казань', title: 'Зал открыт — проверим мою форму 💪', hue: [18, 350], viewers: 960 },
+  { id: 'vanya', name: 'Ваня Голос', cat: 'music', city: 'Новосибирск', title: 'Пою по заявкам чата 🎤', hue: [320, 270], viewers: 1270 },
+  { id: 'gosha', name: 'Шеф Гоша', cat: 'food', city: 'Екатеринбург', title: 'Готовлю из того, что найду в холодильнике', hue: [38, 8], viewers: 640 },
+  { id: 'dasha', name: 'Даша Квест', cat: 'irl', city: 'Сочи', title: 'Набережная + ваши челленджи 🌊', hue: [170, 215], viewers: 880 },
+  { id: 'lev', name: 'Лев Болтун', cat: 'talk', city: 'Минск', title: 'Болтаем, отвечаю на всё за ✦', hue: [250, 300], viewers: 520 },
+];
+const NICK_A = ['кот', 'лис', 'тень', 'пиксель', 'ёж', 'волк', 'сова', 'мята', 'луна', 'шторм', 'енот', 'крош', 'zero', 'neo', 'бро', 'тигр', 'кекс', 'nova'];
+const botNick = () => pick(NICK_A) + pick(['_', '.', '', '']) + (Math.random() < 0.7 ? ri(1, 999) : pick(['ok', 'x', 'pro', 'ru']));
+const CHAT = {
+  idle: ['всем привет 👋', 'го задание!', 'что сегодня делаем?', 'лучший стрим', 'кто из Москвы?', '🔥🔥🔥', 'скиньтесь на моё 😅', 'давай что-нибудь смешное', 'топ', 'ну это база'],
+  doing: ['давай!!', 'успеет?', 'не сможет 😂', 'верю в тебя', '⏱ время!', 'уже почти', 'жми!', '😂😂😂', 'красиво идёт', 'ещё чуть-чуть', '+50 в банк'],
+  voting: ['засчитываю ✅', 'честно сделал', 'не считается 😤', '✅✅✅', 'было близко', 'ну такое…', 'засчитать!'],
+  ok: ['GG', 'заслужил 👏', 'красава', 'легенда', 'следующее!'],
+  bad: ['эх(', 'в следующий раз', 'банк вернули, норм', 'бывает'],
+};
+
+/* ═════════ audio / haptics / ui fx ═════════ */
+let actx = null;
+function beep(f = 660, d = 0.08, type = 'sine', v = 0.05) {
+  if (!S.settings.sound) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = f; g.gain.value = v;
+    o.connect(g).connect(actx.destination);
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + d);
+    o.start(); o.stop(actx.currentTime + d);
+  } catch { /* нет аудио */ }
+}
+const chime = () => { beep(660, 0.09); setTimeout(() => beep(990, 0.14), 90); };
+function buzz(p) { if (S.settings.vibro && navigator.vibrate) { try { navigator.vibrate(p); } catch { /* ignore */ } } }
+function toast(msg, kind = '') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + kind; el.textContent = msg;
+  const box = $('#toasts'); box.appendChild(el);
+  while (box.children.length > 3) box.firstChild.remove();
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 2600);
+}
+function confetti(n = 46) {
+  const app = $('#app'), cols = ['#c6ff3d', '#ff3d8b', '#41e2ff', '#fff', '#ffd23d'];
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement('i');
+    c.className = 'confetti';
+    c.style.left = rnd(0, 100) + '%'; c.style.background = pick(cols);
+    c.style.setProperty('--dx', rnd(-80, 80) + 'px'); c.style.setProperty('--r', rnd(-720, 720) + 'deg');
+    c.style.animationDelay = rnd(0, 0.35) + 's';
+    app.appendChild(c); setTimeout(() => c.remove(), 2300);
+  }
+}
+
+/* ═════════ wallet core ═════════ */
+function addTx(amount, title) {
+  S.balance += amount;
+  S.tx.unshift({ id: uid(), t: Date.now(), amount, title });
+  S.tx.length = Math.min(S.tx.length, 120);
+  save(); refreshBalance();
+}
+function gainXp(n) { S.xp += n; save(); }
+const level = (xp) => Math.floor(Math.sqrt(xp / 40)) + 1;
+const lvlFloor = (l) => 40 * (l - 1) ** 2;
+function refreshBalance() { $$('[data-bal]').forEach((e) => (e.textContent = fmt(S.balance))); if (cur === 'wallet') renderWallet(); }
+function needMoney(amount) {
+  if (S.balance >= amount) return false;
+  toast(`Не хватает ✦ — нужно ${fmt(amount)}, у вас ${fmt(S.balance)}`, 'bad');
+  openTopup();
+  return true;
+}
+
+/* ═════════ streams simulation ═════════ */
+function makeBokeh(hue) {
+  return Array.from({ length: 14 }, () => ({ x: Math.random(), y: rnd(0, 0.75), r: rnd(0.03, 0.12), h: hue[0] + rnd(-35, 35), a: rnd(0.12, 0.4), s: rnd(0.15, 0.55), p: rnd(0, 6.3) }));
+}
+function botDare(st) {
+  const taken = new Set([...st.dares.map((d) => d.text), st.active?.d.text]);
+  const pool = [...(BANK[st.cat] || []), ...BANK.any].filter(([t]) => !taken.has(t));
+  const [text, tag] = pick(pool.length ? pool : BANK.any);
+  return { id: uid(), text, tag, pool: ri(3, 30) * 10, backers: ri(1, 14), time: pick([30, 30, 60, 60, 120]), by: botNick(), mine: false, my: 0 };
+}
+const streams = STREAMERS.map((m) => {
+  const st = { ...m, likes: ri(2000, 30000), dares: [], active: null, cooldown: ri(3, 9), chat: [], bokeh: makeBokeh(m.hue) };
+  for (let i = 0, n = ri(2, 4); i < n; i++) st.dares.push(botDare(st));
+  if (Math.random() < 0.6) { const d = topDare(st); st.dares = st.dares.filter((x) => x !== d); st.active = { d, phase: 'doing', t: ri(10, d.time), total: d.time }; }
+  for (let i = 0; i < 5; i++) st.chat.push({ nick: botNick(), text: pick(CHAT.idle) });
+  return st;
+});
+const byId = (id) => streams.find((s) => s.id === id);
+function topDare(st) { return st.dares.reduce((a, d) => (!a || d.pool > a.pool ? d : a), null); }
+
+function pushChat(st, m) {
+  st.chat.push(m); if (st.chat.length > 30) st.chat.shift();
+  if (st === curStream() && cur === 'feed') renderChat(st);
+}
+function myBacks(dareId) { return S.backs.filter((b) => b.dareId === dareId && b.status === 'pending'); }
+
+function startDare(st, d) {
+  st.dares = st.dares.filter((x) => x !== d);
+  st.active = { d, phase: 'doing', t: d.time, total: d.time, yes: 0, no: 0, myVote: null };
+  pushChat(st, { sys: true, text: `▶ ${st.name} принял(а) задание «${d.text}» — банк ${fmt(d.pool)} ✦` });
+  if (d.my > 0) { toast(`🔥 ${st.name} выполняет ваше задание!`, 'ok'); buzz([40, 60, 40]); chime(); }
+}
+function declineDare(st, d) {
+  st.dares = st.dares.filter((x) => x !== d);
+  pushChat(st, { sys: true, text: `✋ ${st.name} отказался(ась) от «${d.text}». Банк вернули зрителям.` });
+  settle(d, false, st, 'отказ стримера');
+}
+function settle(d, success, st, why) {
+  const mine = myBacks(d.id);
+  if (!mine.length) return;
+  const sum = mine.reduce((a, b) => a + b.amount, 0);
+  for (const b of mine) b.status = success ? 'paid' : 'refunded';
+  if (success) { S.stats.won++; gainXp(20); toast(`✅ Засчитано! Ваши ${fmt(sum)} ✦ ушли ${st.name}`, 'ok'); }
+  else { S.stats.refunded++; addTx(sum, `Возврат (${why}): «${d.text}»`); toast(`↩ Возврат ${fmt(sum)} ✦ — ${why}`); }
+  save();
+}
+function finishVote(st) {
+  const a = st.active, total = a.yes + a.no;
+  a.success = total > 0 && a.yes / total >= PASS;
+  a.phase = 'result'; a.t = 5;
+  pushChat(st, { sys: true, text: a.success ? `✅ Засчитано ${Math.round((a.yes / total) * 100)}% — ${fmt(a.d.pool)} ✦ уходят стримеру` : `❌ Не засчитано — банк ${fmt(a.d.pool)} ✦ возвращается` });
+  const involved = a.d.my > 0 || a.myVote !== null;
+  settle(a.d, a.success, st, 'не засчитано');
+  if (st === curStream() && cur === 'feed') { if (a.success) { confetti(involved ? 60 : 26); chime(); } else beep(220, 0.25, 'triangle'); }
+}
+function tickStream(st, visible) {
+  st.viewers = Math.max(40, Math.round(st.viewers * rnd(0.988, 1.014) + rnd(-4, 6)));
+  const a = st.active;
+  if (Math.random() < (visible ? 0.7 : 0.15)) pushChat(st, { nick: botNick(), text: pick(a ? (a.phase === 'result' ? CHAT[a.success ? 'ok' : 'bad'] : CHAT[a.phase]) : CHAT.idle) });
+  if (st.dares.length < 7 && Math.random() < 0.07) {
+    const d = botDare(st); st.dares.push(d);
+    if (visible) pushChat(st, { sys: true, text: `🎯 Новое задание от ${d.by}: «${d.text}» — ${fmt(d.pool)} ✦` });
+  }
+  if (st.dares.length && Math.random() < 0.35) { const d = pick(st.dares); d.pool += pick([10, 20, 20, 50, 100]); d.backers++; }
+  for (const d of st.dares) if (d.mine && Math.random() < 0.3) { d.pool += pick([10, 20, 30, 50]); d.backers++; }
+  if (!a) {
+    if (--st.cooldown > 0 || !st.dares.length) return;
+    const top = topDare(st);
+    if (top.pool < 60) { st.cooldown = 3; return; }
+    if (Math.random() < 0.1) { declineDare(st, top); st.cooldown = 3; } else startDare(st, top);
+    return;
+  }
+  a.t--;
+  if (a.phase === 'doing') {
+    if (Math.random() < 0.3) { a.d.pool += pick([10, 20, 50]); a.d.backers++; }
+    if (a.t <= 0) {
+      a.phase = 'voting'; a.t = VOTE_SEC; a.yes = a.yes || 0; a.no = a.no || 0; a.p = rnd(0.5, 0.95);
+      pushChat(st, { sys: true, text: '🗳 Время вышло! Голосуйте: засчитать?' });
+      if (visible) { beep(520, 0.1); buzz(30); }
+    }
+  } else if (a.phase === 'voting') {
+    const n = ri(2, Math.max(3, Math.round(st.viewers / 140)));
+    for (let i = 0; i < n; i++) Math.random() < a.p ? a.yes++ : a.no++;
+    if (a.t <= 0) finishVote(st);
+  } else if (a.t <= 0) { st.active = null; st.cooldown = ri(4, 9); }
+}
+
+/* ═════════ viewer actions ═════════ */
+function backDare(st, d, amount) {
+  if (needMoney(amount)) return false;
+  addTx(-amount, `В банк «${d.text}» · ${st.name}`);
+  if (!d.my) d.backers++;
+  d.pool += amount; d.my += amount;
+  const ex = myBacks(d.id)[0];
+  if (ex) ex.amount += amount;
+  else S.backs.unshift({ id: uid(), dareId: d.id, streamId: st.id, streamer: st.name, text: d.text, amount, status: 'pending', t: Date.now(), mine: d.mine });
+  S.stats.backed++; gainXp(5); save();
+  pushChat(st, { nick: S.user.nick, me: true, text: `+${fmt(amount)} ✦ в «${d.text}»` });
+  beep(880, 0.06); buzz(15);
+  return true;
+}
+function proposeDare(st, text, amount, time) {
+  const r = Safety.check(text);
+  if (!r.ok) { toast(`🛡 ${r.cat}: ${r.hint}`, 'bad'); return false; }
+  if (needMoney(amount)) return false;
+  const d = { id: uid(), text: text.trim().replace(/\s+/g, ' '), tag: 'talk', pool: 0, backers: 0, time, by: S.user.nick, mine: true, my: 0 };
+  st.dares.push(d);
+  backDare(st, d, amount);
+  S.stats.proposed++; gainXp(10); save();
+  pushChat(st, { sys: true, text: `🎯 Новое задание от ${S.user.nick}: «${d.text}» — ${fmt(d.pool)} ✦` });
+  toast('Задание отправлено! Чем больше банк — тем выше шанс 🔥', 'ok');
+  return true;
+}
+function vote(st, yes) {
+  const a = st.active;
+  if (!a || a.phase !== 'voting' || a.myVote !== null) return;
+  a.myVote = yes; yes ? a.yes++ : a.no++;
+  gainXp(2); buzz(20); beep(yes ? 880 : 330, 0.07);
+  updateCard(st, true);
+}
+
+/* ═════════ feed rendering ═════════ */
+const feedEl = $('#feed');
+let curIdx = 0;
+const curStream = () => streams[curIdx];
+function cardHTML(st) {
+  const fol = S.follows.includes(st.id);
+  return `<article class="card" data-id="${st.id}">
+    <canvas></canvas><div class="shade"></div>
+    <div class="c-top">
+      <div class="ava" style="background:linear-gradient(135deg,hsl(${st.hue[0]} 90% 70%),hsl(${st.hue[1]} 90% 60%))">${esc(st.name[0].toUpperCase())}</div>
+      <div class="who"><b>${esc(st.name)}</b><small><span class="live">LIVE</span>👁 <span data-k="v">${fmt(st.viewers)}</span> · ${esc(CATS[st.cat])}</small></div>
+      <button class="follow ${fol ? 'on' : ''}" data-act="follow">${fol ? '✓' : '+<span class="fl"> Следить</span>'}</button>
+    </div>
+    <div class="banner" data-el="banner"></div>
+    <div class="c-bottom">
+      <div class="c-title">${esc(st.title)} <span class="muted">· ${esc(st.city)}</span></div>
+      <div class="chat" data-el="chat"></div>
+      <form class="say" data-act="say"><input enterkeyhint="send" maxlength="120" placeholder="Написать в чат…" aria-label="Сообщение" /><button aria-label="Отправить">➤</button></form>
+    </div>
+    <div class="rail">
+      <button class="rbtn" data-act="like"><span>❤️</span><b data-k="likes">${fmt(st.likes)}</b></button>
+      <button class="rbtn main" data-act="dares"><span>🎯<i class="cnt" data-k="dc">${st.dares.length}</i></span>Задания</button>
+      <button class="rbtn" data-act="share"><span>↗</span>Поделиться</button>
+      <button class="rbtn" data-act="report"><span>⚑</span>Жалоба</button>
+    </div>
+  </article>`;
+}
+function bannerKey(st) { const a = st.active; return a ? `${a.phase}:${a.d.id}:${a.myVote}` : `idle:${topDare(st)?.id || ''}`; }
+function bannerHTML(st) {
+  const a = st.active;
+  if (!a) {
+    const top = topDare(st);
+    return `<div class="bn idle"><div class="bn-row"><span class="tag">⏳ Стример выбирает задание</span><span class="muted">в очереди: <b data-k="q">${st.dares.length}</b></span></div>
+      ${top ? `<div class="bn-text">Лидирует «${esc(top.text)}» — <b class="spark" data-k="tp">${fmt(top.pool)}</b> ✦</div>` : ''}
+      <button class="btn sm lime" data-act="dares">🎯 Предложить задание</button></div>`;
+  }
+  const d = a.d;
+  if (a.phase === 'doing') {
+    return `<div class="bn"><div class="bn-row"><span class="tag hot">● Выполняет${d.mine ? ' ваше' : ''}</span><span class="timer" data-k="t">${mmss(a.t)}</span></div>
+      <div class="bn-text">«${esc(d.text)}»</div><div class="bar"><i data-k="bar" style="width:${(a.t / a.total) * 100}%"></i></div>
+      <div class="bn-row"><span>Банк <b class="spark" data-k="pool">${fmt(d.pool)}</b> ✦ · <span data-k="bk">${d.backers}</span> 👥${d.my ? ` · ваши <b data-k="my">${fmt(d.my)}</b>` : ''}</span>
+      <button class="btn sm lime" data-act="boost">+50 ✦</button></div></div>`;
+  }
+  if (a.phase === 'voting') {
+    const dis = a.myVote !== null ? 'disabled' : '';
+    return `<div class="bn"><div class="bn-row"><span class="tag cyan">🗳 Засчитать задание?</span><span class="timer" data-k="t">${mmss(a.t)}</span></div>
+      <div class="bn-text">«${esc(d.text)}» · <span class="spark">${fmt(d.pool)} ✦</span></div>
+      <div class="votes"><button class="vbtn yes ${a.myVote === true ? 'sel' : ''}" data-act="yes" ${dis}><i data-k="yb"></i><span>✓ Да</span><b data-k="yp">0%</b></button>
+      <button class="vbtn no ${a.myVote === false ? 'sel' : ''}" data-act="no" ${dis}><i data-k="nb"></i><span>✕ Нет</span><b data-k="np">0%</b></button></div>
+      <div class="muted small">${a.myVote !== null ? 'Ваш голос учтён. ' : ''}Нужно ≥${PASS * 100}% «да», иначе банк вернётся зрителям</div></div>`;
+  }
+  return `<div class="bn result ${a.success ? 'ok' : 'bad'}"><div class="big">${a.success ? '✅ Засчитано!' : '❌ Не засчитано'}</div>
+    <div class="muted">«${esc(d.text)}»</div><div style="margin-top:4px">${a.success ? `<b class="spark">${fmt(d.pool)} ✦</b> уходят стримеру` : `Банк <b>${fmt(d.pool)} ✦</b> возвращён зрителям`}</div></div>`;
+}
+function updateCard(st, force) {
+  const card = feedEl.querySelector(`[data-id="${st.id}"]`);
+  if (!card) return;
+  const set = (k, v) => { const e = card.querySelector(`[data-k="${k}"]`); if (e) e.textContent = v; };
+  set('v', fmt(st.viewers)); set('likes', fmt(st.likes)); set('dc', st.dares.length);
+  const bn = card.querySelector('[data-el="banner"]'), key = bannerKey(st);
+  if (force || bn.dataset.key !== key) { bn.dataset.key = key; bn.innerHTML = bannerHTML(st); }
+  const a = st.active;
+  if (!a) { set('q', st.dares.length); const top = topDare(st); if (top) set('tp', fmt(top.pool)); return; }
+  set('t', mmss(a.t)); set('pool', fmt(a.d.pool)); set('bk', a.d.backers); set('my', fmt(a.d.my));
+  const tm = card.querySelector('[data-k="t"]'); if (tm) tm.classList.toggle('low', a.phase !== 'result' && a.t <= 5);
+  const bar = card.querySelector('[data-k="bar"]'); if (bar) bar.style.width = (a.t / a.total) * 100 + '%';
+  if (a.phase === 'voting') {
+    const tot = Math.max(1, a.yes + a.no), yp = Math.round((a.yes / tot) * 100);
+    set('yp', yp + '%'); set('np', 100 - yp + '%');
+    card.querySelector('[data-k="yb"]').style.width = yp + '%'; card.querySelector('[data-k="nb"]').style.width = 100 - yp + '%';
+  }
+}
+function renderChat(st) {
+  const card = feedEl.querySelector(`[data-id="${st.id}"]`);
+  if (card) card.querySelector('[data-el="chat"]').innerHTML = chatHTML(st.chat.slice(-8));
+}
+const chatHTML = (list) => list.map((m) => (m.sys ? `<div class="msg sys">${esc(m.text)}</div>` : `<div class="msg ${m.me ? 'me' : ''}"><b style="color:${nickColor(m.nick)}">${esc(m.nick)}</b>${esc(m.text)}</div>`)).join('');
+function buildFeed() {
+  feedEl.innerHTML = streams.map(cardHTML).join('');
+  streams.forEach((st) => { updateCard(st, true); renderChat(st); });
+  const io = new IntersectionObserver((ents) => {
+    for (const e of ents) if (e.isIntersecting) {
+      const i = streams.findIndex((s) => s.id === e.target.dataset.id);
+      if (i !== curIdx) { curIdx = i; renderChat(streams[i]); }
+    }
+  }, { root: feedEl, threshold: 0.6 });
+  $$('.card', feedEl).forEach((c) => io.observe(c));
+}
+feedEl.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-act]'); if (!btn || btn.tagName === 'FORM') return;
+  const st = byId(e.target.closest('.card').dataset.id), act = btn.dataset.act;
+  if (act === 'dares') openDares(st);
+  else if (act === 'boost' && st.active) { backDare(st, st.active.d, 50) && updateCard(st, true); }
+  else if (act === 'yes' || act === 'no') vote(st, act === 'yes');
+  else if (act === 'like') like(st, btn);
+  else if (act === 'follow') {
+    const on = !S.follows.includes(st.id);
+    S.follows = on ? [...S.follows, st.id] : S.follows.filter((x) => x !== st.id); save();
+    btn.classList.toggle('on', on); btn.innerHTML = on ? '✓' : '+<span class="fl"> Следить</span>';
+    if (on) toast(`Вы следите за ${st.name}`);
+  } else if (act === 'share') share(st);
+  else if (act === 'report') openReport(st);
+});
+feedEl.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const inp = e.target.querySelector('input'), text = inp.value.trim(); if (!text) return;
+  const st = byId(e.target.closest('.card').dataset.id);
+  const r = Safety.scan(text);
+  if (!r.ok) { toast(`🛡 Сообщение скрыто фильтром: ${r.cat}`, 'bad'); return; }
+  pushChat(st, { nick: S.user.nick, me: true, text }); inp.value = '';
+});
+function like(st, btn) {
+  st.likes++; btn.querySelector('[data-k="likes"]').textContent = fmt(st.likes); buzz(8);
+  const h = document.createElement('div'); h.className = 'heart'; h.textContent = pick(['❤️', '💖', '🔥', '💜']);
+  h.style.setProperty('--dx', rnd(-50, 10) + 'px'); btn.closest('.card').appendChild(h); setTimeout(() => h.remove(), 1400);
+}
+async function share(st) {
+  const data = { title: 'Кураж', text: `${st.name} в эфире: ${st.title}`, url: location.href };
+  try { if (navigator.share) { await navigator.share(data); return; } await navigator.clipboard.writeText(`${data.text} — ${data.url}`); toast('Ссылка скопирована'); }
+  catch { /* пользователь отменил */ }
+}
+
+/* ═════════ sheets ═════════ */
+let sheetCtx = null;
+function openSheet(html, ctx = {}) {
+  const old = $('#sheet-body'), body = old.cloneNode(false); // чистый узел — без старых обработчиков
+  old.replaceWith(body); body.innerHTML = html; $('#sheet').classList.add('open'); sheetCtx = ctx;
+}
+function closeSheet() { $('#sheet').classList.remove('open'); sheetCtx = null; }
+$('#sheet').addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeSheet(); });
+const sheetHead = (title, sub = '') => `<div class="sh-head"><div><h2>${title}</h2>${sub ? `<div class="muted small" style="margin-top:2px">${sub}</div>` : ''}</div><button class="x" data-close aria-label="Закрыть">✕</button></div>`;
+
+function openDares(st) {
+  const ideas = [...(BANK[st.cat] || []), ...BANK.any].sort(() => Math.random() - 0.5).slice(0, 6);
+  openSheet(`${sheetHead(`Задания · ${esc(st.name)}`, 'Деньги хранятся в банке и уходят стримеру только после зачёта')}
+    <div id="d-active" style="margin-top:12px"></div>
+    <div class="bn-row" style="margin:14px 0 8px"><b>В очереди</b><span class="chips" id="d-amt">${[20, 50, 100].map((v, i) => `<button class="chip ${i === 1 ? 'on' : ''}" data-v="${v}" style="height:30px;padding:0 10px;font-size:13px">+${v}</button>`).join('')}</span></div>
+    <div class="list" id="d-list"></div>
+    <h3>Предложить своё</h3>
+    <form id="d-form">
+      <textarea class="inp" id="d-text" maxlength="140" placeholder="Например: спой куплет как оперный певец"></textarea>
+      <div class="ideas">${ideas.map(([t]) => `<button type="button" data-idea="${esc(t)}">💡 ${esc(t)}</button>`).join('')}</div>
+      <div class="safe-hint" id="d-hint">🛡 Каждое задание проверяет фильтр безопасности</div>
+      <div class="field"><span>Банк от вас</span><div class="chips" id="d-pool">${[20, 50, 100, 250, 500].map((v) => `<button type="button" class="chip ${v === 100 ? 'on' : ''}" data-v="${v}">${v} ✦</button>`).join('')}</div></div>
+      <div class="field"><span>Время на выполнение</span><div class="chips" id="d-time">${[30, 60, 120, 300].map((v) => `<button type="button" class="chip ${v === 60 ? 'on' : ''}" data-v="${v}">${durLabel(v)}</button>`).join('')}</div></div>
+      <button class="btn lime block" style="margin-top:18px" id="d-send">Предложить за 100 ✦</button>
+      <div class="muted small" style="margin-top:10px;text-align:center">Баланс: ✦ <b data-bal>${fmt(S.balance)}</b> · Если стример откажется или задание не засчитают — вернём всё</div>
+    </form>`, { type: 'dares', id: st.id, sig: '' });
+  const body = $('#sheet-body');
+  const val = (sel) => +body.querySelector(`${sel} .chip.on`).dataset.v;
+  const upd = () => {
+    const txt = $('#d-text').value, hint = $('#d-hint');
+    $('#d-send').textContent = `Предложить за ${val('#d-pool')} ✦`;
+    if (!txt.trim()) { hint.className = 'safe-hint'; hint.textContent = '🛡 Каждое задание проверяет фильтр безопасности'; return; }
+    const r = Safety.check(txt);
+    hint.className = 'safe-hint ' + (r.ok ? 'ok' : 'bad');
+    hint.textContent = r.ok ? '✓ Задание прошло проверку' : `✕ ${r.cat}. ${r.hint}`;
+  };
+  body.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (chip) { chip.parentElement.querySelectorAll('.chip').forEach((c) => c.classList.toggle('on', c === chip)); upd(); return; }
+    const idea = e.target.closest('[data-idea]'); if (idea) { $('#d-text').value = idea.dataset.idea; upd(); return; }
+    const b = e.target.closest('[data-back]');
+    if (b) {
+      const s = byId(sheetCtx.id), d = b.dataset.back === 'active' ? s.active?.d : s.dares.find((x) => x.id === b.dataset.back);
+      if (d && backDare(s, d, val('#d-amt'))) { renderDaresSheet(true); updateCard(s, true); }
+    }
+  });
+  $('#d-text').addEventListener('input', upd);
+  $('#d-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (proposeDare(st, $('#d-text').value, val('#d-pool'), val('#d-time'))) { $('#d-text').value = ''; upd(); renderDaresSheet(true); updateCard(st, true); }
+  });
+  renderDaresSheet(true);
+}
+function renderDaresSheet(force) {
+  if (!sheetCtx || sheetCtx.type !== 'dares') return;
+  const st = byId(sheetCtx.id), a = st.active;
+  const act = $('#d-active');
+  if (act) {
+    const k = a ? `${a.phase}:${a.d.id}` : 'none';
+    if (force || act.dataset.k !== k) {
+      act.dataset.k = k;
+      act.innerHTML = a && a.phase === 'doing'
+        ? `<div class="drow" style="border:1px solid rgba(255,61,139,.4)"><div class="grow"><div class="m"><span class="st go">● СЕЙЧАС</span><span data-k="at">${mmss(a.t)}</span></div><div class="t">${esc(a.d.text)}</div><div class="m">банк <span class="pool" data-k="ap">${fmt(a.d.pool)} ✦</span></div></div><button class="btn sm lime" data-back="active">Докинуть</button></div>`
+        : a ? `<div class="drow"><div class="grow"><div class="m"><span class="st vote">${a.phase === 'voting' ? 'ГОЛОСОВАНИЕ' : 'ИТОГ'}</span></div><div class="t">${esc(a.d.text)}</div></div></div>` : '';
+    } else if (a) { const at = act.querySelector('[data-k="at"]'), ap = act.querySelector('[data-k="ap"]'); if (at) at.textContent = mmss(a.t); if (ap) ap.textContent = `${fmt(a.d.pool)} ✦`; }
+  }
+  const list = $('#d-list'); if (!list) return;
+  const sig = st.dares.map((d) => d.id).sort().join();
+  if (force || sig !== sheetCtx.sig) {
+    sheetCtx.sig = sig;
+    const sorted = [...st.dares].sort((x, y) => y.pool - x.pool);
+    list.innerHTML = sorted.length ? sorted.map((d, i) => `<div class="drow" data-row="${d.id}"><div class="grow">
+        <div class="t">${i === 0 ? '👑 ' : ''}${esc(d.text)}</div>
+        <div class="m"><span class="pool" data-k="p">${fmt(d.pool)} ✦</span><span data-k="b">${d.backers} 👥</span><span>⏱ ${durLabel(d.time)}</span>${d.mine ? '<span class="st mine">ВАШЕ</span>' : `<span>от ${esc(d.by)}</span>`}${d.my ? `<span class="st back">вклад ${fmt(d.my)}</span>` : ''}</div>
+      </div><button class="btn sm ghost" data-back="${d.id}">＋</button></div>`).join('')
+      : '<div class="empty" style="padding:20px"><div>🎯</div>Пока пусто — предложите первое задание</div>';
+  } else {
+    for (const d of st.dares) { const r = list.querySelector(`[data-row="${d.id}"]`); if (r) { r.querySelector('[data-k="p"]').textContent = `${fmt(d.pool)} ✦`; r.querySelector('[data-k="b"]').textContent = `${d.backers} 👥`; } }
+  }
+}
+function openReport(st) {
+  const reasons = ['Опасное задание', 'Принуждение или травля', 'Неприемлемый контент', 'Мошенничество', 'Другое'];
+  openSheet(`${sheetHead('Пожаловаться', esc(st.name))}<div class="menu" style="margin-top:14px">${reasons.map((r) => `<button data-r>${r}<span class="muted">›</span></button>`).join('')}</div>
+    <p class="muted small" style="margin-top:12px">Модераторы видят эфир в реальном времени и могут остановить задание или трансляцию.</p>`, { type: 'report' });
+  $('#sheet-body').addEventListener('click', (e) => { if (e.target.closest('[data-r]')) { closeSheet(); toast('Жалоба отправлена модераторам. Спасибо!', 'ok'); } });
+}
+function openRules() {
+  openSheet(`${sheetHead('Правила и безопасность')}<ol class="rules" style="margin-top:14px">
+    <li><b>Запрещено</b>: опасное для жизни и здоровья (высоты, огонь, дороги, транспорт), алкоголь и вещества, кражи и вандализм, контакт с посторонними без согласия, раскрытие личных данных, 18+, унижение и травля.</li>
+    <li>Каждое задание и сообщение проверяет <b>фильтр безопасности</b>; стример дополнительно выбирает, какие типы заданий принимает.</li>
+    <li>Деньги зрителей лежат в <b>банке задания</b> и уходят стримеру только если ≥${PASS * 100}% зрителей проголосовали «засчитать».</li>
+    <li>Отказ стримера, таймаут или «не засчитано» — <b>полный возврат</b> всем, кто скинулся.</li>
+    <li>Стример может отказаться от любого задания <b>без штрафа</b>. Никто не обязан ничего выполнять.</li>
+    <li>Комиссия платформы — ${FEE * 100}% от банка выполненного задания.</li>
+    <li>Сервис для пользователей <b>18+</b>. Кнопка «Жалоба» есть на каждом эфире.</li>
+  </ol><div class="note">Это демо-версия: эфиры зрителей смоделированы, ✦ ненастоящие, реальные деньги не списываются.</div>`, { type: 'rules' });
+}
+function openTopup() {
+  const packs = [[100, '99 ₽'], [550, '490 ₽', '+10%'], [1200, '990 ₽', '+20%'], [3200, '2 490 ₽', '+28%']];
+  openSheet(`${sheetHead('Пополнить ✦', 'Искры — внутренняя валюта для банков заданий')}
+    <div class="packs">${packs.map(([n, p, b]) => `<button class="pack" data-pack="${n}">${b ? `<em>${b}</em>` : ''}<b>✦ ${fmt(n)}</b><span class="muted">${p}</span></button>`).join('')}</div>
+    <div class="note">Демо: оплата имитируется, реальные деньги не списываются. В рабочей версии здесь будет платёжный провайдер и проверка возраста.</div>`, { type: 'topup' });
+  $('#sheet-body').addEventListener('click', (e) => {
+    const p = e.target.closest('[data-pack]'); if (!p || p.disabled) return;
+    p.disabled = true; p.querySelector('.muted').textContent = 'Оплата…';
+    setTimeout(() => { addTx(+p.dataset.pack, 'Пополнение (демо)'); closeSheet(); toast(`+${fmt(+p.dataset.pack)} ✦ зачислено`, 'ok'); chime(); }, 900);
+  });
+}
+
+/* ═════════ top dares tab ═════════ */
+let topSeg = 'hot', topSig = '';
+$('#top-seg').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-seg]'); if (!b) return;
+  topSeg = b.dataset.seg; $$('#top-seg button').forEach((x) => x.classList.toggle('on', x === b)); renderTop(true);
+});
+function hotItems() {
+  const items = [];
+  for (const st of streams) {
+    if (st.active && st.active.phase !== 'result') items.push({ st, d: st.active.d, phase: st.active.phase, t: st.active.t });
+    for (const d of st.dares) items.push({ st, d, phase: 'queue' });
+  }
+  return items.sort((a, b) => b.d.pool - a.d.pool).slice(0, 20);
+}
+function renderTop(force) {
+  const list = $('#top-list');
+  if (topSeg === 'mine') {
+    const msig = S.backs.map((b) => b.status + b.amount).join();
+    if (!force && msig === topSig) return;
+    topSig = msig;
+    list.innerHTML = S.backs.length ? S.backs.map((b) => {
+      const [cls, lbl] = { pending: ['q', 'В банке'], paid: ['ok', 'Засчитано'], refunded: ['back', 'Возврат'] }[b.status];
+      return `<button class="row" data-go="${b.streamId}"><div class="grow"><div class="t">${esc(b.text)}</div><div class="m"><span class="st ${cls}">${lbl}</span>${b.mine ? '<span class="st mine">ВАШЕ</span>' : ''}${esc(b.streamer)} · ${ago(b.t)}</div></div><div class="amt">${fmt(b.amount)} <span class="spark">✦</span></div></button>`;
+    }).join('') : '<div class="empty"><div>🎯</div>Вы ещё не скидывались на задания.<br>Откройте эфир и нажмите «Задания».</div>';
+    return;
+  }
+  const items = hotItems(), sig = items.map((i) => i.d.id + i.phase).join();
+  if (force || sig !== topSig) {
+    topSig = sig;
+    list.innerHTML = items.map(({ st, d, phase, t }) => `<button class="row" data-go="${st.id}" data-d="${d.id}">
+      <div class="ava" style="width:36px;height:36px;font-size:14px;background:linear-gradient(135deg,hsl(${st.hue[0]} 90% 70%),hsl(${st.hue[1]} 90% 60%))">${esc(st.name[0].toUpperCase())}</div>
+      <div class="grow"><div class="t">${esc(d.text)}</div><div class="m">${phase === 'doing' ? `<span class="st go" data-k="t">● ${mmss(t)}</span>` : phase === 'voting' ? '<span class="st vote">ГОЛОСОВАНИЕ</span>' : '<span class="st q">В очереди</span>'}${d.mine ? '<span class="st mine">ВАШЕ</span>' : ''}${esc(st.name)} · ${d.backers} 👥</div></div>
+      <div class="amt" data-k="p">${fmt(d.pool)} <span class="spark">✦</span></div></button>`).join('');
+  } else {
+    for (const { st, d, phase } of items) {
+      const r = list.querySelector(`[data-d="${d.id}"]`); if (!r) continue;
+      r.querySelector('[data-k="p"]').innerHTML = `${fmt(d.pool)} <span class="spark">✦</span>`;
+      const t = r.querySelector('[data-k="t"]'); if (t && phase === 'doing') t.textContent = `● ${mmss(st.active.t)}`;
+    }
+  }
+}
+$('#top-list').addEventListener('click', (e) => {
+  const r = e.target.closest('[data-go]'); if (!r) return;
+  goToStream(r.dataset.go, topSeg === 'hot');
+});
+function goToStream(id, sheet) {
+  show('feed');
+  const i = streams.findIndex((s) => s.id === id);
+  curIdx = i; feedEl.scrollTo({ top: i * feedEl.clientHeight, behavior: 'auto' });
+  renderChat(streams[i]);
+  if (sheet) openDares(streams[i]);
+}
+
+/* ═════════ wallet & profile ═════════ */
+function renderWallet() {
+  $('#wallet').innerHTML = `<h1>Кошелёк</h1>
+    <div class="wcard"><div class="muted">Баланс</div><div class="num">${fmt(S.balance)} <small>✦</small></div>
+      <div class="wbtns"><button class="btn lime" data-w="top">＋ Пополнить</button><button class="btn ghost" data-w="out">Вывести</button></div></div>
+    <div class="grid2" style="margin-top:10px"><div class="stat"><b class="spark">${fmt(S.earned)}</b><span>заработано в эфирах</span></div>
+      <div class="stat"><b>${fmt(S.backs.filter((b) => b.status === 'pending').reduce((a, b) => a + b.amount, 0))}</b><span>сейчас в банках заданий</span></div></div>
+    <h3>История</h3>
+    <div class="list">${S.tx.map((t) => `<div class="row"><div class="grow"><div class="t" style="font-weight:600;font-size:14px">${esc(t.title)}</div><div class="m">${ago(t.t)}</div></div><div class="amt" style="color:${t.amount > 0 ? 'var(--ok)' : 'var(--text)'}">${t.amount > 0 ? '+' : '−'}${fmt(Math.abs(t.amount))}</div></div>`).join('')}</div>`;
+}
+$('#wallet').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-w]'); if (!b) return;
+  if (b.dataset.w === 'top') openTopup();
+  else openSheet(`${sheetHead('Вывод средств')}<p style="margin-top:12px;color:#ddd8ee">Вывести можно ✦, заработанные в своих эфирах: <b class="spark">${fmt(S.earned)} ✦</b>.</p>
+    <div class="note">В рабочей версии вывод доступен после подтверждения личности и возраста (KYC) и подключения платёжного партнёра. В демо вывод отключён.</div>
+    <button class="btn ghost block" style="margin-top:16px" data-close>Понятно</button>`, { type: 'out' });
+});
+function renderProfile() {
+  const u = S.user || { nick: 'гость' }, l = level(S.xp), lo = lvlFloor(l), hi = lvlFloor(l + 1);
+  const st = S.stats;
+  $('#profile').innerHTML = `<h1>Профиль</h1>
+    <div class="me-head"><div class="ava" style="background:linear-gradient(135deg,${nickColor(u.nick)},var(--pink))">${esc(u.nick[0].toUpperCase())}</div>
+      <div><h2>${esc(u.nick)}</h2><div class="muted">Уровень ${l} · ${S.xp} XP</div></div></div>
+    <div class="lvl"><div class="bn-row small muted"><span>До уровня ${l + 1}</span><span>${hi - S.xp} XP</span></div><div class="bar"><i style="width:${((S.xp - lo) / (hi - lo)) * 100}%"></i></div></div>
+    <h3>Как зритель</h3>
+    <div class="grid2"><div class="stat"><b>${st.proposed}</b><span>предложено заданий</span></div><div class="stat"><b>${st.backed}</b><span>вкладов в банки</span></div>
+      <div class="stat"><b>${st.won}</b><span>засчитано с вашим вкладом</span></div><div class="stat"><b>${st.refunded}</b><span>возвратов</span></div></div>
+    <h3>Как стример</h3>
+    <div class="grid2"><div class="stat"><b>${st.streams}</b><span>эфиров</span></div><div class="stat"><b>${st.daresDone}</b><span>выполнено заданий</span></div>
+      <div class="stat"><b>${Math.round(st.liveSec / 60)}</b><span>минут в эфире</span></div><div class="stat"><b class="spark">${fmt(S.earned)}</b><span>заработано ✦</span></div></div>
+    <h3>Настройки</h3>
+    <div class="menu">
+      <button data-p="rules">🛡 Правила и безопасность<span class="muted">›</span></button>
+      <button data-p="nick">✏️ Изменить ник<span class="muted">›</span></button>
+      <button data-p="sound">🔊 Звуки<i class="switch ${S.settings.sound ? 'on' : ''}"></i></button>
+      <button data-p="vibro">📳 Вибрация<i class="switch ${S.settings.vibro ? 'on' : ''}"></i></button>
+      <button data-p="install">📲 Установить на телефон<span class="muted">›</span></button>
+      <button data-p="reset" style="color:var(--bad)">Сбросить демо-данные<span></span></button>
+    </div>
+    <p class="muted small" style="margin-top:16px;text-align:center">Кураж · демо-версия · данные хранятся только на этом устройстве</p>`;
+}
+$('#profile').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-p]'); if (!b) return;
+  const p = b.dataset.p;
+  if (p === 'rules') openRules();
+  else if (p === 'sound' || p === 'vibro') { S.settings[p] = !S.settings[p]; save(); renderProfile(); }
+  else if (p === 'nick') {
+    openSheet(`${sheetHead('Новый ник')}<form id="nick-f"><input class="inp" id="nick-i" maxlength="20" value="${esc(S.user.nick)}" style="margin-top:14px" /><button class="btn lime block" style="margin-top:12px">Сохранить</button></form>`, { type: 'nick' });
+    $('#nick-f').addEventListener('submit', (ev) => {
+      ev.preventDefault(); const v = $('#nick-i').value.trim();
+      if (v.length < 2) return toast('Минимум 2 символа', 'bad');
+      if (!Safety.scan(v).ok) return toast('🛡 Такой ник не пропустит фильтр', 'bad');
+      S.user.nick = v; save(); closeSheet(); renderProfile(); toast('Ник обновлён', 'ok');
+    });
+  } else if (p === 'install') {
+    if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; return; }
+    openSheet(`${sheetHead('Установить на телефон')}<ol class="rules" style="margin-top:14px"><li><b>iPhone (Safari):</b> «Поделиться» → «На экран „Домой“».</li><li><b>Android (Chrome):</b> меню ⋮ → «Установить приложение» или «Добавить на главный экран».</li></ol><p class="muted small">После установки Кураж открывается на весь экран, как обычное приложение, и работает без интернета.</p>`, { type: 'install' });
+  } else if (p === 'reset') {
+    if (confirm('Удалить баланс, историю и статистику на этом устройстве?')) { try { localStorage.removeItem(KEY); } catch { /* ignore */ } location.reload(); }
+  }
+});
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstall = e; });
+
+/* ═════════ go live (streamer mode) ═════════ */
+const L = { on: false, cat: 'talk', allow: { phys: true, people: true, food: true, creative: true, talk: true }, minPool: 50, agree: false, facing: 'user' };
+function renderSetup() {
+  $('#lv-cat').innerHTML = Object.entries(CATS).map(([k, v]) => `<button class="chip ${k === L.cat ? 'on' : ''}" data-v="${k}">${v}</button>`).join('');
+  $('#lv-allow').innerHTML = Object.entries(TAGS).map(([k, v]) => `<button class="chip ${L.allow[k] ? 'on' : ''}" data-v="${k}">${v}</button>`).join('');
+  $('#lv-min').innerHTML = [30, 50, 100, 200].map((v) => `<button class="chip ${v === L.minPool ? 'on' : ''}" data-v="${v}">от ${v} ✦</button>`).join('');
+  $('#lv-agree').classList.toggle('on', L.agree);
+}
+$('#lv-cat').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) { L.cat = c.dataset.v; renderSetup(); } });
+$('#lv-min').addEventListener('click', (e) => { const c = e.target.closest('.chip'); if (c) { L.minPool = +c.dataset.v; renderSetup(); } });
+$('#lv-allow').addEventListener('click', (e) => {
+  const c = e.target.closest('.chip'); if (!c) return;
+  L.allow[c.dataset.v] = !L.allow[c.dataset.v];
+  if (!Object.values(L.allow).some(Boolean)) { L.allow[c.dataset.v] = true; toast('Оставьте хотя бы один тип заданий'); }
+  renderSetup();
+});
+$('#lv-agree').addEventListener('click', () => { L.agree = !L.agree; renderSetup(); });
+$('#lv-start').addEventListener('click', startLive);
+
+async function startCam() {
+  const v = $('#cam');
+  if (L.stream) L.stream.getTracks().forEach((t) => t.stop());
+  L.stream = null; L.camOk = false;
+  try {
+    if (!navigator.mediaDevices?.getUserMedia) throw new Error('no media');
+    L.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: L.facing, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+    v.srcObject = L.stream; v.classList.toggle('rear', L.facing !== 'user'); await v.play().catch(() => {});
+    L.camOk = true;
+  } catch { v.srcObject = null; }
+  v.hidden = !L.camOk; $('#cam-fake').hidden = L.camOk;
+  return L.camOk;
+}
+async function startLive() {
+  if (!L.agree) { toast('Подтвердите правила безопасности', 'bad'); $('#lv-agree').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+  const title = $('#lv-title').value.trim() || `${S.user.nick} в эфире`;
+  if (!Safety.scan(title).ok) { toast('🛡 Название не прошло фильтр', 'bad'); return; }
+  Object.assign(L, { on: true, title, sec: 0, viewers: ri(3, 12), earned: 0, done: 0, filtered: 0, incoming: [], active: null, chat: [], fake: { hue: [hueOf(S.user.nick), hueOf(S.user.nick) + 60], bokeh: makeBokeh([hueOf(S.user.nick), 0]) } });
+  $('#live-setup').hidden = true; $('#live-view').hidden = false; document.body.classList.add('is-live');
+  renderLiveActive(true); renderIncoming(true); renderLiveChat();
+  const ok = await startCam();
+  liveChat({ sys: true, text: ok ? '🎥 Эфир начался! Зрители подключаются…' : '🎥 Камера недоступна — эфир в демо-режиме с заставкой' });
+  liveChat({ sys: true, text: `🛡 Фильтр безопасности включён · минимальный банк ${L.minPool} ✦` });
+  chime(); buzz(40);
+}
+function endLive() {
+  if (L.active && L.active.phase !== 'result') { toast('Сначала завершите текущее задание', 'bad'); return; }
+  if (L.stream) L.stream.getTracks().forEach((t) => t.stop());
+  L.stream = null; L.on = false;
+  S.stats.streams++; S.stats.liveSec += L.sec; gainXp(15); save();
+  $('#live-view').hidden = true; $('#live-setup').hidden = false; document.body.classList.remove('is-live');
+  openSheet(`${sheetHead('Эфир завершён 🎬')}
+    <div class="grid2" style="margin-top:14px"><div class="stat"><b>${mmss(L.sec)}</b><span>длительность</span></div><div class="stat"><b>${fmt(L.peak || L.viewers)}</b><span>пик зрителей</span></div>
+    <div class="stat"><b>${L.done}</b><span>выполнено заданий</span></div><div class="stat"><b class="spark">${fmt(L.earned)}</b><span>заработано ✦</span></div></div>
+    <div class="note">🛡 Фильтр скрыл заданий: <b>${L.filtered}</b>. Комиссия платформы ${FEE * 100}% уже учтена.</div>
+    <button class="btn lime block" style="margin-top:16px" data-close>Отлично</button>`, { type: 'summary' });
+  if (L.earned) confetti(40);
+}
+$('#lv-end').addEventListener('click', endLive);
+$('#lv-flip').addEventListener('click', async () => { L.facing = L.facing === 'user' ? 'environment' : 'user'; if (!(await startCam())) toast('Камера недоступна'); });
+
+function liveChat(m) { L.chat.push(m); if (L.chat.length > 20) L.chat.shift(); renderLiveChat(); }
+function renderLiveChat() { $('#lv-chat').innerHTML = chatHTML(L.chat.slice(-6)); }
+function genIncoming() {
+  if (Math.random() < 0.22) {
+    const r = Safety.check(pick(UNSAFE));
+    if (!r.ok) { L.filtered++; toast(`🛡 Фильтр скрыл задание: ${r.cat}`); return; }
+  }
+  const taken = new Set([...L.incoming.map((d) => d.text), L.active?.d.text]);
+  const pool = [...(BANK[L.cat] || []), ...BANK.any].filter(([t]) => !taken.has(t));
+  if (!pool.length) return;
+  const [text, tag] = pick(pool);
+  if (!L.allow[tag]) { L.filtered++; return; }
+  const d = { id: uid(), text, tag, pool: Math.max(L.minPool, ri(3, 20) * 10), backers: ri(1, 8), time: pick([30, 30, 60, 60, 120]), by: botNick() };
+  L.incoming.push(d); beep(740, 0.05);
+  liveChat({ sys: true, text: `🎯 ${d.by} предлагает: «${d.text}» — ${fmt(d.pool)} ✦` });
+}
+function liveTick() {
+  L.sec++;
+  const target = 8 + L.sec * 0.6 + L.done * 25;
+  L.viewers = Math.max(1, Math.round(L.viewers + (target - L.viewers) * 0.05 + rnd(-2, 3)));
+  L.peak = Math.max(L.peak || 0, L.viewers);
+  const a = L.active;
+  if (Math.random() < 0.45) liveChat({ nick: botNick(), text: pick(a ? (a.phase === 'result' ? CHAT[a.success ? 'ok' : 'bad'] : CHAT[a.phase]) : CHAT.idle) });
+  if (!a && L.incoming.length < 3 && Math.random() < (L.sec < 6 ? 0.5 : 0.2)) genIncoming();
+  for (const d of L.incoming) if (Math.random() < 0.25) { d.pool += pick([10, 20, 50]); d.backers++; }
+  if (a) {
+    a.t--;
+    if (a.phase === 'doing') {
+      if (Math.random() < 0.3) { a.d.pool += pick([10, 20, 50]); a.d.backers++; }
+      if (a.t <= 0) liveResolve(false, 'время вышло');
+      else if (a.t === 5) { beep(440, 0.08); buzz(20); }
+    } else if (a.phase === 'voting') {
+      for (let i = 0, n = ri(1, Math.max(2, Math.round(L.viewers / 6))); i < n; i++) Math.random() < a.p ? a.yes++ : a.no++;
+      if (a.t <= 0) { const tot = a.yes + a.no; liveResolve(tot > 0 && a.yes / tot >= PASS, 'зрители не засчитали'); }
+    } else if (a.t <= 0) L.active = null;
+  }
+  $('#lv-time').textContent = mmss(L.sec); $('#lv-viewers').textContent = fmt(L.viewers);
+  $('#lv-earned').textContent = fmt(L.earned); $('#lv-filtered').textContent = L.filtered;
+  renderLiveActive(); renderIncoming();
+}
+function liveResolve(success, why) {
+  const a = L.active; a.phase = 'result'; a.success = success; a.t = 4; a.why = why;
+  if (success) {
+    const fee = Math.round(a.d.pool * FEE), net = a.d.pool - fee;
+    a.net = net; L.earned += net; L.done++; S.earned += net; S.stats.daresDone++;
+    addTx(net, `Эфир: «${a.d.text}» (−${fee} комиссия)`); gainXp(25);
+    liveChat({ sys: true, text: `✅ Засчитано! +${fmt(net)} ✦ на ваш баланс` }); confetti(60); chime(); buzz([40, 50, 80]);
+  } else {
+    liveChat({ sys: true, text: `↩ Не засчитано (${why}) — банк ${fmt(a.d.pool)} ✦ вернули зрителям` }); beep(220, 0.25, 'triangle');
+  }
+  renderLiveActive(true);
+}
+function renderLiveActive(force) {
+  const el = $('#lv-active'), a = L.active, k = a ? `${a.phase}:${a.d.id}` : `idle:${L.incoming.length ? 1 : 0}`;
+  if (force || el.dataset.k !== k) {
+    el.dataset.k = k;
+    if (!a) el.innerHTML = L.incoming.length ? '' : '<div class="bn idle"><div class="bn-text">⏳ Ждём задания от зрителей… Поболтайте с чатом, пока они придумывают.</div></div>';
+    else if (a.phase === 'doing') el.innerHTML = `<div class="bn"><div class="bn-row"><span class="tag hot">● Вы выполняете</span><span class="timer" data-k="t">${mmss(a.t)}</span></div>
+      <div class="bn-text">«${esc(a.d.text)}»</div><div class="bar"><i data-k="bar" style="width:${(a.t / a.total) * 100}%"></i></div>
+      <div class="bn-row"><span>Банк <b class="spark" data-k="pool">${fmt(a.d.pool)}</b> ✦ · вам после комиссии ≈ <b data-k="net">${fmt(a.d.pool * (1 - FEE))}</b></span></div>
+      <div class="lv-acts"><button class="btn lime" data-l="done">✓ Готово</button><button class="btn ghost" data-l="quit">Сдаться</button></div></div>`;
+    else if (a.phase === 'voting') el.innerHTML = `<div class="bn"><div class="bn-row"><span class="tag cyan">🗳 Зрители голосуют</span><span class="timer" data-k="t">${mmss(a.t)}</span></div>
+      <div class="bn-text">«${esc(a.d.text)}»</div><div class="votes"><div class="vbtn yes"><i data-k="yb"></i><span>✓ Да</span><b data-k="yp">0%</b></div><div class="vbtn no"><i data-k="nb"></i><span>✕ Нет</span><b data-k="np">0%</b></div></div></div>`;
+    else el.innerHTML = `<div class="bn result ${a.success ? 'ok' : 'bad'}"><div class="big">${a.success ? `✅ +${fmt(a.net)} ✦` : '↩ Не засчитано'}</div><div class="muted">${a.success ? 'Деньги зачислены на баланс' : `${esc(a.why)} — банк вернулся зрителям`}</div></div>`;
+  }
+  if (!a) return;
+  const q = (s) => el.querySelector(`[data-k="${s}"]`);
+  if (q('t')) { q('t').textContent = mmss(a.t); q('t').classList.toggle('low', a.t <= 5); }
+  if (q('bar')) q('bar').style.width = (a.t / a.total) * 100 + '%';
+  if (q('pool')) { q('pool').textContent = fmt(a.d.pool); q('net').textContent = fmt(a.d.pool * (1 - FEE)); }
+  if (a.phase === 'voting') {
+    const tot = Math.max(1, a.yes + a.no), yp = Math.round((a.yes / tot) * 100);
+    q('yp').textContent = yp + '%'; q('np').textContent = 100 - yp + '%'; q('yb').style.width = yp + '%'; q('nb').style.width = 100 - yp + '%';
+  }
+}
+function renderIncoming(force) {
+  const el = $('#lv-incoming'), hide = !!L.active, sig = hide ? 'hide' : L.incoming.map((d) => d.id).join();
+  if (force || el.dataset.sig !== sig) {
+    el.dataset.sig = sig;
+    el.innerHTML = hide ? '' : L.incoming.map((d) => `<div class="icard" data-i="${d.id}"><div class="grow"><div class="t">${esc(d.text)}</div>
+      <div class="m"><b class="spark" data-k="p">${fmt(d.pool)} ✦</b> · ⏱ ${durLabel(d.time)} · от ${esc(d.by)}</div></div>
+      <div class="acts"><button class="no" data-l="decline" aria-label="Отказаться">✕</button><button class="yes" data-l="accept" aria-label="Принять">✓</button></div></div>`).join('');
+    return;
+  }
+  for (const d of L.incoming) { const r = el.querySelector(`[data-i="${d.id}"] [data-k="p"]`); if (r) r.textContent = `${fmt(d.pool)} ✦`; }
+}
+$('#live-view').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-l]'); if (!b) return;
+  const act = b.dataset.l;
+  if (act === 'accept' || act === 'decline') {
+    const d = L.incoming.find((x) => x.id === b.closest('[data-i]').dataset.i); if (!d) return;
+    L.incoming = L.incoming.filter((x) => x !== d);
+    if (act === 'accept') {
+      L.active = { d, phase: 'doing', t: d.time, total: d.time, yes: 0, no: 0 };
+      liveChat({ sys: true, text: `▶ Вы приняли «${d.text}». Время пошло!` }); buzz(30); beep(880, 0.08);
+    } else { liveChat({ sys: true, text: `✋ Вы отказались от «${d.text}» — банк вернули зрителям` }); }
+    renderLiveActive(true); renderIncoming(true);
+  } else if (act === 'done' && L.active?.phase === 'doing') {
+    Object.assign(L.active, { phase: 'voting', t: 8, p: rnd(0.78, 0.96) });
+    liveChat({ sys: true, text: '🗳 Стример говорит «готово»! Голосуем: засчитать?' }); renderLiveActive(true);
+  } else if (act === 'quit' && L.active?.phase === 'doing') liveResolve(false, 'вы сдались');
+});
+
+/* ═════════ canvas scenes ═════════ */
+function drawScene(cv, sc, t) {
+  const w = cv.clientWidth, h = cv.clientHeight; if (!w || !h) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const g = c.createLinearGradient(0, 0, w * 0.4, h);
+  g.addColorStop(0, `hsl(${sc.hue[0]} 55% 17%)`); g.addColorStop(1, `hsl(${sc.hue[1]} 60% 5%)`);
+  c.fillStyle = g; c.fillRect(0, 0, w, h);
+  c.globalCompositeOperation = 'lighter';
+  for (const b of sc.bokeh) {
+    const x = (b.x + Math.sin(t * b.s + b.p) * 0.04) * w, y = (b.y + Math.cos(t * b.s * 0.8 + b.p) * 0.03) * h, r = b.r * Math.max(w, h);
+    const rg = c.createRadialGradient(x, y, 0, x, y, r);
+    rg.addColorStop(0, `hsla(${b.h},90%,65%,${b.a})`); rg.addColorStop(1, `hsla(${b.h},90%,65%,0)`);
+    c.fillStyle = rg; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
+  }
+  c.globalCompositeOperation = 'source-over';
+  const cx = w / 2 + Math.sin(t * 0.6) * w * 0.025, hr = Math.min(w, h) * 0.14, hy = h * 0.6 + Math.sin(t * 1.1) * 3, sy = hy + hr * 1.7;
+  c.fillStyle = 'rgba(5,4,10,.93)';
+  c.beginPath(); c.ellipse(cx, sy + h * 0.32, w * 0.44, h * 0.34, 0, 0, Math.PI * 2); c.fill();
+  c.fillRect(cx - hr * 0.42, hy, hr * 0.84, hr * 1.9);
+  c.beginPath(); c.arc(cx, hy, hr, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = `hsla(${sc.hue[0]},95%,72%,.55)`; c.lineWidth = 2.5;
+  c.beginPath(); c.arc(cx, hy, hr, Math.PI * 1.05, Math.PI * 1.72); c.stroke();
+  c.beginPath(); c.ellipse(cx, sy + h * 0.32, w * 0.44, h * 0.34, 0, Math.PI * 1.1, Math.PI * 1.4); c.stroke();
+  c.fillStyle = 'rgba(255,255,255,.035)';
+  for (let i = 0; i < 70; i++) c.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5);
+}
+const prevScene = { hue: [150, 260], bokeh: makeBokeh([150, 0]) };
+let lastFrame = 0;
+function frame(ts) {
+  requestAnimationFrame(frame);
+  if (document.hidden || ts - lastFrame < 33) return;
+  lastFrame = ts; const t = ts / 1000;
+  if (cur === 'feed') { const card = feedEl.children[curIdx]; if (card) drawScene(card.querySelector('canvas'), curStream(), t); }
+  if (cur === 'live') { if (L.on) { if (!L.camOk) drawScene($('#cam-fake'), L.fake, t); } else drawScene($('#prev-canvas'), prevScene, t); }
+}
+
+/* ═════════ navigation ═════════ */
+let cur = 'feed';
+function show(tab) {
+  if (L.on && tab !== 'live') return;
+  cur = tab;
+  $$('.screen').forEach((s) => s.classList.toggle('on', s.id === 'scr-' + tab));
+  $$('.tabbar [data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+  if (tab === 'top') renderTop(true);
+  if (tab === 'wallet') renderWallet();
+  if (tab === 'profile') renderProfile();
+  if (tab === 'live' && !L.on) renderSetup();
+  if (tab === 'feed') renderChat(curStream());
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-tab]'); if (!b) return;
+  closeSheet(); show(b.dataset.tab);
+});
+
+/* ═════════ onboarding ═════════ */
+function onboarding() {
+  const steps = [
+    { em: '📺', h: 'Смотри живые эфиры', p: 'Стримеры гуляют, рисуют, поют и готовят прямо сейчас. Листай вверх, чтобы переключать эфиры.' },
+    { em: '🎯', h: 'Предлагай задания', p: 'Придумай задание и положи ✦ в банк. Другие зрители докидывают — самое богатое задание стример берёт первым.' },
+    { em: '🗳', h: 'Зачёт решает чат', p: `Когда время выходит, зрители голосуют. ≥${PASS * 100}% «да» — банк уходит стримеру, иначе все получают деньги назад.` },
+    { em: '🛡', h: 'Кураж, а не риск', p: 'Опасные, незаконные и унизительные задания блокирует фильтр. Стример всегда может отказаться без штрафа.' },
+  ];
+  const el = document.createElement('div'); el.className = 'onb'; $('#app').appendChild(el);
+  let i = 0, agree = false;
+  const render = () => {
+    const last = i === steps.length;
+    el.innerHTML = `<div class="logo">КУРАЖ</div>
+      <div class="hero">${last ? `<div class="em">⚡</div><h1>Как тебя зовут в чате?</h1>
+        <input class="inp" id="onb-nick" maxlength="20" placeholder="Ник" autocomplete="nickname" />
+        <button class="check ${agree ? 'on' : ''}" id="onb-agree"><i></i><span>Мне есть 18 лет, я принимаю правила безопасности</span></button>`
+      : `<div class="em">${steps[i].em}</div><h1>${steps[i].h}</h1><p>${steps[i].p}</p>`}</div>
+      <div class="dots">${[...steps, 0].map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div>
+      <button class="btn lime block" id="onb-next" style="height:54px;font-size:16px">${last ? 'Погнали ⚡' : 'Дальше'}</button>
+      ${last ? '' : '<button class="btn block" id="onb-skip" style="margin-top:6px;background:none;color:var(--muted)">Пропустить</button>'}`;
+    const nick = $('#onb-nick', el);
+    if (nick) { nick.value = el.dataset.nick || ''; nick.addEventListener('input', () => (el.dataset.nick = nick.value)); }
+    $('#onb-agree', el)?.addEventListener('click', () => { agree = !agree; render(); });
+    $('#onb-skip', el)?.addEventListener('click', () => { i = steps.length; render(); });
+    $('#onb-next', el).addEventListener('click', () => {
+      if (!last) { i++; render(); return; }
+      const v = (el.dataset.nick || '').trim();
+      if (v.length < 2) return toast('Ник — минимум 2 символа', 'bad');
+      if (!Safety.scan(v).ok) return toast('🛡 Такой ник не пропустит фильтр', 'bad');
+      if (!agree) return toast('Подтвердите возраст и правила', 'bad');
+      S.user = { nick: v, joined: Date.now() }; save(); el.remove(); toast(`Привет, ${v}! На счёт зачислено 500 ✦ 🎁`, 'ok'); chime();
+    });
+  };
+  render();
+}
+
+/* ═════════ boot ═════════ */
+load();
+buildFeed();
+refreshBalance();
+setInterval(() => {
+  streams.forEach((st, i) => tickStream(st, i === curIdx && cur === 'feed'));
+  if (cur === 'feed') streams.forEach((st) => updateCard(st));
+  if (cur === 'top') renderTop();
+  renderDaresSheet();
+  if (L.on) liveTick();
+}, 1000);
+requestAnimationFrame(frame);
+if (!S.user) onboarding();
+if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+window.Kurazh = { Safety, BANK, UNSAFE, S: () => S, streams, L };
+</script>
+</body>
+</html>
