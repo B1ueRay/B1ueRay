@@ -1,0 +1,13 @@
+{
+  "name": "ai-squat-coach",
+  "version": "1.0.0",
+  "description": "Real-time squat form coach: watches you through the camera in the browser and gives spoken cues on depth, back angle and tempo",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

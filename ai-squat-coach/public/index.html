@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>AI Squat Coach 🏋️</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo">AI Squat <span>Coach</span> 🏋️</div>
+    <select id="lang-select"></select>
+  </header>
+  <div class="subtitle" id="subtitle"></div>
+
+  <div class="stage">
+    <canvas id="canvas"></canvas>
+    <video id="video" playsinline muted style="display:none"></video>
+    <div class="overlay-msg" id="overlay-msg"></div>
+  </div>
+
+  <div class="hud">
+    <div class="hud-item">
+      <div class="hud-label" id="label-reps"></div>
+      <div class="hud-value" id="val-reps">0</div>
+    </div>
+    <div class="hud-item">
+      <div class="hud-label" id="label-phase"></div>
+      <div class="hud-value" id="val-phase">—</div>
+    </div>
+  </div>
+
+  <div class="debug-line" id="debug-line"></div>
+
+  <div class="cue-banner" id="cue-banner"></div>
+
+  <div class="controls">
+    <button class="btn-primary" id="start-btn"></button>
+    <button class="btn-secondary" id="stop-btn" style="display:none"></button>
+    <div class="controls-row">
+      <label class="switch-label"><input type="checkbox" id="mute-toggle" /><span id="label-mute"></span></label>
+      <select id="camera-select"></select>
+    </div>
+  </div>
+
+  <div class="hint" id="hint-text"></div>
+  <div class="privacy" id="privacy-note"></div>
+</div>
+
+<script src="i18n.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>
