@@ -1001,7 +1001,9 @@ $('#profile').addEventListener('click', (e) => {
     if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; return; }
     openSheet(`${sheetHead('Установить на телефон')}<ol class="rules" style="margin-top:14px"><li><b>iPhone (Safari):</b> «Поделиться» → «На экран „Домой“».</li><li><b>Android (Chrome):</b> меню ⋮ → «Установить приложение» или «Добавить на главный экран».</li></ol><p class="muted small">После установки Кураж открывается на весь экран, как обычное приложение, и работает без интернета.</p>`, { type: 'install' });
   } else if (p === 'reset') {
-    if (confirm('Удалить баланс, историю и статистику на этом устройстве?')) { try { localStorage.removeItem(KEY); } catch { /* ignore */ } location.reload(); }
+    openSheet(`${sheetHead('Сбросить данные?')}<p style="margin-top:12px;color:#ddd8ee">Баланс, история, ставки и статистика на этом устройстве удалятся. Это нельзя отменить.</p>
+      <div class="wbtns" style="margin-top:16px"><button class="btn ghost" data-close>Отмена</button><button class="btn bad" id="reset-ok">Сбросить</button></div>`, { type: 'reset' });
+    $('#reset-ok').addEventListener('click', () => { try { localStorage.removeItem(KEY); } catch { /* ignore */ } location.reload(); });
   }
 });
 let deferredInstall = null;
