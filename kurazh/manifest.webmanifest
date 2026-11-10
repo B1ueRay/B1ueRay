@@ -1,14 +1,23 @@
 {
+  "id": "./",
   "name": "Kurazh",
   "short_name": "Kurazh",
-  "description": "Live streams where viewers suggest dares and pool money behind them, and streamers decide whether to take them on.",
+  "description": "Call it or do it. Live streams where Callers write dares and back them with card holds, and Takers go live and take them on.",
   "lang": "en",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": [
+    "standalone"
+  ],
   "orientation": "portrait",
   "background_color": "#0a0c0a",
   "theme_color": "#0a0c0a",
+  "categories": [
+    "entertainment",
+    "social"
+  ],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icon-192.png",

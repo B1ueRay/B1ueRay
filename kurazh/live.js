@@ -5,6 +5,9 @@
 (function (w) {
   'use strict';
   const PEERJS_URL = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
+  // Subresource Integrity: hash of the published npm file that unpkg serves byte for byte. qrcodejs on cdnjs and Google's
+  // GIS client have no pinned hash here: GIS is served dynamically by Google, and the cdnjs build could not be verified offline.
+  const PEERJS_SRI = 'sha384-nlUQ8ZqCbvStErob+biJNzSgltf6urV3VGqhfIfzhmg9RXmpeRm76ELw0pYnKlTR';
   const QR_URL = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
   const GIS_URL = 'https://accounts.google.com/gsi/client';
   const PREFIX = 'kurazh-';
@@ -13,7 +16,7 @@
 
   /* ---------- scripts from CDNs, loaded only when needed ---------- */
   const pending = {};
-  function loadScript(src, ready, timeout = 10000) {
+  function loadScript(src, ready, timeout = 10000, integrity = '') {
     try { const v = ready && ready(); if (v) return Promise.resolve(v); } catch (e) { /* not ready */ }
     if (pending[src]) return pending[src];
     pending[src] = new Promise((resolve, reject) => {
@@ -21,6 +24,7 @@
       let done = false;
       const fail = (msg) => { if (done) return; done = true; delete pending[src]; s.remove(); reject(new Error(msg)); };
       const to = setTimeout(() => fail('timeout'), timeout);
+      if (integrity) { s.integrity = integrity; s.crossOrigin = 'anonymous'; }
       s.src = src; s.async = true;
       s.onload = () => {
         clearTimeout(to); if (done) return;
@@ -32,7 +36,7 @@
     });
     return pending[src];
   }
-  const loadPeer = () => loadScript((config().peerjsUrl || PEERJS_URL), () => w.Peer, 12000);
+  const loadPeer = () => { const u = config().peerjsUrl; return loadScript(u || PEERJS_URL, () => w.Peer, 12000, u ? '' : PEERJS_SRI); };
   const loadQR = () => loadScript(QR_URL, () => w.QRCode, 8000);
   const loadGIS = () => loadScript(GIS_URL, () => w.google && w.google.accounts && w.google.accounts.id, 8000);
 
