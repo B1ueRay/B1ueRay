@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#0a0c0a" />
+<title>Community Guidelines · Kurazh (Draft)</title>
+<meta name="description" content="Draft Community Guidelines for Kurazh. Must be reviewed by a qualified lawyer before launch." />
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<!-- Fonts match the app. Before EU launch, self-host these files (see docs/security-trust-safety.md, 7.7). -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" />
+<style>
+  :root {
+    --bg: #0a0c0a; --s1: #111512; --s2: #161c18; --line: rgba(236,226,207,.1); --line2: rgba(205,178,124,.35);
+    --text: #ece2cf; --muted: #a8a293; --gold: #cdb27c; --gold-d: #b8975a; --bad: #d08a7c;
+    --serif: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
+    --sans: Manrope, Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.65 var(--sans); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 65ch; margin: 0 auto; padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 48px); }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 28px; }
+  .back { color: var(--gold); text-decoration: none; font-weight: 600; font-size: 15px; padding: 8px 0; }
+  .back:hover, .back:focus-visible { text-decoration: underline; }
+  .logo { font: 700 13px/1 var(--sans); letter-spacing: .32em; color: var(--muted); }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.12; color: var(--text); }
+  h1 { font-size: clamp(34px, 9vw, 46px); margin: 0 0 6px; letter-spacing: -.01em; }
+  h2 { font-size: 27px; margin: 44px 0 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+  h3 { font-size: 21px; margin: 26px 0 6px; }
+  .tag { color: var(--gold); font: italic 600 20px/1.3 var(--serif); margin: 0 0 18px; }
+  .meta { color: var(--muted); font-size: 14px; margin: 0 0 22px; }
+  p, ul, ol { margin: 0 0 14px; }
+  ul, ol { padding-left: 22px; }
+  li { margin: 4px 0; }
+  a { color: var(--gold); text-underline-offset: 3px; }
+  strong, b { font-weight: 700; color: var(--text); }
+  .draft { border: 1px solid var(--bad); background: rgba(208,138,124,.08); border-radius: 12px; padding: 14px 16px; margin: 0 0 22px; font-size: 15px; }
+  .draft strong { color: var(--bad); display: block; font-size: 16px; margin-bottom: 4px; }
+  .note { border-left: 2px solid var(--gold-d); background: var(--s1); padding: 10px 14px; border-radius: 0 10px 10px 0; color: var(--muted); font-size: 14px; }
+  .note b { color: var(--gold); }
+  .key { border: 1px solid var(--line2); background: var(--s1); border-radius: 12px; padding: 14px 16px; margin: 0 0 16px; }
+  .key p:last-child, .key ul:last-child { margin-bottom: 0; }
+  nav.toc { background: var(--s1); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 0 0 8px; }
+  nav.toc h2 { border: 0; margin: 0 0 8px; padding: 0; font-size: 20px; }
+  nav.toc ol { margin: 0; columns: 1; font-size: 15px; }
+  @media (min-width: 560px) { nav.toc ol { columns: 2; column-gap: 28px; } }
+  .tbl { overflow-x: auto; margin: 0 0 16px; border: 1px solid var(--line); border-radius: 12px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 460px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--gold); font-weight: 700; background: var(--s2); }
+  tr:last-child td { border-bottom: 0; }
+  .ph { color: var(--gold); font-weight: 600; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  footer a { margin-right: 14px; display: inline-block; padding: 4px 0; }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+  @media print { body { background: #fff; color: #000; } h1, h2, h3, strong, b { color: #000; } a, .tag, .ph, th { color: #5a4716; } .note, .key, nav.toc, th { background: #f4f1ea; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="back" href="../">← Back to Kurazh</a>
+    <span class="logo" aria-hidden="true">KURAZH</span>
+  </header>
+
+  <main>
+    <aside class="draft" role="note">
+      <strong>Draft — must be reviewed by a qualified lawyer before launch.</strong>
+      This is a working draft. It is not in force yet. Placeholders in [brackets] must be completed.
+    </aside>
+
+    <h1>Community Guidelines</h1>
+    <p class="tag">Call it or do it. Safely.</p>
+    <p class="meta">Version [0.1-draft] · Effective date: [Effective date]</p>
+
+    <div class="key">
+      <p><strong>The one rule that matters most</strong></p>
+      <p><strong>You can always refuse an unsafe dare for free.</strong> Tap “Unsafe / against the rules”. It never costs money, never uses a free pass and never lowers your Courage score. You can also stop in the middle of a dare for safety or health at any moment, for free. No pot is worth getting hurt.</p>
+    </div>
+
+    <p>Kurazh is about courage, creativity and laughs, not about danger or cruelty. These guidelines apply to everything: dares, chat, nicknames, stream titles, profile pictures and what happens on camera. Our safety filter checks text in English, Ukrainian and Russian, but you are responsible for what you write and do, even if the filter lets it through. If in doubt, don’t.</p>
+
+    <nav class="toc" aria-label="Contents">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#dangerous">Dangerous</a></li>
+        <li><a href="#substances">Alcohol and drugs</a></li>
+        <li><a href="#illegal">Illegal</a></li>
+        <li><a href="#consent">Without consent</a></li>
+        <li><a href="#personal">Personal data</a></li>
+        <li><a href="#humiliation">Humiliation, hate and harassment</a></li>
+        <li><a href="#selfharm">Self-harm</a></li>
+        <li><a href="#sexual">Sexual content</a></li>
+        <li><a href="#minors">Minors</a></li>
+        <li><a href="#vehicles">Vehicles</a></li>
+        <li><a href="#martial">Martial law and air-raid alerts</a></li>
+        <li><a href="#adult">The 18+ section</a></li>
+        <li><a href="#money">Money and fair play</a></li>
+        <li><a href="#takers">For Takers</a></li>
+        <li><a href="#callers">For Callers</a></li>
+        <li><a href="#report">Reporting and what happens next</a></li>
+        <li><a href="#help">Getting help</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="dangerous">1. Dangerous</h2>
+    <p>No dare may put anyone at risk of injury. Not allowed:</p>
+    <ul>
+      <li>heights: roofs, ledges, balconies, railings, bridges, cliffs, jumping off things;</li>
+      <li>fire, lighters, fireworks, electricity, sockets, chemicals, bleach, eating non-food items;</li>
+      <li>knives, blades, guns and any weapons, real or replica;</li>
+      <li>choking, holding your breath, strangling, going under water, extreme cold or heat;</li>
+      <li>pills, medicines, “challenges” with food in dangerous amounts, not sleeping or not eating;</li>
+      <li>roads, railways and traffic: crossing on red, running in front of cars, standing on tracks;</li>
+      <li>risky stunts and exercise “until you drop”.</li>
+    </ul>
+    <p>Physical dares are fine when they are reasonable: a plank for a minute, 20 squats, a dance.</p>
+
+    <h2 id="substances">2. Alcohol and drugs</h2>
+    <p>Alcohol, tobacco, vapes and drugs are banned in every stream, including the 18+ section. No drinking dares, no “chug it”, no smoking on request, and don’t go live drunk or high.</p>
+
+    <h2 id="illegal">3. Illegal</h2>
+    <p>No theft, shoplifting, leaving without paying, vandalism, graffiti, trespassing, breaking into places, fake IDs or anything else against the law where you are. Local rules count too, such as curfews and filming restrictions.</p>
+
+    <h2 id="consent">4. Without consent</h2>
+    <ul>
+      <li>You can involve other people only politely and with their clear agreement. If someone says no, or looks uncomfortable, stop.</li>
+      <li>No pranks on strangers, no scaring, pushing, hitting, spitting, pouring water or insulting anyone.</li>
+      <li>No physical contact with strangers: no kissing, hugging or touching.</li>
+      <li>Don’t film people’s faces up close without permission. Ask Kurazh to blur them if needed.</li>
+    </ul>
+
+    <h2 id="personal">5. Personal data</h2>
+    <p>Never ask for or show addresses, where someone lives, documents, passports, passwords, PIN codes, card numbers or phone numbers, yours or anyone else’s. Don’t show your home from outside, house numbers, car plates or your children’s school. Sharing someone’s personal information to target them (doxxing) means a permanent ban.</p>
+
+    <h2 id="humiliation">6. Humiliation, hate and harassment</h2>
+    <ul>
+      <li>Dares must not humiliate, degrade or bully anyone, including the Taker.</li>
+      <li>No hate based on who people are: nationality, ethnicity, religion, gender, sexual orientation, disability, age.</li>
+      <li>No threats, no wishing death or harm, no coordinated attacks or raids on a stream.</li>
+      <li>Disagree with a vote? Fine. Abuse the Taker or other viewers? Not fine.</li>
+    </ul>
+
+    <h2 id="selfharm">7. Self-harm</h2>
+    <p>Dares or messages that encourage suicide, self-harm or eating disorders are banned. If a Taker or viewer seems to be in danger, report it straight away: our team can pause the stream and reach out. If you are struggling yourself, please talk to someone (see <a href="#help">Getting help</a>). Nothing you lose on Kurazh matters more than you.</p>
+
+    <h2 id="sexual">8. Sexual content</h2>
+    <p>Outside the 18+ section, nothing sexual or explicit: no nudity, stripping, underwear dares or erotic content. Keep it fun and clothed.</p>
+
+    <h2 id="minors">9. Minors</h2>
+    <p>Kurazh is for adults only. Under-18s must not use Kurazh or appear in streams. Anything that sexualises minors, including role-play, “school” themes in the 18+ section or comments about a child’s body, means an immediate permanent ban and a report to the authorities. If you see a child in a stream where they shouldn’t be, report it.</p>
+
+    <h2 id="vehicles">10. Vehicles</h2>
+    <ul>
+      <li>When you are driving, dares pause automatically. Switch to <strong>Stopped</strong> only when you have parked.</li>
+      <li>Never take a dare while driving. Drivers don’t read chat; passengers can.</li>
+      <li>Not allowed: speeding, overtaking, drifting, burnouts, street racing, phones at the wheel, hands off the wheel, no seatbelt.</li>
+      <li>Racing is allowed only on a closed track at an organised event.</li>
+    </ul>
+
+    <h2 id="martial">11. Martial law and air-raid alerts</h2>
+    <ul>
+      <li>Do not film or describe air-defence activity, missile or drone strikes and their aftermath, military sites, equipment, checkpoints, troop movements or critical infrastructure. This can endanger lives and is a crime in Ukraine.</li>
+      <li>During an air-raid alert, dares pause. Go to a shelter. Ending your stream is always free.</li>
+      <li>Don’t stream outdoors during curfew.</li>
+      <li>Think about what your stream shows about your location in real time.</li>
+    </ul>
+
+    <h2 id="adult">12. The 18+ section</h2>
+    <p class="note"><b>Drafting note:</b> keep this section only if the 18+ section launches, and only in countries where counsel confirms it is lawful. It is recommended to stay disabled in Ukraine at launch.</p>
+    <p>The 18+ section is separate, open only to verified adults who accept its rules. Explicit themes may be allowed there within the law where you are, but these hard limits always apply:</p>
+    <ul>
+      <li><strong>Everyone on camera is a verified adult who has agreed to be on stream.</strong> They are verified by Kurazh before they appear. Nobody else in frame.</li>
+      <li><strong>No minors</strong> and nothing that suggests minors, including costumes and role-play.</li>
+      <li><strong>No meetups:</strong> no meeting in person, no offline services, no hourly rates, no hotel visits.</li>
+      <li><strong>No off-platform contacts:</strong> no Telegram, WhatsApp, Instagram, Snapchat, OnlyFans, Discord or phone numbers. Everything stays on Kurazh.</li>
+      <li><strong>No public places:</strong> private spaces only, no streets, cars, windows, balconies or bystanders.</li>
+      <li>All the general rules still apply: nothing dangerous, no alcohol or drugs, no violence, no personal data.</li>
+      <li>Recording or sharing 18+ streams outside Kurazh is forbidden.</li>
+    </ul>
+
+    <h2 id="money">13. Money and fair play</h2>
+    <ul>
+      <li>One person, one account. No bots, alternative accounts or paid votes.</li>
+      <li>Vote on what you saw: did the Taker do what the dare said, in time? Don’t vote “no” just to keep your money.</li>
+      <li>Takers and their friends don’t vote on the Taker’s dares or back them to steer the pot.</li>
+      <li>All payments for dares stay on Kurazh. Asking for money elsewhere is forbidden.</li>
+      <li>No stolen cards, no chargebacks for dares you watched being completed, no schemes to move money between accounts.</li>
+      <li>Don’t write dares just to make a Taker pass.</li>
+    </ul>
+
+    <h2 id="takers">14. For Takers</h2>
+    <ul>
+      <li><strong>You decide.</strong> You never have to accept a dare, and a dare is never an order.</li>
+      <li>Set your limits before you go live: minimum amount, minimum viewer age, categories, dare types and free passes.</li>
+      <li><strong>Unsafe or against the rules? Refuse it for free.</strong> Feeling unwell, or a dare involves someone who hasn’t agreed, or it’s illegal where you are? Also free. Stop for safety at any moment, for free.</li>
+      <li>Need a break? Use Break mode: dares and timers pause.</li>
+      <li>You can end your stream at any time.</li>
+      <li>Use your tools: chat moderators, mute, block, slow mode and “verified viewers only”.</li>
+      <li>We may review how the “Unsafe” reason is used to improve safety. We will never fine you after the fact for using it.</li>
+    </ul>
+
+    <h2 id="callers">15. For Callers</h2>
+    <ul>
+      <li>Write dares you’d be happy to see a friend do. Fun, creative, safe.</li>
+      <li>If a Taker refuses a dare as unsafe, it goes to moderation. If it broke the rules, it counts as a strike against the person who wrote it.</li>
+      <li>Respect a “no”. Pushing a Taker to do something they refused is harassment.</li>
+    </ul>
+
+    <h2 id="report">16. Reporting and what happens next</h2>
+    <p>Tap <strong>Report</strong> on any stream, dare, message or profile. Reports about danger to life, children or the 18+ section go to the front of the queue. If someone is in immediate danger, also call local emergency services (112).</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Step</th><th>What happens</th></tr></thead>
+      <tbody>
+        <tr><td>Warning</td><td>Content removed, a note explaining why</td></tr>
+        <tr><td>Strike 1</td><td>24-hour chat and dare restriction</td></tr>
+        <tr><td>Strike 2</td><td>7-day suspension of backing, voting and going live</td></tr>
+        <tr><td>Strike 3</td><td>Permanent ban</td></tr>
+        <tr><td>Immediate ban</td><td>Threats to life, anything involving minors, trafficking, doxxing, fraud, stolen cards</td></tr>
+      </tbody>
+    </table></div>
+    <p>When we take action, we tell you what we did and why. You can appeal within 6 months in the app or at <span class="ph">[appeals email]</span>; a different person reviews it. We also act against people who repeatedly make reports that are clearly unfounded.</p>
+
+    <h2 id="help">17. Getting help</h2>
+    <ul>
+      <li>Emergency: <strong>112</strong> (Ukraine and the EU).</li>
+      <li>Ukraine, suicide prevention and emotional support: <strong>Lifeline Ukraine 7333</strong> <span class="ph">[verify before launch]</span>.</li>
+      <li>EU: emotional support lines on <strong>116 123</strong> in many countries <span class="ph">[verify per country]</span>.</li>
+      <li>Kurazh safety team: <span class="ph">[safety email]</span>, or Report in the app.</li>
+    </ul>
+    <p>These guidelines are part of our <a href="terms.html">Terms of Service</a>. Our <a href="privacy.html">Privacy Policy</a> explains how we handle reports and moderation data.</p>
+  </main>
+
+  <footer>
+    <a href="../">← Back to Kurazh</a>
+    <a href="terms.html">Terms of Service</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <p>Draft — must be reviewed by a qualified lawyer before launch.</p>
+  </footer>
+</div>
+</body>
+</html>
