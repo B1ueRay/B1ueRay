@@ -176,6 +176,15 @@
   .say input { flex: 1; min-width: 0; height: 42px; border-radius: 12px; border: 1px solid var(--line); background: var(--glass);
     padding: 0 13px; outline: none; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); font-size: 16px; }
   .say input::placeholder { color: var(--muted); }
+  .say .mic { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; flex: none; background: var(--glass); border: 1px solid var(--line); color: var(--van); }
+  .say .mic.on { border-color: var(--gold); color: var(--gold2); background: rgba(184,151,90,.16); animation: micpulse 1.2s ease-in-out infinite; }
+  .say input.partial { color: var(--cash); font-style: italic; }
+  @keyframes micpulse { 50% { box-shadow: 0 0 0 6px rgba(184,151,90,.18); } }
+  .msg.taker { align-self: flex-start; max-width: 92%; background: rgba(10,12,10,.62); border: 1px solid var(--line2); padding: 6px 10px; border-radius: 11px; text-shadow: none; }
+  .msg.taker b { color: var(--gold2) !important; }
+  .msg.taker i { font-style: normal; font-size: 9.5px; font-weight: 800; letter-spacing: .08em; color: var(--ink); background: var(--gold); border-radius: 5px; padding: 1px 5px; margin-right: 6px; vertical-align: 1px; }
+  .msg.taker.typing { color: var(--muted); font-style: italic; }
+  .rbtn.vo > span { color: var(--gold2); border-color: var(--line2); }
   .say button { width: 42px; height: 42px; border-radius: 12px; background: var(--green); display: grid; place-items: center; }
   .heart { position: absolute; right: 22px; bottom: 240px; color: var(--gold2); pointer-events: none; animation: fly 1.5s ease-out forwards; }
   @keyframes fly { to { transform: translate(var(--dx), -200px) scale(1.3); opacity: 0; } }
@@ -664,6 +673,7 @@
 <script src="sound.js"></script>
 <script src="analytics.js"></script>
 <script src="live.js"></script>
+<script src="voice.js"></script>
 <script>
 'use strict';
 /* ═════════ currency ═════════
@@ -719,6 +729,9 @@ const IC = {
   wallet: '<rect x="3" y="6" width="18" height="14" rx="2.5"/><path d="M3 10h18M16 15h2M7 6l8-3 1 3"/>',
   feed: '<rect x="4" y="3" width="16" height="18" rx="3"/><path d="m10 9 5 3-5 3z"/>',
   sound: '<path d="M4 10v4h4l5 4V6L8 10zM16.5 9a4 4 0 0 1 0 6"/>',
+  voice: '<path d="M4 10v4h4l5 4V6L8 10zM16.5 9a4 4 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11"/>',
+  voiceoff: '<path d="M4 10v4h4l5 4V6L8 10zM17 9.5l4 5M21 9.5l-4 5"/>',
+  mic: '<path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM6 11a6 6 0 0 0 12 0M12 17v4M9 21h6"/>',
   vibro: '<rect x="8" y="3" width="8" height="18" rx="2"/><path d="M4 8v8M20 8v8"/>',
   pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
   phone: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
@@ -799,7 +812,7 @@ const defaults = () => ({
   tx: [],
   backs: [], follows: [], payouts: [],
   role: null, ledger: [], credits: [], courage: [], passLog: [], modQueue: [], blocked: [], reports: [],
-  settings: { sound: true, vibro: true, adult: false, demoAudience: true, camPrimed: false },
+  settings: { sound: true, vibro: true, adult: false, demoAudience: true, camPrimed: false, voice: false },
   stats: { proposed: 0, backed: 0, won: 0, refunded: 0, streams: 0, liveSec: 0, daresDone: 0, earnedTotal: 0 },
 });
 let S;
@@ -1377,6 +1390,7 @@ function startDare(st, d) {
   st.dares = st.dares.filter((x) => x !== d);
   st.active = { d, phase: 'doing', t: d.time, total: d.time, yes: 0, no: 0, myVote: null };
   pushChat(st, { sys: true, text: `${st.name} takes on “${d.text}” · pot ${money(d.pool)}` });
+  if (st === curStream() && cur === 'feed') takerSay(st, pick(TAKER_LINES.take)(d), { chat: false });
   if (d.my > 0) { toast(`${st.name} is doing your dare`, 'gold'); buzz([40, 60, 40]); sfx('dare-accept'); }
 }
 // Simulated Takers follow the same Courage rules as real ones: free passes first, then a capped decline fee paid to backers as credits.
@@ -1422,6 +1436,7 @@ function finishVote(st) {
   a.phase = 'result'; a.t = 5;
   pushChat(st, { sys: true, text: a.success ? `Counted (${Math.round((a.yes / total) * 100)}%) · ${money(a.d.pool)} goes to the Taker` : `Not counted · holds of ${money(a.d.pool)} released` });
   const involved = a.d.my > 0 || a.myVote !== null;
+  if (st === curStream() && cur === 'feed') takerSay(st, pick(a.success ? TAKER_LINES.won : TAKER_LINES.lost)(a.d), { chat: false });
   settle(a.d, a.success, st, 'not counted');
   if (st === curStream() && cur === 'feed' && !a.d.my) { if (a.success) { if (involved) goldDust(); sfx('win'); } else sfx('lose'); }
   else if (a.success && a.d.my) goldDust();
@@ -1558,11 +1573,12 @@ function cardHTML(st) {
       <div class="c-tags" data-el="tags">${tagsHTML(st)}</div>
       <div class="c-title" data-k="title">${esc(st.title)}</div>
       <div class="chat" data-el="chat"></div>
-      <form class="say" data-act="say"><input enterkeyhint="send" maxlength="120" placeholder="Say something" aria-label="Chat message" /><button aria-label="Send">${ico('send', 18)}</button></form>
+      <form class="say" data-act="say"><input enterkeyhint="send" maxlength="120" placeholder="${real ? 'Say something' : `Say something to ${esc(firstName(st.name))}`}" aria-label="Chat message" /><button type="button" class="mic" data-act="mic" aria-label="Speak instead of typing" ${window.KurazhVoice?.can.stt ? '' : 'hidden'}>${ico('mic', 18)}</button><button aria-label="Send">${ico('send', 18)}</button></form>
     </div>
     <div class="rail">
       <button class="rbtn ${st.liked ? 'liked' : ''}" data-act="like" aria-label="Like"><span>${ico('heart', 21)}</span><b data-k="likes" class="num">${fmt(st.likes)}</b></button>
       <button class="rbtn main" data-act="dares" aria-label="Dares"><span>${ico('target', 22)}<i class="cnt" data-k="dc">${st.dares.length}</i></span>Dares</button>
+      ${real ? '' : `<button class="rbtn ${S.settings.voice ? 'vo' : ''}" data-act="voice" aria-label="${S.settings.voice ? 'Turn the Taker’s voice off' : 'Hear the Taker talk'}" aria-pressed="${S.settings.voice ? 'true' : 'false'}"><span>${ico(S.settings.voice ? 'voice' : 'voiceoff', 19)}</span>Voice</button>`}
       <button class="rbtn" data-act="share" aria-label="Share"><span>${ico('share', 19)}</span>Share</button>
       <button class="rbtn" data-act="report" aria-label="Report"><span>${ico('flag', 19)}</span>Report</button>
     </div>
@@ -1627,7 +1643,9 @@ function updateCard(st, force) {
     const yb = card.querySelector('[data-k="yb"]'), nb = card.querySelector('[data-k="nb"]'); if (yb) { yb.style.width = yp + '%'; nb.style.width = 100 - yp + '%'; }
   }
 }
-const chatHTML = (list) => list.map((m) => (m.sys ? `<div class="msg sys">${esc(m.text)}</div>` : `<div class="msg ${m.me ? 'me' : ''}"><b style="color:${nickColor(m.nick)}">${esc(m.nick)}</b>${esc(m.text)}</div>`)).join('');
+const chatHTML = (list) => list.map((m) => (m.sys ? `<div class="msg sys">${esc(m.text)}</div>`
+  : m.taker ? `<div class="msg taker${m.typing ? ' typing' : ''}"><i>TAKER</i><b>${esc(firstName(m.nick))}</b>${esc(m.text)}</div>`
+  : `<div class="msg ${m.me ? 'me' : ''}"><b style="color:${nickColor(m.nick)}">${esc(m.nick)}</b>${esc(m.text)}</div>`)).join('');
 function renderChat(st) {
   if (!st) return;
   const card = cardOf(st);
@@ -1667,16 +1685,124 @@ function onCardAct(st, act, btn) {
   else if (act === 'report') openReport(st);
   else if (act === 'leave') leaveWatch();
   else if (act === 'unmute') unmuteRoom();
+  else if (act === 'mic') toggleMic(st, btn);
+  else if (act === 'voice') toggleVoice(st, btn);
   else if (act === 'retry') Room.v?.retry();
   else if (act === 'feed') { leaveRoom(); show('feed'); }
 }
+/* ═════════ Taker voice: the simulated Taker talks; the viewer can speak ═════════ */
+// Who each simulated Taker is, for the AI and for the voice. Fictional demo characters.
+const PERSONA = {
+  nika: ['f', 'airy', 'a cheerful, quick-witted city walker who loves talking to strangers politely'],
+  mila: ['f', 'glassy', 'a calm illustrator who draws fast and jokes dryly'],
+  taras: ['m', 'rounded', 'an energetic gym coach who hypes everyone up but cares about good form'],
+  ivan: ['m', 'buttery', 'a warm singer-songwriter who takes song requests'],
+  andriy: ['m', 'rounded', 'a playful chef cooking with whatever is in the fridge'],
+  daria: ['f', 'airy', 'a sunny swimmer on the Odesa seafront'],
+  lev: ['m', 'buttery', 'a thoughtful talk host who answers questions honestly'],
+  yana: ['f', 'glassy', 'an outdoorsy hiker on a forest trail in the Carpathians'],
+  oleh: ['m', 'rounded', 'a rally driver at a closed race circuit; dares only in the pit lane, never while driving'],
+  max: ['m', 'buttery', 'a road-tripper; when the car is moving he keeps eyes on the road and dares wait for the next stop'],
+  velvet: ['f', 'glassy', 'a confident late-night 18+ host who is flirty but classy and never explicit'],
+  noir: ['f', 'buttery', 'a mysterious 18+ host who answers candid questions with style and keeps it non-explicit'],
+  carmen: ['f', 'airy', 'a passionate dancer on an 18+ stream who flirts playfully but never explicitly'],
+};
+const personaOf = (st) => { const p = PERSONA[st.id] || ['f', 'airy', 'a friendly live streamer']; return { gender: p[0], claudeVoice: p[1], vibe: p[2] }; };
+const TAKER_LINES = {
+  take: [(d) => `Okay, you're on! ${d.text}. Let's go!`, (d) => `Challenge accepted. ${d.text}. Watch this.`, (d) => `Alright chat, ${d.text}. Here we go!`],
+  won: [() => 'Yes! Thank you, chat, you are the best!', () => 'Counted! Thank you so much!', () => 'We did it! Thanks for backing me!'],
+  lost: [() => 'Oh no, not counted. Next one, I promise!', () => 'Tough crowd! Okay, I will try harder.', () => 'Not this time. Give me another one!'],
+};
+const voiceOn = () => !!S.settings.voice;
+// Say a line as the Taker: in chat (optional) and aloud when Voice is on.
+function takerSay(st, text, { chat = true } = {}) {
+  if (chat) pushChat(st, { nick: st.name, taker: true, text });
+  if (voiceOn() && st === curStream() && cur === 'feed') window.KurazhVoice?.speak(text, personaOf(st));
+}
+// Scripted replies for when Claude isn't available (outside a Claude viewer).
+function scriptedReply(st, text) {
+  const ru = /[\u0400-\u04FF]/.test(text), ua = /[іїєґІЇЄҐ]/.test(text), who = S.user.nick, mn = money(minOf(st));
+  const t = text.toLowerCase();
+  const L = ua ? {
+    hi: [`Привіт, ${who}! Радий тебе бачити в ефірі.`, `Хей, ${who}! Що сьогодні замовиш?`],
+    dare: [`Ідея класна! Кидай її в Dares, від ${mn}, і я подивлюся.`, `Звучить весело. Додай у Dares, чат проголосує.`],
+    q: ['Гарне питання! Зараз подумаю... скажу так: усе можливо.', 'Хм, чесно? Мені подобається, як ти думаєш.'],
+    any: ['Ха, дякую! Пиши ще.', 'Я тут, читаю чат. Продовжуй!', 'Обожнюю цей чат!'],
+  } : ru ? {
+    hi: [`Привет, ${who}! Рад видеть тебя в эфире.`, `Хей, ${who}! Что сегодня закажешь?`],
+    dare: [`Классная идея! Кидай её в Dares, от ${mn}, и я посмотрю.`, `Звучит весело. Добавь в Dares, чат проголосует.`],
+    q: ['Хороший вопрос! Скажу так: всё возможно.', 'Хм, честно? Мне нравится, как ты думаешь.'],
+    any: ['Ха, спасибо! Пиши ещё.', 'Я тут, читаю чат. Продолжай!', 'Обожаю этот чат!'],
+  } : {
+    hi: [`Hey ${who}! Great to see you here.`, `Hi ${who}! What are we doing tonight?`],
+    dare: [`Love it! Put it in Dares, from ${mn}, and I'll take a look.`, `Sounds fun. Add it to Dares and let chat vote.`],
+    q: ['Good question! Let me think... I would say anything is possible.', 'Honestly? I like how you think.'],
+    any: ['Ha, thank you! Keep them coming.', 'I am reading chat, keep going!', 'I love this chat!'],
+  };
+  const k = /^(hi|hey|hello|yo|привет|прив|здравствуй|хай|привіт|вітаю)(?=[\s,.!?]|$)/.test(t) ? 'hi' : /(dare|can you|could you|сделай|можешь|зроби|можеш|давай)/.test(t) ? 'dare' : /\?$/.test(t) ? 'q' : 'any';
+  return pick(L[k]);
+}
+let replyBusy = false, replyAt = 0;
+async function takerReply(st, text) {
+  if (st.real || replyBusy || Date.now() - replyAt < 2500) return; // one reply at a time, no flooding
+  replyBusy = true; replyAt = Date.now();
+  const typing = { nick: st.name, taker: true, typing: true, text: 'is typing…' };
+  setTimeout(() => { if (replyBusy) pushChat(st, typing); }, 500);
+  const p = personaOf(st), a = st.active;
+  const recent = st.chat.filter((m) => !m.typing).slice(-6).map((m) => (m.sys ? `[system] ${m.text}` : `${m.taker ? st.name + ' (you)' : m.nick}: ${m.text}`)).join('\n');
+  const prompt = `You are ${st.name}, a fictional demo streamer on Kurazh, a live app where viewers ("Callers") write dares and back them with money, and streamers ("Takers") decide what to do. You are ${p.vibe}. You are streaming live from ${st.city}: "${st.title}".
+Your rules: dares start at ${money(minOf(st))}; you accept ${typesOf(st).map((t) => TAGS[t] || t).join(', ')}.${a ? ` Right now: ${a.phase === 'doing' ? `you are doing the dare "${a.d.text}"` : `chat is voting on "${a.d.text}"`}.` : ''}
+Recent chat:
+${recent}
+
+The viewer ${S.user.nick} just said to you: "${text}"
+
+Reply as ${firstName(st.name)} speaking out loud on stream: one or two short, natural sentences, at most 30 words, warm and in character, in the same language the viewer used. If they suggest a dare, react to it and tell them to add it in Dares with a stake. Never agree to anything dangerous, illegal, explicit, involving minors, or hurting others; never share contacts or personal data, never ask for money outside the app. Output only the words you say: no quotes, no stage directions, no emoji.`;
+  let reply = null;
+  try { reply = await window.KurazhVoice?.ask(prompt); } catch { reply = null; }
+  if (reply) { reply = reply.replace(/^["“”']+|["“”']+$/g, '').replace(/\*[^*]*\*/g, '').replace(/\s+/g, ' ').trim().slice(0, 220); if (!Safety.scan(reply, modeOf(st.cat)).ok) reply = null; }
+  if (!reply) { await new Promise((r) => setTimeout(r, 700 + Math.random() * 700)); reply = scriptedReply(st, text); }
+  st.chat = st.chat.filter((m) => m !== typing);
+  replyBusy = false;
+  takerSay(st, reply);
+}
+function toggleVoice(st, btn) {
+  S.settings.voice = !S.settings.voice; save();
+  const on = S.settings.voice, KV = window.KurazhVoice;
+  $$('.rbtn[data-act="voice"]').forEach((b) => { b.classList.toggle('vo', on); b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Turn the Taker’s voice off' : 'Hear the Taker talk'); b.querySelector('span').innerHTML = ico(on ? 'voice' : 'voiceoff', 19); });
+  if (!on) { KV?.stopSpeaking(); toast('Taker voice off'); return; }
+  if (!KV?.can.tts) { toast('Your browser can’t read aloud here, so replies stay in chat', 'bad'); return; }
+  KV.unlock();
+  toast(KV.can.ai ? `Voice on. Talk to ${firstName(st.name)}: Claude answers` : `Voice on. Talk to ${firstName(st.name)}`, 'gold');
+  takerSay(st, scriptedReply(st, 'hi'), { chat: true });
+  track('voice_on', { ai: !!KV.can.ai });
+}
+let micFor = null;
+function toggleMic(st, btn) {
+  const KV = window.KurazhVoice, form = btn.closest('form'), inp = form.querySelector('input');
+  if (!KV?.can.stt) { toast('Voice input isn’t available in this browser. Type instead', 'bad'); return; }
+  if (KV.listening) { KV.stopListening(); return; }
+  micFor = { st, form, inp, btn, base: inp.value.trim(), orig: inp.value.trim() };
+  const done = () => { btn.classList.remove('on'); btn.setAttribute('aria-label', 'Speak instead of typing'); };
+  // must start synchronously inside the tap (iOS and Claude dictation both require it)
+  KV.listen({
+    onState: (state) => { if (state === 'listening') { btn.classList.add('on'); btn.setAttribute('aria-label', 'Stop listening'); } else { done(); if (micFor && micFor.inp.value.trim() && micFor.inp.value.trim() !== micFor.orig) { const m = micFor; micFor = null; sendChat(m.st, m.form); } else micFor = null; } },
+    onPartial: (t) => { if (!micFor) return; micFor.inp.value = (micFor.base ? micFor.base + ' ' : '') + t; micFor.inp.classList.toggle('partial', !!t); },
+    onFinal: (t) => { if (!micFor) return; micFor.base = ((micFor.base ? micFor.base + ' ' : '') + String(t).trim()).trim(); micFor.inp.value = micFor.base; micFor.inp.classList.remove('partial'); if (window.KurazhVoice?.engine.stt === 'claude') { /* Claude dictation keeps listening: send on each settled phrase */ const m = micFor; micFor = { ...m, base: '', orig: '' }; sendChat(m.st, m.form); } },
+    onError: (code) => { done(); micFor = null; toast(code === 'not_granted' ? 'Microphone access is off. You can still type' : code === 'no-speech' ? 'Didn’t catch that. Tap the mic and try again' : 'Voice input stopped. You can still type', code === 'no-speech' ? '' : 'bad'); },
+  });
+  sfx('tap');
+}
+// show the mic once some speech input exists
+function syncMic() { const ok = !!window.KurazhVoice?.can.stt; $$('.say .mic').forEach((b) => { b.hidden = !ok; }); }
+window.addEventListener('kurazh-voice', syncMic);
 function sendChat(st, form) {
   const inp = form.querySelector('input'), text = inp.value.trim(); if (!text) return;
   const r = Safety.scan(text, modeOf(st.cat));
   if (!r.ok) { toast(`Message hidden by the filter: ${r.cat}`, 'bad'); sfx('blocked'); return; }
   if (st.real) { if (!Room.send({ type: 'chat', text })) { toast('Not connected right now', 'bad'); return; } }
-  else pushChat(st, { nick: S.user.nick, me: true, text });
-  inp.value = '';
+  else { pushChat(st, { nick: S.user.nick, me: true, text }); takerReply(st, text); }
+  inp.value = ''; inp.classList.remove('partial');
 }
 feedEl.addEventListener('click', (e) => {
   if (e.target.closest('[data-join]')) { openJoin(); return; }

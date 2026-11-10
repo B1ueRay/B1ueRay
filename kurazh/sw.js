@@ -1,9 +1,9 @@
 // Kurazh offline cache. Only same-origin static files are ever cached: no cross-origin
 // responses (CDNs, Google, the PeerJS broker), no query-string or API-like requests.
-const CACHE = 'kurazh-v6';
+const CACHE = 'kurazh-v7';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png',
-  './config.js', './live.js', './sound.js', './analytics.js',
+  './config.js', './live.js', './voice.js', './sound.js', './analytics.js',
   './support.html', './legal/terms.html', './legal/privacy.html', './legal/community-guidelines.html',
   './admin.html', './sound-lab.html', './test-rig.html', './viewer-pov.html',
 ];
