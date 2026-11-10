@@ -1,0 +1,91 @@
+# Publishes the static Kurazh PWA (the kurazh/ folder) as the GitHub Pages site root:
+#   https://b1ueray.github.io/B1ueRay/
+#
+# One-time setup: repository Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+# Optional: Settings -> Secrets and variables -> Actions -> Variables -> New repository variable
+#   KURAZH_GOOGLE_CLIENT_ID = <id>.apps.googleusercontent.com
+# When the variable is set, the deployed copy gets it in config.js (window.KURAZH_CONFIG.googleClientId).
+# Nothing is committed back to the repository. A Google OAuth client ID is public, not a secret.
+
+name: Kurazh · GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'kurazh/**'
+      - '.github/workflows/kurazh-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time. A newer run replaces a queued one, but a deployment
+# already in progress is allowed to finish so Pages never ends up half-published.
+concurrency:
+  group: kurazh-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Prepare site
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check that the app is there
+        run: |
+          set -eu
+          for f in index.html manifest.webmanifest sw.js; do
+            test -f "kurazh/$f" || { echo "::error file=kurazh/$f::kurazh/$f is missing"; exit 1; }
+          done
+
+      - name: Inject Google client ID into config.js (only when the variable is set)
+        if: ${{ vars.KURAZH_GOOGLE_CLIENT_ID != '' }}
+        env:
+          CLIENT_ID: ${{ vars.KURAZH_GOOGLE_CLIENT_ID }}
+        run: |
+          set -eu
+          # Accept only the shape of a real Google web client ID, so nothing else can be injected into JS.
+          if ! printf '%s' "$CLIENT_ID" | grep -Eq '^[0-9]+-[a-z0-9]+\.apps\.googleusercontent\.com$'; then
+            echo "::error::KURAZH_GOOGLE_CLIENT_ID does not look like <digits>-<id>.apps.googleusercontent.com"
+            exit 1
+          fi
+          # Merge rather than overwrite, so other settings in a committed config.js are kept.
+          {
+            echo ''
+            echo '/* Added at deploy time by .github/workflows/kurazh-pages.yml from the KURAZH_GOOGLE_CLIENT_ID variable. */'
+            echo "window.KURAZH_CONFIG = Object.assign(window.KURAZH_CONFIG || {}, { googleClientId: '${CLIENT_ID}' });"
+          } >> kurazh/config.js
+          echo "config.js in the artifact now sets googleClientId=${CLIENT_ID}"
+          echo "Google client ID injected: \`${CLIENT_ID}\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: kurazh
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+      - name: Print the URL
+        run: |
+          echo "Kurazh is live at ${{ steps.deployment.outputs.page_url }}"
+          echo "Kurazh is live at ${{ steps.deployment.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"
