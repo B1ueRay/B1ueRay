@@ -153,7 +153,8 @@
 
     var track = function (name, props) {
       try {
-        name = String(name || '').trim().toLowerCase().replace(/[^a-z0-9_]+/g, '_').slice(0, 64);
+        if (typeof name !== 'string') return false;
+        name = name.trim().toLowerCase().replace(/[^a-z0-9_]+/g, '_').slice(0, 64);
         if (!name || name === 'session_start') return false; // session_start is emitted by the SDK only
         var t = now();
         touch(t);

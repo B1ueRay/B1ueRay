@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0c0a" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Kurazh Insights</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" />
+<style>
+  /* Internal dashboard over the on-device analytics log (localStorage "kurazh.analytics.v1"). Same matte palette as the app. */
+  :root {
+    --bg: #0a0c0a; --s1: #111512; --s2: #161c18; --s3: #1f2822;
+    --line: rgba(236,226,207,.09); --line2: rgba(184,151,90,.34); --grid: rgba(236,226,207,.07);
+    --green: #1e3a2c; --green2: #284a39; --gold: #b8975a; --gold2: #cdb27c; --cash: #c8b69a; --van: #ece2cf;
+    --muted: #8f8b7e; --ok: #93b49c; --bad: #c07466; --ink: #121410; --seg2: #5f8f76;
+    --serif: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
+    --sans: Manrope, Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px);
+    color-scheme: dark;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--bg); color: var(--van); font: 14px/1.45 var(--sans); -webkit-font-smoothing: antialiased; }
+  body { min-height: 100dvh; overflow-x: hidden; }
+  button, select, input, textarea { font: inherit; color: inherit; }
+  button { background: none; border: 0; cursor: pointer; touch-action: manipulation; }
+  button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 1.5px solid var(--gold2); outline-offset: 2px; }
+  a { color: inherit; text-decoration: none; }
+  [hidden] { display: none !important; }
+  .num { font-variant-numeric: lining-nums tabular-nums; }
+  .muted { color: var(--muted); }
+
+  .top { position: sticky; top: 0; z-index: 5; background: rgba(10,12,10,.86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--line); padding: calc(var(--st) + 10px) 16px 10px; }
+  .top-in { max-width: 1180px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .back { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px 0 10px; border-radius: 10px;
+    border: 1px solid var(--line); color: var(--cash); font-weight: 600; font-size: 13px; white-space: nowrap; }
+  .back:hover { border-color: var(--line2); color: var(--van); }
+  .seg { display: inline-flex; padding: 3px; border-radius: 11px; background: var(--s2); border: 1px solid var(--line); }
+  .seg button { height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--van); color: var(--ink); }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 22px 16px calc(var(--sb) + 48px); }
+  .eyebrow { color: var(--gold); text-transform: uppercase; letter-spacing: .18em; font-size: 11px; font-weight: 700; }
+  h1 { font: 600 38px/1.02 var(--serif); letter-spacing: -.01em; margin-top: 6px; }
+  h1 em { font-style: normal; color: var(--gold2); }
+  .lead { color: var(--cash); margin-top: 8px; max-width: 60ch; }
+  h2 { font: 600 24px/1.1 var(--serif); margin: 34px 0 12px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  h2 small { font: 500 12px/1.3 var(--sans); color: var(--muted); }
+
+  .status { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .tag { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; background: var(--s2);
+    border: 1px solid var(--line); color: var(--cash); font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .tag.sample { border-color: var(--line2); color: var(--gold2); background: rgba(184,151,90,.09); }
+  .tag i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 12px;
+    background: var(--s3); font-weight: 700; font-size: 13px; transition: transform .12s, background .2s; }
+  .btn:active { transform: scale(.98); }
+  .btn.gold { background: var(--gold); color: var(--ink); }
+  .btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--cash); }
+  .btn.bad { background: rgba(192,116,102,.12); color: var(--bad); }
+
+  .banner { margin-top: 18px; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line2); background: rgba(184,151,90,.07);
+    color: var(--cash); font-size: 13px; }
+  .banner b { color: var(--gold2); }
+
+  .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tile { background: var(--s1); border: 1px solid var(--line); border-radius: 16px; padding: 14px 14px 13px; min-width: 0; }
+  .tile .k { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  .tile .v { font: 600 32px/1.05 var(--serif); margin-top: 6px; color: var(--van); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile .v.money { color: var(--gold2); }
+  .tile .s { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .tile.wide { grid-column: span 2; }
+  .split { display: flex; gap: 2px; height: 10px; margin-top: 10px; border-radius: 4px; overflow: hidden; background: var(--s3); }
+  .split span { display: block; height: 100%; min-width: 2px; }
+  .split-legend { display: flex; justify-content: space-between; gap: 8px; margin-top: 7px; font-size: 12px; color: var(--cash); }
+  .split-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+
+  .card { background: var(--s1); border: 1px solid var(--line); border-radius: 18px; padding: 16px; min-width: 0; }
+  .card h3 { font: 600 20px/1.15 var(--serif); }
+  .card .sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
+  .cols { display: grid; gap: 10px; }
+
+  .funnel { margin-top: 14px; display: grid; gap: 12px; }
+  .fstep .row { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+  .fstep .row b { font-weight: 700; color: var(--van); }
+  .fstep .row code { font: 600 11px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); margin-left: 6px; }
+  .fstep .bar { height: 10px; margin-top: 6px; background: var(--s3); border-radius: 4px; overflow: hidden; }
+  .fstep .bar span { display: block; height: 100%; background: var(--gold); border-radius: 0 4px 4px 0; min-width: 2px; }
+  .fstep .conv { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .chart-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .chart { position: relative; margin-top: 12px; }
+  .chart svg { display: block; width: 100%; height: 220px; }
+  .tip { position: absolute; pointer-events: none; background: var(--s3); border: 1px solid var(--line2); border-radius: 10px; padding: 7px 10px;
+    font-size: 12px; white-space: nowrap; transform: translate(-50%, -100%); color: var(--van); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+  .tip b { font: 600 17px/1 var(--serif); color: var(--gold2); display: block; margin-top: 2px; }
+  details.daily { margin-top: 10px; font-size: 12px; color: var(--muted); }
+  details.daily summary { cursor: pointer; }
+  details.daily table { margin-top: 8px; }
+
+  .bars { margin-top: 12px; display: grid; gap: 10px; }
+  .bars .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; font-size: 13px; }
+  .bars .row .lbl { color: var(--cash); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bars .row .val { color: var(--van); font-weight: 700; }
+  .bars .row .val small { color: var(--muted); font-weight: 500; margin-left: 6px; }
+  .bars .row .track { grid-column: 1 / -1; height: 8px; background: var(--s3); border-radius: 4px; overflow: hidden; }
+  .bars .row .track span { display: block; height: 100%; background: var(--gold); border-radius: 0 4px 4px 0; min-width: 2px; }
+  .empty-note { color: var(--muted); font-size: 13px; margin-top: 12px; }
+
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .field { height: 38px; padding: 0 12px; border-radius: 11px; background: var(--s2); border: 1px solid var(--line); min-width: 0; }
+  .filters input.field { flex: 1 1 200px; }
+  .filters select.field { flex: 0 1 220px; }
+  .tablewrap { margin-top: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--line); }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th { text-align: left; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700;
+    padding: 9px 10px; background: var(--s2); white-space: nowrap; position: sticky; top: 0; }
+  td { padding: 8px 10px; border-top: 1px solid var(--line); vertical-align: top; }
+  td.t { white-space: nowrap; color: var(--cash); }
+  td.e { white-space: nowrap; font-weight: 700; }
+  td.p { font: 500 11.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--cash); min-width: 220px; word-break: break-word; }
+  td.id { font: 500 11.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); white-space: nowrap; }
+  .mini { display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: 4px; border: 1px solid var(--line2); color: var(--gold2);
+    font: 700 9.5px/16px var(--sans); letter-spacing: .08em; text-transform: uppercase; vertical-align: 1px; }
+  .count-note { margin-top: 8px; font-size: 12px; color: var(--muted); }
+
+  .sheet-bg { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.6); display: grid; place-items: end center; padding: 16px; }
+  .sheet { width: 100%; max-width: 640px; background: var(--s1); border: 1px solid var(--line); border-radius: 20px; padding: 18px;
+    margin-bottom: var(--sb); }
+  .sheet h3 { font: 600 24px/1.1 var(--serif); }
+  .sheet p { color: var(--cash); margin-top: 6px; font-size: 13px; }
+  .sheet textarea { width: 100%; height: 42dvh; margin-top: 12px; padding: 10px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line);
+    font: 11.5px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--cash); resize: vertical; user-select: text; -webkit-user-select: text; }
+  .sheet .actions { justify-content: flex-end; }
+  .toast { position: fixed; left: 50%; bottom: calc(var(--sb) + 20px); transform: translateX(-50%); z-index: 30; background: var(--s3);
+    border: 1px solid var(--line2); color: var(--van); padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 600;
+    max-width: calc(100vw - 32px); box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+  .foot { margin-top: 36px; color: var(--muted); font-size: 12px; border-top: 1px solid var(--line); padding-top: 14px; }
+
+  @media (min-width: 720px) {
+    h1 { font-size: 48px; }
+    .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .cols.two { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .cols.three { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .card { padding: 20px; }
+    .sheet-bg { place-items: center; }
+  }
+  @media (max-width: 380px) { .tile .v { font-size: 27px; } .seg button { padding: 0 8px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="back" href="./" aria-label="Back to Kurazh">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      Back to Kurazh
+    </a>
+    <div class="seg" role="group" aria-label="Date range" id="range">
+      <button data-d="7" aria-pressed="false">7d</button>
+      <button data-d="14" aria-pressed="false">14d</button>
+      <button data-d="30" aria-pressed="true">30d</button>
+      <button data-d="0" aria-pressed="false">All</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="eyebrow">Internal · on-device log</div>
+  <h1>Kurazh <em>Insights</em></h1>
+  <p class="lead">Product, money and safety metrics read from this device's analytics log. Nothing here leaves the device.</p>
+
+  <div class="status" id="status"></div>
+  <div class="actions">
+    <button class="btn gold" id="btn-sample">Load sample data</button>
+    <button class="btn ghost" id="btn-export">Export JSON</button>
+    <button class="btn bad" id="btn-clear">Clear data</button>
+  </div>
+  <div class="banner" id="banner" hidden></div>
+
+  <section id="dash">
+    <h2>Audience <small id="range-label"></small></h2>
+    <div class="tiles" id="t-audience"></div>
+
+    <h2>Money</h2>
+    <div class="tiles" id="t-money"></div>
+
+    <h2>Live &amp; safety</h2>
+    <div class="tiles" id="t-live"></div>
+
+    <h2>Conversion</h2>
+    <div class="cols two">
+      <div class="card">
+        <h3>Core funnel</h3>
+        <div class="sub">Unique devices reaching each step in the selected range</div>
+        <div class="funnel" id="funnel"></div>
+      </div>
+      <div class="card">
+        <div class="chart-head">
+          <div>
+            <h3>Daily activity</h3>
+            <div class="sub" id="chart-sub">Sessions per day</div>
+          </div>
+          <div class="seg" role="group" aria-label="Chart metric" id="metric">
+            <button data-m="sessions" aria-pressed="true">Sessions</button>
+            <button data-m="events" aria-pressed="false">Events</button>
+            <button data-m="held" aria-pressed="false">Held $</button>
+          </div>
+        </div>
+        <div class="chart" id="chart"></div>
+        <details class="daily"><summary>Daily numbers as a table</summary><div class="tablewrap" id="daily-table"></div></details>
+      </div>
+    </div>
+
+    <h2>Breakdowns</h2>
+    <div class="cols three">
+      <div class="card"><h3>Declines by reason</h3><div class="sub" id="decl-sub">Share of dares offered</div><div class="bars" id="b-decline"></div></div>
+      <div class="card"><h3>Dares blocked by category</h3><div class="sub">Safety filter hits</div><div class="bars" id="b-blocked"></div></div>
+      <div class="card"><h3>Reports by reason</h3><div class="sub">report_submitted</div><div class="bars" id="b-reports"></div></div>
+    </div>
+
+    <h2>Recent events</h2>
+    <div class="card">
+      <div class="filters">
+        <input class="field" id="f-q" type="search" placeholder="Filter by name, property or id" aria-label="Filter events" />
+        <select class="field" id="f-name" aria-label="Event name"><option value="">All events</option></select>
+      </div>
+      <div class="tablewrap"><table><thead><tr><th>Time</th><th>Event</th><th>Properties</th><th>User</th><th>Session</th><th>Platform</th></tr></thead>
+        <tbody id="ev-body"></tbody></table></div>
+      <div class="count-note" id="ev-note"></div>
+    </div>
+  </section>
+
+  <p class="foot">Source: <code>localStorage["kurazh.analytics.v1"]</code> on this device. User ids are salted SHA-256 hashes; email, name and phone are never logged. Money is demo money.</p>
+</main>
+
+<div class="sheet-bg" id="sheet" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <h3 id="sheet-title">Export JSON</h3>
+    <p id="sheet-text">Downloads are blocked here. Select all and copy the log below.</p>
+    <textarea id="sheet-area" readonly spellcheck="false" aria-label="Exported events JSON"></textarea>
+    <div class="actions">
+      <button class="btn ghost" id="sheet-copy">Copy</button>
+      <button class="btn gold" id="sheet-close">Done</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'kurazh.analytics.v1', META = 'kurazh.analytics.meta.v1', CAP = 5000, DAY = 864e5, FEE = 0.2;
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { days: 30, metric: 'sessions', q: '', name: '' };
+  var ALL = [];
+
+  // ---------- storage ----------
+  function load() {
+    try {
+      var a = JSON.parse(localStorage.getItem(KEY) || '[]');
+      ALL = Array.isArray(a) ? a.filter(function (e) { return e && typeof e === 'object' && e.name && isFinite(e.ts); }) : [];
+    } catch (e) { ALL = []; }
+    ALL.sort(function (a, b) { return a.ts - b.ts; });
+  }
+  function save(arr) {
+    try { localStorage.setItem(KEY, JSON.stringify(arr)); return true; } catch (e) { return false; }
+  }
+  function meta() { try { return JSON.parse(localStorage.getItem(META) || '{}') || {}; } catch (e) { return {}; } }
+
+  // ---------- formatting ----------
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function n0(v) { return Math.round(v).toLocaleString('en-US'); }
+  function money(v) { return '$' + (v >= 10000 ? (v / 1000).toFixed(1) + 'k' : v.toLocaleString('en-US', { maximumFractionDigits: v < 100 ? 2 : 0 })); }
+  function pct(a, b) { return b ? Math.round(a / b * 100) + '%' : '—'; }
+  function dur(s) { if (!s) return '—'; var m = Math.round(s / 60); return m >= 60 ? Math.floor(m / 60) + 'h ' + (m % 60) + 'm' : m + ' min'; }
+  function label(s) { s = String(s || 'unknown').replace(/_/g, ' '); return s.charAt(0).toUpperCase() + s.slice(1); }
+  function dayKey(ts) { var d = new Date(ts); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function startOfDay(ts) { var d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime(); }
+  function shortId(s) { if (!s) return '—'; s = String(s); var i = s.indexOf(':'); return (i > -1 ? s.slice(i + 1) : s).slice(0, 8); }
+  function amt(e) { var v = e.props && e.props.amount; return typeof v === 'number' && isFinite(v) ? v : 0; }
+  function actor(e) { return e.user_id || e.device_id || 'anon'; }
+
+  // ---------- metrics ----------
+  function inRange() {
+    if (!state.days) return ALL;
+    var from = startOfDay(Date.now()) - (state.days - 1) * DAY;
+    return ALL.filter(function (e) { return e.ts >= from; });
+  }
+  function by(list, name) { return list.filter(function (e) { return e.name === name; }); }
+  function countBy(list, prop) {
+    var m = {};
+    list.forEach(function (e) { var k = (e.props && e.props[prop] != null) ? String(e.props[prop]) : 'unknown'; m[k] = (m[k] || 0) + 1; });
+    return Object.keys(m).map(function (k) { return [k, m[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+  }
+  function sum(list, f) { return list.reduce(function (s, e) { return s + f(e); }, 0); }
+  function distinct(list, f) { var m = {}; list.forEach(function (e) { var k = f(e); if (k) m[k] = 1; }); return Object.keys(m).length; }
+  function setOf(list, f) { var m = {}; list.forEach(function (e) { var k = f(e); if (k) m[k] = 1; }); return m; }
+
+  function compute(E) {
+    var r = {};
+    r.sessions = distinct(E, function (e) { return e.session_id; });
+    r.devices = distinct(E, function (e) { return e.device_id; });
+    var su = by(E, 'signup_complete');
+    r.signups = su.length; r.signupBy = countBy(su, 'method');
+
+    // Roles are state: latest role per user over the whole log; caller→taker = took caller first, taker later.
+    var roles = {}, hist = {};
+    ALL.forEach(function (e) {
+      if (e.name !== 'role_select' || !e.props) return;
+      var a = actor(e), role = e.props.role;
+      roles[a] = role; (hist[a] = hist[a] || []).push(role);
+    });
+    var active = setOf(E, actor);
+    r.callers = 0; r.takers = 0; r.c2t = 0; r.callersEver = 0;
+    Object.keys(roles).forEach(function (a) {
+      if (!active[a]) return;
+      if (roles[a] === 'caller') r.callers++; else if (roles[a] === 'taker') r.takers++;
+      var h = hist[a], ci = h.indexOf('caller');
+      if (ci > -1) { r.callersEver++; if (h.indexOf('taker', ci + 1) > -1) r.c2t++; }
+    });
+    var holds = by(E, 'hold_placed'), backers = setOf(holds, actor);
+    r.callersBacked = Object.keys(backers).filter(function (a) { return roles[a] === 'caller' || (hist[a] || []).indexOf('caller') > -1; }).length;
+
+    r.kycStart = distinct(by(E, 'kyc_start'), actor);
+    r.kycDone = distinct(by(E, 'kyc_complete'), actor);
+
+    var cap = by(E, 'hold_captured'), rel = by(E, 'hold_released');
+    r.held = sum(holds, amt); r.holdN = holds.length;
+    r.captured = sum(cap, amt); r.capN = cap.length;
+    r.released = sum(rel, amt); r.relN = rel.length;
+    r.avgStake = r.holdN ? r.held / r.holdN : 0;
+
+    var sugg = by(E, 'dare_suggest'), decl = by(E, 'dare_decline');
+    r.suggested = sugg.length; r.declines = decl.length; r.declineBy = countBy(decl, 'reason');
+    r.paidDeclines = decl.filter(function (e) { return e.props && e.props.fee > 0; }).length;
+    r.timeouts = by(E, 'dare_timeout').length;
+    var bonus = by(E, 'decline_bonus');
+    r.bonus = sum(bonus, amt);
+
+    var ls = by(E, 'live_start'), le = by(E, 'live_end');
+    r.lives = ls.length; r.livesReal = ls.filter(function (e) { return e.props && e.props.real; }).length;
+    var durs = le.map(function (e) { return (e.props && +e.props.duration_s) || 0; }).filter(function (v) { return v > 0; });
+    r.avgDur = durs.length ? durs.reduce(function (s, v) { return s + v; }, 0) / durs.length : 0;
+    r.daresDone = sum(le, function (e) { return (e.props && +e.props.dares_done) || 0; });
+
+    var bl = by(E, 'dare_blocked'); r.blocked = bl.length; r.blockedBy = countBy(bl, 'category');
+    var rp = by(E, 'report_submitted'); r.reports = rp.length; r.reportBy = countBy(rp, 'reason');
+    r.errors = by(E, 'client_error').length;
+    r.withdrawals = sum(by(E, 'withdrawal_request'), amt);
+    r.adult = distinct(by(E, 'adult_unlock'), actor);
+    return r;
+  }
+
+  // ---------- render: tiles ----------
+  function tile(k, v, s, opts) {
+    opts = opts || {};
+    return '<div class="tile' + (opts.wide ? ' wide' : '') + '"><div class="k">' + esc(k) + '</div><div class="v num' + (opts.money ? ' money' : '') + '">' +
+      esc(v) + '</div>' + (s ? '<div class="s">' + s + '</div>' : '') + (opts.extra || '') + '</div>';
+  }
+  function split(parts) { // parts: [label, value, color]
+    var tot = parts.reduce(function (s, p) { return s + p[1]; }, 0);
+    if (!tot) return '';
+    return '<div class="split" role="img" aria-label="' + esc(parts.map(function (p) { return p[0] + ' ' + pct(p[1], tot); }).join(', ')) + '">' +
+      parts.map(function (p) { return p[1] ? '<span style="flex:' + p[1] + ';background:' + p[2] + '"></span>' : ''; }).join('') + '</div>' +
+      '<div class="split-legend">' + parts.map(function (p) { return '<span><i style="background:' + p[2] + '"></i>' + esc(p[0]) + ' ' + pct(p[1], tot) + '</span>'; }).join('') + '</div>';
+  }
+  function renderTiles(r) {
+    var methods = r.signupBy.map(function (m) { return esc(label(m[0])) + ' ' + n0(m[1]); }).join(' · ') || 'No sign-ups yet';
+    var roleTot = r.callers + r.takers;
+    $('t-audience').innerHTML =
+      tile('Sessions', n0(r.sessions), n0(r.devices) + ' devices') +
+      tile('Sign-ups', n0(r.signups), methods) +
+      tile('Caller vs Taker', roleTot ? pct(r.callers, roleTot) : '—', roleTot ? n0(r.callers) + ' Callers · ' + n0(r.takers) + ' Takers' : 'No role picks yet',
+        { extra: split([['Caller', r.callers, 'var(--gold2)'], ['Taker', r.takers, 'var(--seg2)']]) }) +
+      tile('Caller → Taker', pct(r.c2t, r.callersEver), n0(r.c2t) + ' of ' + n0(r.callersEver) + ' Callers went live side') +
+      tile('KYC completion', pct(r.kycDone, r.kycStart), n0(r.kycDone) + ' of ' + n0(r.kycStart) + ' started') +
+      tile('Callers who backed', pct(r.callersBacked, r.callersEver), n0(r.callersBacked) + ' of ' + n0(r.callersEver) + ' placed a hold') +
+      tile('18+ unlocked', n0(r.adult), 'Verified users') +
+      tile('Client errors', n0(r.errors), r.sessions ? (r.errors / r.sessions).toFixed(2) + ' per session' : '');
+    $('t-money').innerHTML =
+      tile('Held', money(r.held), n0(r.holdN) + ' holds', { money: true }) +
+      tile('Captured', money(r.captured), n0(r.capN) + ' holds', { money: true }) +
+      tile('Released', money(r.released), n0(r.relN) + ' holds', { money: true }) +
+      tile('Capture rate', pct(r.capN, r.capN + r.relN), 'By count · ' + pct(r.captured, r.captured + r.released) + ' by value') +
+      tile('Average stake', r.holdN ? money(r.avgStake) : '—', 'Per hold', { money: true }) +
+      tile('Decline bonuses', money(r.bonus), n0(r.paidDeclines) + ' paid declines', { money: true }) +
+      tile('Platform fee 20%', money(r.captured * FEE), 'Takers earn ' + money(r.captured * (1 - FEE)), { money: true }) +
+      tile('Withdrawals', money(r.withdrawals), 'Requested', { money: true });
+    $('t-live').innerHTML =
+      tile('Live sessions', n0(r.lives), n0(r.livesReal) + ' real camera') +
+      tile('Avg duration', dur(r.avgDur), n0(r.daresDone) + ' dares done') +
+      tile('Decline rate', pct(r.declines, r.suggested), n0(r.declines) + ' of ' + n0(r.suggested) + ' dares · ' + n0(r.timeouts) + ' timed out') +
+      tile('Dares blocked', n0(r.blocked), r.suggested ? pct(r.blocked, r.suggested + r.blocked) + ' of attempts' : 'Safety filter') +
+      tile('Reports', n0(r.reports), r.sessions ? (r.reports / r.sessions * 1000).toFixed(1) + ' per 1k sessions' : '');
+  }
+
+  // ---------- render: funnel ----------
+  var STEPS = [['app_open', 'Opened app'], ['signup_complete', 'Signed up'], ['role_select', 'Picked a role'],
+    ['kyc_complete', 'Verified (KYC)'], ['hold_placed', 'Placed a hold'], ['hold_captured', 'Hold captured']];
+  function renderFunnel(E) {
+    var counts = STEPS.map(function (s) { return distinct(by(E, s[0]), function (e) { return e.device_id; }); });
+    var top = counts[0] || Math.max.apply(null, counts) || 0;
+    $('funnel').innerHTML = STEPS.map(function (s, i) {
+      var c = counts[i], w = top ? Math.min(100, c / top * 100) : 0;
+      var conv = i ? 'Step ' + pct(c, counts[i - 1]) + ' · overall ' + pct(c, top) : 'Base';
+      return '<div class="fstep"><div class="row"><span>' + esc(s[1]) + '<code>' + s[0] + '</code></span><b class="num">' + n0(c) + '</b></div>' +
+        '<div class="bar" role="img" aria-label="' + esc(s[1] + ': ' + c) + '"><span style="width:' + w.toFixed(1) + '%"></span></div><div class="conv">' + conv + '</div></div>';
+    }).join('');
+  }
+
+  // ---------- render: daily chart (inline SVG, single series, hover tooltip) ----------
+  var series = [];
+  function renderChart(E) {
+    var end = startOfDay(Date.now()), start;
+    if (state.days) start = end - (state.days - 1) * DAY;
+    else start = E.length ? startOfDay(E[0].ts) : end - 13 * DAY;
+    var n = Math.min(400, Math.round((end - start) / DAY) + 1), idx = {};
+    series = [];
+    for (var i = 0; i < n; i++) { var ts = start + i * DAY; var d = new Date(ts); d.setHours(12); var t = startOfDay(d.getTime()); idx[dayKey(t)] = i; series.push({ ts: t, v: 0, s: {} }); }
+    E.forEach(function (e) {
+      var j = idx[dayKey(e.ts)]; if (j === undefined) return;
+      var p = series[j];
+      if (state.metric === 'events') p.v++;
+      else if (state.metric === 'held') { if (e.name === 'hold_placed') p.v += amt(e); }
+      else if (e.session_id && !p.s[e.session_id]) { p.s[e.session_id] = 1; p.v++; }
+    });
+    $('chart-sub').textContent = { sessions: 'Sessions per day', events: 'Events per day', held: 'Dollars held per day' }[state.metric];
+    drawChart();
+    var fmt = state.metric === 'held' ? money : n0;
+    $('daily-table').innerHTML = '<table><thead><tr><th>Day</th><th>' + esc({ sessions: 'Sessions', events: 'Events', held: 'Held' }[state.metric]) +
+      '</th></tr></thead><tbody>' + series.slice().reverse().map(function (p) {
+        return '<tr><td class="t">' + esc(new Date(p.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) + '</td><td class="num">' + fmt(p.v) + '</td></tr>';
+      }).join('') + '</tbody></table>';
+  }
+  function niceMax(v) { if (v <= 0) return 4; var p = Math.pow(10, Math.floor(Math.log10(v))), m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
+  function drawChart() {
+    var box = $('chart'), W = Math.max(260, box.clientWidth || 600), H = 220, L = 40, R = 6, T = 10, B = 26;
+    var max = niceMax(Math.max.apply(null, series.map(function (p) { return p.v; }).concat([0])));
+    var n = series.length, pw = W - L - R, ph = H - T - B, step = pw / n, bw = Math.max(2, Math.min(26, step - 2));
+    var fmt = state.metric === 'held' ? money : n0;
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc($('chart-sub').textContent) + '">';
+    for (var g = 0; g <= 4; g++) {
+      var gy = T + ph - ph * g / 4;
+      s += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + gy + '" y2="' + gy + '" stroke="' + (g ? 'rgba(236,226,207,.07)' : 'rgba(236,226,207,.16)') + '" stroke-width="1"/>';
+      if (g % 2 === 0) s += '<text x="' + (L - 8) + '" y="' + (gy + 4) + '" text-anchor="end" font-size="10.5" fill="#8f8b7e" font-family="Manrope, system-ui, sans-serif">' + esc(fmt(max * g / 4)) + '</text>';
+    }
+    var every = Math.ceil(n / Math.max(2, Math.floor(pw / 64)));
+    series.forEach(function (p, i) {
+      var x = L + i * step + (step - bw) / 2, h = p.v ? Math.max(2, p.v / max * ph) : 0, y = T + ph - h, rr = Math.min(4, bw / 2, h);
+      if (h) s += '<path d="M' + x + ',' + (T + ph) + 'V' + (y + rr) + 'Q' + x + ',' + y + ' ' + (x + rr) + ',' + y + 'H' + (x + bw - rr) + 'Q' + (x + bw) + ',' + y + ' ' + (x + bw) + ',' + (y + rr) + 'V' + (T + ph) + 'Z" fill="#b8975a" data-i="' + i + '" class="bar"/>';
+      s += '<rect x="' + (L + i * step) + '" y="' + T + '" width="' + step + '" height="' + ph + '" fill="transparent" data-i="' + i + '"/>';
+      if ((n - 1 - i) % every === 0) s += '<text x="' + (L + i * step + step / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10.5" fill="#8f8b7e" font-family="Manrope, system-ui, sans-serif">' +
+        esc(new Date(p.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) + '</text>';
+    });
+    s += '</svg><div class="tip" hidden></div>';
+    box.innerHTML = s;
+    var svg = box.querySelector('svg'), tip = box.querySelector('.tip');
+    var show = function (ev) {
+      var t = ev.target, i = t && t.getAttribute && t.getAttribute('data-i');
+      if (i === null || i === undefined) { tip.hidden = true; return; }
+      var p = series[+i];
+      box.querySelectorAll('path.bar').forEach(function (b) { b.setAttribute('fill', b.getAttribute('data-i') === i ? '#cdb27c' : '#b8975a'); });
+      tip.innerHTML = esc(new Date(p.ts).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })) + '<b class="num">' + esc(fmt(p.v)) + '</b>';
+      var scale = svg.clientWidth / W, cx = (L + (+i + .5) * step) * scale, cy = (T + ph - (p.v / max * ph)) * scale;
+      tip.hidden = false;
+      var tw = tip.offsetWidth / 2;
+      tip.style.left = Math.max(tw, Math.min(svg.clientWidth - tw, cx)) + 'px';
+      tip.style.top = Math.max(tip.offsetHeight + 2, cy - 8) + 'px';
+    };
+    var hide = function () { tip.hidden = true; box.querySelectorAll('path.bar').forEach(function (b) { b.setAttribute('fill', '#b8975a'); }); };
+    svg.addEventListener('pointermove', show);
+    svg.addEventListener('pointerdown', show);
+    svg.addEventListener('pointerleave', hide);
+  }
+
+  // ---------- render: breakdown bars ----------
+  function bars(id, rows, denom, empty) {
+    if (!rows.length) { $(id).innerHTML = '<div class="empty-note">' + esc(empty) + '</div>'; return; }
+    var max = rows[0][1];
+    $(id).innerHTML = rows.slice(0, 7).map(function (r) {
+      return '<div class="row"><span class="lbl">' + esc(label(r[0])) + '</span><span class="val num">' + n0(r[1]) +
+        (denom ? '<small>' + pct(r[1], denom) + '</small>' : '') + '</span><span class="track"><span style="width:' + (r[1] / max * 100).toFixed(1) + '%"></span></span></div>';
+    }).join('');
+  }
+
+  // ---------- render: events table ----------
+  function renderTable() {
+    var q = state.q.toLowerCase(), list = [], total = 0;
+    for (var i = ALL.length - 1; i >= 0; i--) {
+      var e = ALL[i];
+      if (state.name && e.name !== state.name) continue;
+      if (q) { var hay = (e.name + ' ' + JSON.stringify(e.props || {}) + ' ' + (e.user_id || '') + ' ' + (e.session_id || '') + ' ' + (e.platform || '')).toLowerCase(); if (hay.indexOf(q) < 0) continue; }
+      total++;
+      if (list.length < 150) list.push(e);
+    }
+    $('ev-body').innerHTML = list.length ? list.map(function (e) {
+      var props = Object.keys(e.props || {}).map(function (k) { return k + ': ' + JSON.stringify(e.props[k]); }).join(', ');
+      return '<tr><td class="t num">' + esc(new Date(e.ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })) + '</td>' +
+        '<td class="e">' + esc(e.name) + (e.sample ? '<span class="mini">sample</span>' : '') + '</td><td class="p">' + esc(props || '—') + '</td>' +
+        '<td class="id">' + esc(shortId(e.user_id)) + '</td><td class="id">' + esc(shortId(e.session_id)) + '</td><td class="id">' + esc(e.platform || '—') + '</td></tr>';
+    }).join('') : '<tr><td colspan="6" class="muted" style="padding:18px 12px">No events match.</td></tr>';
+    $('ev-note').textContent = total > list.length ? 'Showing the newest ' + list.length + ' of ' + n0(total) + ' matching events.' : n0(total) + ' matching events.';
+  }
+  function fillNames() {
+    var names = {}; ALL.forEach(function (e) { names[e.name] = (names[e.name] || 0) + 1; });
+    var sel = $('f-name'), cur = state.name;
+    sel.innerHTML = '<option value="">All events</option>' + Object.keys(names).sort().map(function (n) {
+      return '<option value="' + esc(n) + '"' + (n === cur ? ' selected' : '') + '>' + esc(n) + ' (' + names[n] + ')</option>';
+    }).join('');
+    if (cur && !names[cur]) state.name = '';
+  }
+
+  // ---------- render: all ----------
+  function render() {
+    load();
+    var E = inRange(), r = compute(E), m = meta(), sampleN = ALL.filter(function (e) { return e.sample; }).length;
+    var dnt = navigator.doNotTrack === '1' || navigator.globalPrivacyControl === true;
+    $('status').innerHTML =
+      '<span class="tag num">' + n0(ALL.length) + ' events stored</span>' +
+      '<span class="tag">Consent on this device: ' + esc(m.consent === 'full' && !dnt ? 'full' : 'essential') + (dnt ? ' (Do Not Track)' : '') + '</span>' +
+      (sampleN ? '<span class="tag sample"><i></i>' + n0(sampleN) + ' sample events</span>' : '');
+    var b = $('banner');
+    if (!ALL.length) { b.hidden = false; b.innerHTML = '<b>No events yet.</b> Use Kurazh on this device, or load the sample data to preview the dashboard.'; }
+    else if (sampleN) { b.hidden = false; b.innerHTML = '<b>Sample data.</b> ' + n0(sampleN) + ' of ' + n0(ALL.length) + ' events are generated for preview, not real usage. Clear data to remove them.'; }
+    else b.hidden = true;
+    $('range-label').textContent = state.days ? 'Last ' + state.days + ' days' : 'All time';
+    renderTiles(r);
+    renderFunnel(E);
+    renderChart(E);
+    $('decl-sub').textContent = r.suggested ? 'Share of ' + n0(r.suggested) + ' dares suggested' : 'Share of dares suggested';
+    bars('b-decline', r.declineBy, r.suggested, 'No declines in this range.');
+    bars('b-blocked', r.blockedBy, r.blocked, 'Nothing blocked in this range.');
+    bars('b-reports', r.reportBy, r.reports, 'No reports in this range.');
+    fillNames();
+    renderTable();
+  }
+
+  // ---------- sample data (seeded, clearly marked sample: true) ----------
+  function makeSample() {
+    var seed = 20261110;
+    var rnd = function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    var pick = function (arr) { return arr[Math.floor(rnd() * arr.length)]; };
+    var wpick = function (pairs) { var s = 0, x = rnd(), i; for (i = 0; i < pairs.length; i++) s += pairs[i][1]; x *= s; for (i = 0; i < pairs.length; i++) { x -= pairs[i][1]; if (x <= 0) return pairs[i][0]; } return pairs[0][0]; };
+    var hex = function (len) { var s = ''; while (s.length < len) s += Math.floor(rnd() * 16).toString(16); return s; };
+    var uuid = function () { return hex(8) + '-' + hex(4) + '-4' + hex(3) + '-a' + hex(3) + '-' + hex(12); };
+    var stake = function () { return wpick([[3, 6], [5, 22], [10, 20], [15, 9], [20, 13], [25, 6], [40, 3], [50, 4], [100, 1]]); };
+    var DAYS = 28, today = startOfDay(Date.now()), out = [];
+    var HOUR = [[8, 2], [10, 3], [12, 5], [14, 5], [16, 6], [18, 9], [19, 11], [20, 13], [21, 13], [22, 10], [23, 6], [0, 3]];
+    var DECLINE = [['too_risky', 30], ['not_my_category', 22], ['not_feeling_it', 18], ['low_stake', 14], ['already_done', 9], ['off_camera_needed', 7]];
+    var BLOCK = [['dangerous_stunt', 34], ['alcohol_substances', 18], ['driving', 14], ['personal_data', 11], ['violence', 9], ['off_platform', 8], ['minors', 6]];
+    var REPORT = [['unsafe_dare', 36], ['harassment', 24], ['spam', 18], ['impersonation', 10], ['underage', 7], ['scam', 5]];
+    var TYPES = ['funny', 'physical', 'creative', 'food', 'music', 'talk', 'outdoors'];
+    var SUPPORT = ['payments', 'kyc', 'account', 'safety', 'payout'];
+    var devices = 240;
+    for (var u = 0; u < devices; u++) {
+      var plat = wpick([['ios', 52], ['android', 36], ['macos', 7], ['windows', 5]]);
+      var mobile = plat === 'ios' || plat === 'android';
+      var vp = mobile ? pick(['390x844', '393x852', '430x932', '412x915', '360x780']) : pick(['1280x800', '1440x900', '1920x1080']);
+      var dev = { device_id: uuid(), platform: plat, viewport: vp, standalone: mobile && rnd() < 0.38, user: null, role: null, kyc: false, earned: 0, passes: 0 };
+      var first = Math.floor(Math.pow(rnd(), 0.75) * DAYS); // growth: more new devices recently
+      var nSess = 1 + Math.floor(-Math.log(1 - rnd()) * 1.4);
+      var day = DAYS - 1 - first;
+      for (var si = 0; si < nSess && day < DAYS; si++) {
+        var hr = wpick(HOUR), t = today - (DAYS - 1 - day) * DAY + hr * 3600e3 + Math.floor(rnd() * 3500e3);
+        if (t > Date.now() - 60e3) t = Date.now() - Math.floor(rnd() * 6 * 3600e3) - 120e3;
+        var sid = uuid();
+        var ev = function (name, props) {
+          t += 4e3 + Math.floor(rnd() * 70e3);
+          out.push({ id: uuid(), name: name, props: props || {}, ts: t, session_id: sid, device_id: dev.device_id, user_id: dev.user,
+            app_version: '0.9.' + (day < 14 ? 2 : 3), viewport: dev.viewport, standalone: dev.standalone, platform: dev.platform,
+            consent: 'full', sample: true });
+        };
+        ev('session_start'); ev('app_open', si ? {} : { referrer: pick(['', '', 'https://t.co/', 'https://www.instagram.com/', 'https://www.tiktok.com/']) });
+        ev('page_view', { page: 'feed' });
+        if (rnd() < 0.5) ev('perf', { fcp: 600 + Math.floor(rnd() * 900), lcp: 1100 + Math.floor(rnd() * 1800), ttfb: 80 + Math.floor(rnd() * 300) });
+        var views = 1 + Math.floor(rnd() * 3);
+        for (var v = 0; v < views; v++) ev('stream_view', { stream_id: 's_' + hex(6), real: rnd() < 0.3 });
+        if (!dev.user) {
+          if (rnd() < 0.62) {
+            var method = rnd() < 0.61 ? 'google' : 'email';
+            ev('signup_start', { method: method });
+            if (rnd() < 0.8) {
+              dev.user = 's256:' + hex(32);
+              ev('signup_complete', { method: method });
+              dev.role = rnd() < 0.77 ? 'caller' : 'taker';
+              ev('role_select', { role: dev.role, first_time: true });
+              if (rnd() < (dev.role === 'taker' ? 0.86 : 0.5)) {
+                ev('kyc_start');
+                if (rnd() < 0.76) { dev.kyc = true; ev('kyc_complete'); }
+              }
+            }
+          }
+        } else {
+          ev('login', { method: rnd() < 0.6 ? 'google' : 'email' });
+          if (dev.role === 'caller' && dev.kyc && rnd() < 0.09) { dev.role = 'taker'; ev('role_select', { role: 'taker', first_time: false }); }
+          if (!dev.kyc && rnd() < 0.3) { ev('kyc_start'); if (rnd() < 0.7) { dev.kyc = true; ev('kyc_complete'); } }
+        }
+        if (dev.user && dev.kyc && dev.role === 'caller') {
+          if (rnd() < 0.3) ev('room_join', { real: rnd() < 0.35 });
+          var dares = rnd() < 0.78 ? 1 + Math.floor(rnd() * 4) : 0;
+          for (var d = 0; d < dares; d++) {
+            var a = stake();
+            if (rnd() < 0.08) { ev('dare_blocked', { category: wpick(BLOCK) }); continue; }
+            ev('dare_suggest', { amount: a, type: pick(TYPES) });
+            ev('hold_placed', { amount: a });
+            var o = rnd();
+            if (o < 0.6) { ev('vote_cast', { value: 'yes' }); ev('hold_captured', { amount: a }); }
+            else if (o < 0.76) { ev('vote_cast', { value: 'no' }); ev('hold_released', { amount: a }); }
+            else if (o < 0.93) {
+              var fee = rnd() < 0.45 ? Math.round(a * 0.25 * 100) / 100 : 0;
+              ev('dare_decline', { reason: wpick(DECLINE), fee: fee }); ev('hold_released', { amount: a });
+              if (fee) ev('decline_bonus', { amount: fee });
+            } else { ev('dare_timeout'); ev('hold_released', { amount: a }); }
+          }
+          if (rnd() < 0.05) ev('adult_unlock');
+        }
+        if (dev.user && dev.kyc && dev.role === 'taker' && rnd() < 0.7) {
+          var real = rnd() < 0.55, done = Math.floor(rnd() * 4), dur = 600 + Math.floor(rnd() * 4800), earned = 0;
+          ev('live_start', { real: real });
+          for (var k = 0; k < done; k++) earned += stake() * (1 - FEE);
+          t += dur * 1000;
+          ev('live_end', { duration_s: dur, dares_done: done, earned: Math.round(earned * 100) / 100 });
+          dev.earned += earned;
+          if (dev.earned >= 20 && rnd() < 0.25) { ev('withdrawal_request', { amount: Math.round(dev.earned) }); dev.earned = 0; }
+        }
+        if (rnd() < 0.035) ev('report_submitted', { reason: wpick(REPORT) });
+        if (rnd() < 0.03) ev('support_open', { topic: pick(SUPPORT) });
+        if (rnd() < 0.012) ev('client_error', { kind: 'error', message: pick(['TypeError: Cannot read properties of null (reading \'play\')', 'NotAllowedError: Permission denied']), source: 'index.html', line: 1200 + Math.floor(rnd() * 900), col: 12 });
+        day += 1 + Math.floor(-Math.log(1 - rnd()) * 3);
+      }
+    }
+    return out.filter(function (e) { return e.ts <= Date.now(); });
+  }
+
+  // ---------- actions ----------
+  var toastT;
+  function toast(msg) { var el = $('toast'); el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(function () { el.hidden = true; }, 2600); }
+  function openSheet(json, text) {
+    $('sheet-text').textContent = text; $('sheet-area').value = json; $('sheet').hidden = false;
+    setTimeout(function () { try { $('sheet-area').focus(); $('sheet-area').select(); } catch (e) {} }, 30);
+  }
+  $('btn-sample').addEventListener('click', function () {
+    load();
+    var real = ALL.filter(function (e) { return !e.sample; }), sample = makeSample();
+    var room = Math.max(0, CAP - real.length), merged = real.concat(sample.slice(Math.max(0, sample.length - room)));
+    merged.sort(function (a, b) { return a.ts - b.ts; });
+    if (!save(merged)) { toast('Storage is full or blocked on this device.'); return; }
+    render(); toast('Loaded ' + n0(Math.min(sample.length, room)) + ' sample events.');
+  });
+  $('btn-clear').addEventListener('click', function () {
+    if (!confirm('Delete every analytics event stored on this device? This cannot be undone.')) return;
+    try { if (window.KurazhAnalytics) window.KurazhAnalytics.clear(); localStorage.removeItem(KEY); } catch (e) {}
+    render(); toast('Analytics log cleared.');
+  });
+  $('btn-export').addEventListener('click', function () {
+    load();
+    var json = JSON.stringify({ exported_at: new Date().toISOString(), source: KEY, count: ALL.length, events: ALL }, null, 2);
+    var a = document.createElement('a'), ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var blocked = !('download' in a) || navigator.standalone === true || (ios && window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+    if (!blocked) {
+      try {
+        var url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+        a.href = url; a.download = 'kurazh-analytics-' + dayKey(Date.now()) + '.json'; a.rel = 'noopener';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+        toast('Exported ' + n0(ALL.length) + ' events.');
+        return;
+      } catch (e) { /* fall through to the textarea */ }
+    }
+    openSheet(json, 'Downloads are blocked here. Select all and copy the log below.');
+  });
+  $('sheet-close').addEventListener('click', function () { $('sheet').hidden = true; });
+  $('sheet').addEventListener('click', function (e) { if (e.target === $('sheet')) $('sheet').hidden = true; });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') $('sheet').hidden = true; });
+  $('sheet-copy').addEventListener('click', function () {
+    var ta = $('sheet-area'); ta.focus(); ta.select();
+    var ok = false;
+    try { if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(ta.value).then(function () { toast('Copied.'); }, function () { toast('Select all and copy manually.'); }); return; } } catch (e) {}
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    toast(ok ? 'Copied.' : 'Select all and copy manually.');
+  });
+  $('range').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    state.days = +b.getAttribute('data-d');
+    this.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    render();
+  });
+  $('metric').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    state.metric = b.getAttribute('data-m');
+    this.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    renderChart(inRange());
+  });
+  var qt;
+  $('f-q').addEventListener('input', function () { var v = this.value; clearTimeout(qt); qt = setTimeout(function () { state.q = v.trim(); renderTable(); }, 120); });
+  $('f-name').addEventListener('change', function () { state.name = this.value; renderTable(); });
+  var rt;
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(drawChart, 120); });
+  window.addEventListener('storage', function (e) { if (e.key === KEY) render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>
