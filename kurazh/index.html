@@ -463,6 +463,7 @@
   .amt-own .inp.on { border-color: var(--gold); }
   .amt-own small { font-size: 12px; color: var(--muted); }
   .amt-own small.bad { color: var(--bad); }
+  .bad-t { color: var(--bad); font-weight: 600; }
   .vsafe { display: flex; gap: 12px; align-items: flex-start; margin-top: 14px; padding: 13px 14px; border-radius: 14px; background: rgba(30,58,44,.55); border: 1px solid var(--line2); font-size: 13.5px; color: var(--cash); line-height: 1.45; }
   .vsafe svg { color: var(--gold2); margin-top: 2px; }
   .vsafe b { color: var(--van); }
@@ -1107,8 +1108,12 @@ const cardIcon = (c) => `<span class="cardic">${{ Visa: 'VISA', Mastercard: 'MC'
 const cardPart = (b) => (b.cardAmt ?? b.amount);
 const heldNow = () => S.backs.filter((b) => b.status === 'held').reduce((a, b) => a + cardPart(b), 0);
 function heldToday() {
-  return S.tx.filter((t) => t.kind === 'hold' && t.t >= dayStart()).reduce((a, t) => a + Math.abs(t.amount), 0);
+  const d0 = dayStart(), sum = (k) => S.tx.filter((t) => t.kind === k && t.t >= d0).reduce((a, t) => a + Math.abs(t.amount), 0);
+  return Math.max(0, Math.round((sum('hold') - sum('release')) * 100) / 100);
 }
+// how much more can be held today: card room plus Kurazh credits (credits never count toward the limit)
+const holdRoom = () => Math.max(0, Math.round((CUR.holdLimit - heldToday()) * 100) / 100);
+const maxStake = () => Math.round((holdRoom() + creditBal()) * 100) / 100;
 
 /* Kurazh credits: decline fees reach backers as credits. Non-withdrawable, used before the card on the next stake, expire after 60 days. */
 const liveCredits = () => S.credits.filter((c) => c.remaining > 0.004 && c.expiresAt > Date.now());
@@ -1214,8 +1219,8 @@ function renderPay() {
       <div><span class="ic">${ico('check', 15)}</span><span><b>If it counts</b> (at least ${PASS * 100}% yes), the hold is charged and goes to the Taker, minus the ${FEE * 100}% fee.</span></div>
       <div><span class="ic">${ico('undo', 15)}</span><span><b>If it doesn’t,</b> or the Taker passes or runs out of time, the hold is released in full${credit > 0 ? ' and your credits come back' : ''}.</span></div>
     </div>
-    <div class="muted small" style="margin-top:12px">Daily hold limit ${money(CUR.holdLimit)} · ${money(left)} left today. Your bank may show the hold as pending.</div>
-    <button class="btn gold block" data-pay="go" style="margin-top:16px;height:54px">${ico('lock', 18)}<span data-k="pg">Hold ${money(o.amount)}</span></button>
+    <div class="muted small" style="margin-top:12px">Daily hold limit ${money(CUR.holdLimit)} · <span data-k="pl" class="${onCard > left ? 'bad-t' : ''}">${money2(left)} left today</span>. Released holds don’t count. Your bank may show the hold as pending.</div>
+    <button class="btn gold block" data-pay="go" style="margin-top:16px;height:54px" ${onCard > left ? 'disabled' : ''}>${ico('lock', 18)}<span data-k="pg">${onCard > left ? `Over today’s limit by ${money2(onCard - left)}` : `Hold ${money(o.amount)}`}</span></button>
     <div class="note">Demo: no card is charged and no bank is contacted. In production a licensed payment provider places the hold (a card authorization), then captures or releases it.</div>`);
   o.shape = `${credit > 0}|${onCard > 0}`; o.ownBad = false;
   if (!o.own) o.chipAmount = o.amount;
@@ -1228,7 +1233,7 @@ $('#pay').addEventListener('input', (e) => {
   e.target.classList.toggle('on', typed);
   $$('#p-amt .chip').forEach((c) => c.classList.toggle('on', !typed && +c.dataset.v === o.amount));
   n.className = typed && !ok ? 'bad' : '';
-  n.textContent = !typed ? `${money(min)}–${money(CUR.holdLimit)}` : v < min ? `From ${money(min)}` : v > CUR.holdLimit ? `Up to ${money(CUR.holdLimit)}` : '';
+  n.textContent = ownHint(typed ? v : NaN, min);
   o.ownBad = typed && !ok; o.ownMin = min;
   if (!o.shape) { const cr = Math.min(creditBal(), o.amount); o.shape = `${cr > 0}|${o.amount - cr > 0}`; }
   if (ok) { o.amount = v; o.own = true; }
@@ -1237,7 +1242,10 @@ $('#pay').addEventListener('input', (e) => {
   const cr = round2(Math.min(creditBal(), o.amount));
   $$('#pay [data-k="pc"]').forEach((x) => (x.textContent = money2(cr)));
   $$('#pay [data-k="po"]').forEach((x) => (x.textContent = money2(round2(o.amount - cr))));
-  $('[data-k="pg"]').textContent = o.ownBad ? 'Enter an amount' : `Hold ${money(o.amount)}`;
+  const over = round2(o.amount - cr) - holdRoom();
+  $('[data-k="pg"]').textContent = o.ownBad ? (typed && v > maxStake() ? `Over today’s limit by ${money2(v - maxStake())}` : 'Enter an amount') : over > 0 ? `Over today’s limit by ${money2(over)}` : `Hold ${money(o.amount)}`;
+  const go = $('#pay [data-pay="go"]'); if (go) go.disabled = o.ownBad || over > 0;
+  $('#pay [data-k="pl"]')?.classList.toggle('bad-t', over > 0 || (typed && v > maxStake()));
 });
 $('#pay').addEventListener('keydown', (e) => { if (e.target.id === 'p-own' && e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
 function renderLinkCard() {
@@ -1282,12 +1290,12 @@ $('#pay').addEventListener('click', (e) => {
   else if (act === 'back') renderPay();
   else if (act === 'go') {
     const o = payCtx, c = defCard();
-    if (o.ownBad) { toast(`Enter an amount from ${money(o.ownMin)} to ${money(CUR.holdLimit)}`, 'bad'); sfx('error'); $('#p-own')?.focus(); return; }
+    if (o.ownBad) { toast(`Enter an amount from ${money(o.ownMin)} to ${money(maxStake())}`, 'bad'); sfx('error'); $('#p-own')?.focus(); return; }
     // the credit/card split shown may be from before the amount was typed: re-check it
     const shape = (a) => { const cr = Math.min(creditBal(), a); return `${cr > 0}|${a - cr > 0}`; };
     if (o.own && shape(o.amount) !== o.shape) { renderPay(); return; }
     const credit = round2(Math.min(creditBal(), o.amount)), onCard = round2(o.amount - credit);
-    if (onCard > CUR.holdLimit - heldToday()) { toast(`That would go over your daily hold limit of ${money(CUR.holdLimit)}`, 'bad'); sfx('error'); return; }
+    if (onCard > holdRoom()) { toast(holdRoom() > 0 ? `You can hold ${money2(holdRoom())} more today. Try a smaller amount` : `Daily hold limit of ${money(CUR.holdLimit)} reached. It resets at midnight`, 'bad'); sfx('error'); return; }
     b.disabled = true; b.textContent = onCard > 0 ? 'Authorizing with your bank…' : 'Applying your credits…';
     setTimeout(() => {
       if (payCtx !== o) return;
@@ -1713,10 +1721,12 @@ queueMicrotask(() => sheetSwipe($('#sheet'), closeSheet));
 $('#sheet').addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeSheet(); });
 const sheetHead = (title, sub = '') => `<div class="sh-head"><div><h2>${title}</h2>${sub ? `<div class="sub">${sub}</div>` : ''}</div><button class="x" data-close aria-label="Close">${ico('x', 16)}</button></div>`;
 // "Your amount" field beside preset chips. Typing switches the chips off; tapping a chip clears it.
-const amtOwn = (id, min, label = 'Your amount') => `<div class="amt-own"><span>${label}</span><label>${CUR.prefix ? `<i>${CUR.sym}</i>` : ''}<input class="inp" id="${id}" type="number" inputmode="decimal" min="${min}" max="${CUR.holdLimit}" step="0.01" placeholder="Other" aria-label="${label}, from ${money(min)} to ${money(CUR.holdLimit)}" /></label><small data-k="${id}-n">${money(min)}–${money(CUR.holdLimit)}</small></div>`;
+const amtOwn = (id, min, label = 'Your amount') => { const mx = maxStake(); return `<div class="amt-own"><span>${label}</span><label>${CUR.prefix ? `<i>${CUR.sym}</i>` : ''}<input class="inp" id="${id}" type="number" inputmode="decimal" min="${min}" max="${mx}" step="0.01" placeholder="Other" aria-label="${label}, from ${money(min)} to ${money(mx)}" /></label><small data-k="${id}-n">${ownRange(min)}</small></div>`; };
+const ownRange = (min) => { const mx = maxStake(); return mx < min ? 'Daily limit reached' : mx < CUR.holdLimit ? `Up to ${money(mx)} today` : `${money(min)}–${money(mx)}`; };
+const ownHint = (v, min) => { const mx = maxStake(); return !Number.isFinite(v) ? ownRange(min) : v < min ? `From ${money(min)}` : v > mx ? (mx < CUR.holdLimit ? `${money(mx)} left today` : `Up to ${money(mx)}`) : ''; };
 // NaN when empty; otherwise the amount rounded to cents (validity is checked by the caller)
 const ownVal = (el) => { const raw = String(el?.value ?? '').replace(',', '.').trim(); return raw === '' ? NaN : Math.round(+raw * 100) / 100; };
-const ownOk = (v, min) => Number.isFinite(v) && v >= min && v <= CUR.holdLimit;
+const ownOk = (v, min) => Number.isFinite(v) && v >= min && v <= maxStake();
 const chipRow = (id, vals, on, label, cls = '') => `<div class="chips" id="${id}">${vals.map((v) => `<button type="button" class="chip ${cls} ${v === on ? 'on' : ''}" data-v="${v}">${label(v)}</button>`).join('')}</div>`;
 
 function openDares(st) {
@@ -1753,7 +1763,7 @@ function openDares(st) {
     inp.classList.toggle('on', typed);
     if (typed) body.querySelectorAll(`${sel} .chip`).forEach((c) => c.classList.remove('on'));
     n.className = typed && !ok ? 'bad' : '';
-    n.textContent = !typed ? `${money(min)}–${money(CUR.holdLimit)}` : v < min ? `From ${money(min)}` : v > CUR.holdLimit ? `Up to ${money(CUR.holdLimit)}` : '';
+    n.textContent = ownHint(typed ? v : NaN, min);
     return !typed || ok;
   };
   const tagOn = () => body.querySelector('#d-type .chip.on')?.dataset.v || '';
@@ -1782,7 +1792,7 @@ function openDares(st) {
     const b = e.target.closest('[data-back]');
     if (b) {
       const s = streamOf(sheetCtx.id), d = b.dataset.back === 'active' ? s.active?.d : s.dares.find((x) => x.id === b.dataset.back);
-      if (!ownState('#d-amt')) { toast(`Add from ${money(CUR.back[0])} to ${money(CUR.holdLimit)}`, 'bad'); sfx('error'); body.querySelector('#d-amt-own').focus(); return; }
+      if (!ownState('#d-amt')) { toast(`Add from ${money(CUR.back[0])} to ${money(maxStake())}`, 'bad'); sfx('error'); body.querySelector('#d-amt-own').focus(); return; }
       if (d) backDare(s, d, amt('#d-amt'), () => { renderDaresSheet(true); updateCard(s, true); });
     }
   });
@@ -1793,7 +1803,7 @@ function openDares(st) {
   body.querySelector('#d-amt-own').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
   $('#d-form').addEventListener('submit', (e) => {
     e.preventDefault();
-    if (!ownState('#d-pool')) { toast(`Your stake can be from ${money(mn)} to ${money(CUR.holdLimit)}`, 'bad'); sfx('error'); return; }
+    if (!ownState('#d-pool')) { toast(`Your stake can be from ${money(mn)} to ${money(maxStake())}`, 'bad'); sfx('error'); return; }
     proposeDare(streamOf(st.id) || st, $('#d-text').value, amt('#d-pool'), val('#d-time'), tagOn(), () => { $('#d-text').value = ''; body.querySelector('#d-pool-own').value = ''; upd(); renderDaresSheet(true); updateCard(st, true); });
   });
   renderDaresSheet(true);
