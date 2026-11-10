@@ -295,7 +295,9 @@
   .sheet-wrap.open .sheet-bg { opacity: 1; }
   .sheet-wrap.open .sheet { transform: none; }
   .grab { width: 38px; height: 4px; border-radius: 9px; background: var(--s3); margin: 10px auto 2px; flex: none; }
-  .sheet-body { overflow-y: auto; padding: 8px 16px calc(var(--sb) + 22px); -webkit-overflow-scrolling: touch; }
+  .sheet-body { overflow-y: auto; padding: 8px 16px calc(var(--sb) + 22px); -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  .sheet.dragging { transition: none; }
+  .grab { touch-action: none; }
   .sh-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin: 8px 0 4px; }
   .sh-head .sub { font-size: 13px; color: var(--cash); margin-top: 4px; }
   .x { width: 34px; height: 34px; border-radius: 50%; background: var(--s3); display: grid; place-items: center; flex: none; }
@@ -328,9 +330,10 @@
   .step small { display: block; font-size: 12px; color: var(--muted); }
 
   /* toasts / fx / onboarding */
-  #toasts { position: absolute; top: calc(var(--st) + 10px); left: 12px; right: 12px; z-index: 80; display: grid; gap: 8px; pointer-events: none; }
-  .toast { justify-self: center; max-width: 100%; padding: 11px 15px; border-radius: 14px; background: #1a211c; border: 1px solid var(--line);
-    font-size: 13.5px; font-weight: 600; color: var(--van); box-shadow: 0 12px 30px rgba(0,0,0,.45); animation: drop .3s ease; }
+  #toasts { position: absolute; top: calc(var(--st) + 6px); left: 16px; right: 16px; z-index: 80; display: grid; gap: 6px; pointer-events: none; }
+  .toast { justify-self: center; max-width: min(100%, 340px); padding: 8px 14px; border-radius: 12px; background: #1a211c; border: 1px solid var(--line);
+    font-size: 13px; line-height: 1.35; font-weight: 600; color: var(--van); box-shadow: 0 12px 30px rgba(0,0,0,.45); animation: drop .3s ease;
+    pointer-events: auto; cursor: pointer; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-align: center; }
   .toast.out { opacity: 0; transform: translateY(-8px); transition: .3s; }
   .toast.ok { border-color: rgba(147,180,156,.45); }
   .toast.bad { border-color: rgba(192,116,102,.5); }
@@ -352,6 +355,15 @@
   .auth { gap: 0; }
   .a-top { display: flex; align-items: center; justify-content: space-between; min-height: 34px; }
   .a-top .sp34 { width: 34px; }
+  /* tap targets: Apple's minimum is 44x44 pt. Small controls keep their look and get an invisible hit area. */
+  :where(button.chip, button.pill, button.follow, button.x, button.backb, .say button) { position: relative; }
+  :where(button.chip, button.pill, button.follow, button.x, button.backb, .say button)::after { content: ""; position: absolute; inset: -5px -4px; }
+  button.pill::after, button.follow::after { inset: -8px -4px; }
+  .cats .chip::after { inset: -7px -3px; }
+  button.x::after, button.backb::after { inset: -5px; }
+  @media (max-width: 400px) { button.follow::after { inset: -8px; } }
+  .cats { padding: 7px 20px 7px 3px; margin-block: -7px; }
+  .rbtn { min-width: 44px; min-height: 44px; justify-content: center; }
   .backb { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--s2); border: 1px solid var(--line); }
   .stepper { display: flex; gap: 6px; margin: 20px 0 8px; }
   .stepper i { flex: 1; height: 3px; border-radius: 3px; background: var(--s3); }
@@ -1054,8 +1066,10 @@ function toast(msg, kind = '') {
   const el = document.createElement('div');
   el.className = 'toast ' + kind; el.textContent = msg;
   const box = $('#toasts'); box.appendChild(el);
-  while (box.children.length > 3) box.firstChild.remove();
-  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 2800);
+  while (box.children.length > 2) box.firstChild.remove();
+  const hide = () => { if (el.classList.contains('out')) return; el.classList.add('out'); setTimeout(() => el.remove(), 300); };
+  el.addEventListener('click', hide); // tap to dismiss
+  setTimeout(hide, Math.min(3200, 1800 + msg.length * 18));
 }
 function goldDust(n = 28) {
   const app = $('#app'), cols = ['#b8975a', '#cdb27c', '#ece2cf', '#c8b69a'];
@@ -1152,6 +1166,33 @@ function deductFromStream(roomKey, fee) {
 let payCtx = null;
 function openPay(html) { const m = $('#pay'); m.querySelector('.pay-body').innerHTML = html; m.classList.add('open'); sfx('open'); }
 function closePay() { $('#pay').classList.remove('open'); payCtx = null; }
+// Drag down from the grabber, the header, or anywhere once the content is scrolled to the top.
+function sheetSwipe(wrap, close) {
+  const sh = wrap.querySelector('.sheet'); let y0 = 0, t0 = 0, dy = 0, on = false, armed = false;
+  sh.addEventListener('touchstart', (e) => {
+    if (!wrap.classList.contains('open') || e.touches.length !== 1) return;
+    const t = e.target, body = sh.querySelector('.sheet-body');
+    if (t.closest('input, textarea, select, .chips, .cats, .ideas')) { armed = false; return; }
+    armed = !!t.closest('.grab, .sh-head') || (body?.scrollTop || 0) <= 0;
+    y0 = e.touches[0].clientY; t0 = performance.now(); dy = 0; on = false;
+  }, { passive: true });
+  sh.addEventListener('touchmove', (e) => {
+    if (!armed) return;
+    dy = e.touches[0].clientY - y0;
+    if (!on && dy > 8) { on = true; sh.classList.add('dragging'); }
+    if (on) { if (e.cancelable) e.preventDefault(); sh.style.transform = `translateY(${Math.max(0, dy)}px)`; }
+    if (dy < -4 && !on) armed = false; // scrolling up: leave it to the content
+  }, { passive: false });
+  const end = () => {
+    if (!on) { armed = false; return; }
+    const v = dy / Math.max(1, performance.now() - t0);
+    sh.classList.remove('dragging'); on = armed = false;
+    if (dy > Math.min(140, sh.offsetHeight * 0.28) || (v > 0.6 && dy > 40)) { close(); sfx('tap'); }
+    sh.style.transform = '';
+  };
+  sh.addEventListener('touchend', end); sh.addEventListener('touchcancel', end);
+}
+sheetSwipe($('#pay'), closePay);
 function requestHold(o) {
   if (needKyc('back dares')) return;
   payCtx = { ...o };
@@ -1668,6 +1709,7 @@ function openSheet(html, ctx = {}) {
   return body;
 }
 function closeSheet() { $('#sheet').classList.remove('open'); sheetCtx = null; }
+queueMicrotask(() => sheetSwipe($('#sheet'), closeSheet));
 $('#sheet').addEventListener('click', (e) => { if (e.target.closest('[data-close]')) closeSheet(); });
 const sheetHead = (title, sub = '') => `<div class="sh-head"><div><h2>${title}</h2>${sub ? `<div class="sub">${sub}</div>` : ''}</div><button class="x" data-close aria-label="Close">${ico('x', 16)}</button></div>`;
 // "Your amount" field beside preset chips. Typing switches the chips off; tapping a chip clears it.
@@ -2097,7 +2139,7 @@ function setRole(role, first) {
 }
 $('#profile').addEventListener('click', (e) => {
   const r = e.target.closest('[data-role]');
-  if (r) { setRole(r.dataset.role, false); sfx('tap'); renderProfile(); toast(r.dataset.role === 'taker' ? 'Taker tonight. Go live sits in the middle of the tab bar' : 'Caller tonight. Dares sit in the middle of the tab bar', 'gold'); return; }
+  if (r) { setRole(r.dataset.role, false); sfx('tap'); renderProfile(); toast(r.dataset.role === 'taker' ? 'Taker mode. Go live is in the middle tab' : 'Caller mode. Dares is in the middle tab', 'gold'); return; }
   const b = e.target.closest('[data-p]'); if (!b) return;
   const p = b.dataset.p;
   if (p === 'rules') openRules();
@@ -3477,7 +3519,7 @@ async function onAuthClick(e) {
     const watching = !!pendingWatch;
     afterAuth();
     if (!watching) show(role === 'taker' ? 'live' : 'feed');
-    toast(role === 'taker' ? 'Taker tonight. Set your rules and go live' : 'Caller tonight. Find a stream and write the dare', 'gold');
+    toast(role === 'taker' ? 'Taker mode. Set your rules and go live' : 'Caller mode. Pick a stream and write a dare', 'gold');
   }
   else if (act === 'showpw') { const i = b.previousElementSibling; i.type = i.type === 'password' ? 'text' : 'password'; b.textContent = i.type === 'password' ? 'Show' : 'Hide'; }
   else if (act === 'resend') { sendCode(A.codeFor); go(A.step); toast('New code sent'); }
@@ -3585,7 +3627,7 @@ if (qs.has('dev')) setTimeout(openDev, 300);
 pageView(cur);
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
 window.Kurazh = { Safety, BANK, UNSAFE, ADULT_UNSAFE, S: () => S, streams, L, money, settle, byId, updateCard,
-  Room, joinRoom, leaveRoom, takerDecline, previewFee, liveRules, courageOf, myCourage, creditBal, earnAvail, earnPending, openReceipt, onGoogleIdentity, decodeJwt, setRole, show, cfg };
+  Room, joinRoom, leaveRoom, takerDecline, previewFee, liveRules, courageOf, myCourage, creditBal, earnAvail, earnPending, openReceipt, onGoogleIdentity, decodeJwt, setRole, show, cfg, toast };
 </script>
 </body>
 </html>
