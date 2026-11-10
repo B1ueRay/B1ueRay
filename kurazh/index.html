@@ -9,10 +9,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Kurazh" />
+<meta name="format-detection" content="telephone=no" />
+<meta name="kurazh-version" content="0.4.0-demo" />
 <link rel="manifest" href="manifest.webmanifest" data-pwa />
 <link rel="icon" href="icon.svg" type="image/svg+xml" data-pwa />
-<link rel="apple-touch-icon" href="icon-192.png" data-pwa />
-<title>Kurazh</title>
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" data-pwa />
+<title>Kurazh · Call it or do it.</title>
+<script src="config.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" />
@@ -46,8 +49,8 @@
 
   #app { position: relative; height: 100dvh; max-width: 480px; margin: 0 auto; overflow: hidden; background: var(--bg); }
   .screens { position: absolute; inset: 0 0 calc(var(--nav) + var(--sb)) 0; }
-  body.is-live .screens { bottom: 0; }
-  body.is-live .tabbar { display: none; }
+  body.is-live .screens, body.is-watch .screens { bottom: 0; }
+  body.is-live .tabbar, body.is-watch .tabbar { display: none; }
   .screen { position: absolute; inset: 0; display: none; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .screen.on { display: block; }
   #scr-feed { overflow: hidden; }
@@ -92,9 +95,10 @@
     font-size: 10.5px; font-weight: 600; letter-spacing: .02em; color: var(--muted); }
   .tab.on { color: var(--van); }
   .tab.on::before { content: ""; position: absolute; top: 0; width: 22px; height: 2px; border-radius: 2px; background: var(--gold); }
-  .tab-go { flex: 1; display: grid; place-items: center; }
-  .tab-go span { display: grid; place-items: center; width: 54px; height: 38px; border-radius: 13px; background: var(--gold); }
-  .tab-go span::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 3px var(--ink); }
+  .tab-go { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; font-weight: 700; letter-spacing: .02em; color: var(--cash); }
+  .tab-go span { display: grid; place-items: center; width: 54px; height: 34px; border-radius: 12px; background: var(--gold); color: var(--ink); }
+  .tab-go.golive span::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 3px var(--ink); }
+  .tab-go.on { color: var(--van); }
 
   /* feed */
   .feed-top { position: absolute; top: calc(var(--st) + 10px); left: 0; right: 0; z-index: 6; display: flex; gap: 8px; align-items: center; padding: 0 12px; }
@@ -445,6 +449,103 @@
   .drivebtn { cursor: pointer; }
   .drivebtn.on { background: var(--gold); color: var(--ink); border-color: var(--gold); }
   .tag svg { display: inline-block; }
+
+  /* roles, Google sign-in, Courage rules, real live rooms, money receipts */
+  .tagline { font: italic 600 48px/1 var(--serif); letter-spacing: -.01em; color: var(--van); text-wrap: balance; }
+  .onb .hero .tagline { font-size: 50px; }
+  .legal { font-size: 12px; color: var(--muted); text-align: center; margin-top: 14px; line-height: 1.5; }
+  .legal a, .linka { color: var(--gold2); text-decoration: none; font-weight: 700; }
+  .gbtn { background: var(--van); color: var(--ink); height: 54px; font-size: 16px; }
+  .gsi { display: flex; justify-content: center; min-height: 44px; align-items: center; }
+  .gsi-note { font-size: 11.5px; color: var(--muted); text-align: center; margin-top: 7px; }
+  .demo-tag { display: inline-flex; align-items: center; align-self: flex-start; height: 22px; padding: 0 8px; border-radius: 6px; border: 1px dashed var(--gold); color: var(--gold2); font-size: 10.5px; font-weight: 800; letter-spacing: .14em; }
+  .gcard { display: flex; gap: 12px; align-items: center; margin-top: 18px; padding: 12px 14px; border-radius: 16px; background: var(--s1); border: 1px solid var(--line); }
+  .gcard .grow { flex: 1; min-width: 0; } .gcard b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gcard small { display: block; color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ava img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+  .gacc { display: flex; gap: 12px; align-items: center; padding: 13px 14px; border-radius: 16px; background: var(--s1); border: 1px solid var(--line); text-align: left; width: 100%; }
+  .gacc .grow { flex: 1; min-width: 0; } .gacc small { display: block; color: var(--muted); font-size: 12.5px; }
+  .role-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 18px 0 6px; }
+  .rolecards { display: grid; gap: 12px; margin-top: 22px; }
+  .rolecard { position: relative; display: flex; gap: 16px; align-items: center; padding: 22px 18px; border-radius: 22px; text-align: left; overflow: hidden;
+    background: linear-gradient(160deg, var(--green) 0%, #122119 100%); border: 1px solid var(--line2); transition: transform .12s, box-shadow .2s; }
+  .rolecard.alt { background: linear-gradient(160deg, #1b1812 0%, #0e0d0a 100%); }
+  .rolecard::after { content: ""; position: absolute; right: -46px; top: -46px; width: 150px; height: 150px; border-radius: 50%; border: 1px solid rgba(205,178,124,.16); pointer-events: none; }
+  .rolecard:active { transform: scale(.985); }
+  .rolecard.on { box-shadow: inset 0 0 0 1.5px var(--gold); }
+  .rolecard .ric { flex: none; width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; border: 1px solid var(--line2); color: var(--gold2); }
+  .rolecard .rt { flex: 1; min-width: 0; }
+  .rolecard b { display: block; font: 600 32px/1 var(--serif); }
+  .rolecard .rt span { display: block; color: var(--cash); margin-top: 7px; font-size: 14px; }
+  .foot-tag { text-align: center; font: italic 600 24px var(--serif); color: var(--gold2); margin-top: 16px; }
+  .c-tags .cour, .cour { color: var(--gold2); border-color: var(--line2); }
+  .rgate { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; text-align: center; padding: 0 34px; background: rgba(5,6,5,.82); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .rgate h2 { margin-bottom: 8px; } .rgate p { color: var(--cash); font-size: 14px; } .rgate .btn { margin-top: 16px; }
+  .write { display: block; position: relative; margin-top: 14px; }
+  .write > b { display: block; font: 600 24px/1.1 var(--serif); margin-bottom: 9px; }
+  .write textarea.inp { height: 100px; font-size: 17px; border-color: var(--line2); background: var(--s2); padding-bottom: 24px; }
+  .write .count { position: absolute; right: 12px; bottom: 9px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .cnote { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; padding: 11px 13px; border-radius: 12px; background: rgba(30,58,44,.45); border: 1px solid var(--line2); font-size: 12.5px; color: var(--cash); line-height: 1.45; }
+  .cnote svg { color: var(--gold2); margin-top: 1px; } .cnote b { color: var(--van); }
+  .reasons { display: grid; gap: 8px; margin-top: 16px; }
+  .reasons .row .t small { display: block; font-weight: 500; font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+  .reasons .row.safe { border-color: rgba(147,180,156,.4); }
+  .lv-rail { position: absolute; right: 12px; top: calc(var(--st) + 54px); display: grid; gap: 10px; z-index: 2; }
+  .lv-rail .iconb { width: 42px; height: 42px; }
+  .iconb.off { color: var(--bad); border-color: rgba(192,116,102,.5); }
+  .lv-active { right: 66px; }
+  .lv-shield { right: 66px; flex-wrap: wrap; }
+  .lv-say { display: flex; gap: 6px; }
+  .lv-say input { flex: 1; min-width: 0; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--glass); padding: 0 13px; outline: none; font-size: 16px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .lv-say button { width: 40px; height: 40px; border-radius: 12px; background: var(--green); display: grid; place-items: center; }
+  .ign { display: inline-flex; align-items: center; gap: 4px; color: var(--cash); font-variant-numeric: tabular-nums; }
+  .ign.low { color: var(--bad); }
+  .icard.below { opacity: .72; }
+  .st.real { background: rgba(147,180,156,.16); color: var(--ok); }
+  .st.bad { background: rgba(192,116,102,.16); color: var(--bad); }
+  .brk { display: grid; gap: 5px; margin-top: 4px; font-size: 13px; color: var(--cash); }
+  .brk div { display: flex; justify-content: space-between; gap: 10px; }
+  .brk .neg { color: var(--bad); } .brk .tot { color: var(--van); font-weight: 700; border-top: 1px solid var(--line); padding-top: 6px; }
+  .bn.credit { border-color: rgba(147,180,156,.5); }
+  .bn.credit .big { font: 600 30px/1 var(--serif); color: var(--ok); }
+  .bn.debit { border-color: rgba(192,116,102,.5); }
+  .bn.debit .big { font: 600 30px/1 var(--serif); color: var(--bad); }
+  .dot-st { display: inline-flex; align-items: center; gap: 6px; }
+  .dot-st::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+  .dot-st.ok::before { background: var(--ok); } .dot-st.warn::before { background: var(--gold2); animation: blink 1.2s infinite; } .dot-st.bad::before { background: var(--bad); }
+  .rclose { flex: none; }
+  .unmute { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%); z-index: 3; height: 44px; padding: 0 18px; border-radius: 999px; display: inline-flex; align-items: center; gap: 8px;
+    background: var(--glass); border: 1px solid var(--line2); color: var(--van); font-weight: 700; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+  .rstat { position: absolute; top: calc(var(--st) + 100px); left: 12px; z-index: 2; }
+  .watch .banner { top: calc(var(--st) + 136px); }
+  .watch .c-top { top: calc(var(--st) + 12px); }
+  .watch .rstat { top: calc(var(--st) + 62px); }
+  .watch .banner { top: calc(var(--st) + 100px); }
+  .room-mini { position: absolute; left: 12px; right: 12px; bottom: calc(var(--nav) + var(--sb) + 10px); z-index: 25; display: flex; gap: 10px; align-items: center; padding: 9px 9px 9px 14px; border-radius: 16px;
+    background: var(--glass); border: 1px solid var(--line2); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .room-mini .grow { flex: 1; min-width: 0; font-size: 13px; color: var(--cash); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .room-mini .grow b { color: var(--van); }
+  .qr { width: 204px; height: 204px; margin: 16px auto 0; padding: 10px; background: var(--van); border-radius: 18px; display: grid; place-items: center; }
+  .qr img, .qr canvas { width: 184px !important; height: 184px !important; display: block; }
+  .qr.off { background: var(--s2); border: 1px dashed var(--line2); color: var(--muted); font-size: 12px; text-align: center; padding: 18px; }
+  .code-big { font: 600 34px/1 var(--serif); letter-spacing: .18em; text-align: center; color: var(--gold2); margin-top: 14px; font-variant-numeric: lining-nums; }
+  .linkbox { display: flex; gap: 8px; margin-top: 14px; }
+  .linkbox .inp { height: 44px; font-size: 13px; color: var(--cash); }
+  .sum3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; position: relative; z-index: 1; margin-bottom: 14px; }
+  .sum3 div { padding: 10px; border-radius: 12px; background: rgba(0,0,0,.22); border: 1px solid var(--line); }
+  .sum3 b { display: block; font: 600 20px/1 var(--serif); font-variant-numeric: lining-nums; } .sum3 span { font-size: 11px; color: var(--cash); }
+  .kv { display: flex; justify-content: space-between; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .kv > span:first-child { color: var(--muted); flex: none; } .kv > span:last-child { text-align: right; min-width: 0; overflow-wrap: anywhere; }
+  .kv.neg > span:last-child { color: var(--bad); } .kv.tot > span:last-child { font-weight: 800; color: var(--gold2); }
+  .tls { display: grid; gap: 12px; margin-top: 14px; }
+  .tls > div { display: flex; gap: 12px; align-items: flex-start; font-size: 13.5px; color: var(--muted); }
+  .tls i { flex: none; width: 12px; height: 12px; margin-top: 3px; border-radius: 50%; border: 1.5px solid var(--muted); }
+  .tls .done { color: var(--van); } .tls .done i { background: var(--gold); border-color: var(--gold); }
+  .tls .bad i { background: var(--bad); border-color: var(--bad); }
+  .tls small { display: block; color: var(--muted); font-size: 12px; }
+  .amt small { display: block; font: 500 11px var(--sans); color: var(--muted); margin-top: 3px; }
+  .dev .inp { font-size: 16px; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; overflow-wrap: anywhere; }
 </style>
 </head>
 <body>
@@ -453,6 +554,7 @@
     <section class="screen on" id="scr-feed">
       <div class="feed-top">
         <button class="pill fbtn" id="fbtn" aria-label="Stream filters"></button>
+        <button class="pill fbtn" id="joinbtn" aria-label="Join by code"></button>
         <div class="cats" id="cats"></div>
         <button class="pill balance" data-tab="wallet" aria-label="Balance"><b data-bal class="num">0</b></button>
       </div>
@@ -474,15 +576,19 @@
     <section class="screen" id="scr-live">
       <div class="page" id="live-setup">
         <h1>Go live</h1>
-        <p class="lead">Viewers suggest dares and pool money behind them. You decide what to take on.</p>
+        <p class="lead">Callers write the dare and back it. You set the rules and decide what to take on.</p>
         <div class="preview"><canvas id="prev-canvas"></canvas><span class="pill" id="cam-note">Your camera turns on when you start</span></div>
         <label class="field"><span>Stream title</span><input class="inp" id="lv-title" maxlength="60" placeholder="e.g. Evening walk along the seafront" /></label>
         <div class="field"><span>Category</span><div class="chips" id="lv-cat"></div></div>
-        <div class="field"><span>Dares you accept</span><div class="chips" id="lv-allow"></div></div>
+        <div class="field"><span>Dare types you accept</span><div class="chips" id="lv-allow"></div></div>
         <div class="field"><span>What you’re doing · up to 3</span><div class="chips" id="lv-themes"></div></div>
         <div class="vsafe" id="lv-vsafe" hidden></div>
         <div class="field"><span>Minimum stake per dare</span><div class="chips" id="lv-min"></div>
           <div class="minrow"><span>Custom</span><input class="inp" id="lv-min-custom" type="number" inputmode="decimal" min="1" step="1" placeholder="Amount" aria-label="Custom minimum stake" /></div></div>
+        <div class="field"><span>Minimum viewer age</span><div class="chips" id="lv-age"></div></div>
+        <div class="field"><span>Free passes per stream</span><div class="chips" id="lv-passes"></div></div>
+        <div class="cnote" id="lv-courage"></div>
+        <div class="menu" style="margin-top:16px"><button id="lv-demo"></button></div>
         <button class="check" id="lv-drive" hidden><i></i><span>I never take dares while driving. Racing dares only on a closed track, never on public roads.</span></button>
         <button class="check" id="lv-adult" hidden><i></i><span>Everyone on camera is over 18 and consents to the broadcast. I won't stream in public places or arrange meetups.</span></button>
         <button class="check" id="lv-agree"><i></i><span>I won't do dangerous dares, I respect people around me, and I can decline any dare without penalty</span></button>
@@ -495,25 +601,34 @@
         <div class="lv-top">
           <span class="live">LIVE <b id="lv-time" class="num">0:00</b></span>
           <span class="pill" id="lv-viewers-p"></span>
-          <span class="pill"><b id="lv-earned" class="gold num">$0</b></span>
+          <span class="pill" aria-label="Earned this stream"><span class="muted small">Earned</span><b id="lv-earned" class="gold num">$0</b></span>
           <span class="sp"></span>
           <button class="pill drivebtn" id="lv-drivebtn" hidden aria-pressed="false"></button>
-          <button class="iconb" id="lv-flip" aria-label="Switch camera"></button>
           <button class="iconb" id="lv-end" aria-label="End stream"></button>
         </div>
-        <div class="lv-shield"><span class="pill" id="lv-shield"></span></div>
+        <div class="lv-rail">
+          <button class="iconb" id="lv-flip" aria-label="Switch camera"></button>
+          <button class="iconb" id="lv-mic" aria-label="Mute microphone" aria-pressed="false"></button>
+          <button class="iconb" id="lv-share" aria-label="Share stream"></button>
+          <button class="iconb" id="lv-rules" aria-label="Stream rules"></button>
+        </div>
+        <div class="lv-shield"><span class="pill" id="lv-shield"></span><button class="pill" id="lv-room"></button></div>
         <div class="lv-active" id="lv-active"></div>
         <div class="lv-bottom">
           <div class="chat" id="lv-chat"></div>
           <div class="inc" id="lv-incoming"></div>
+          <form class="lv-say" id="lv-say"><input enterkeyhint="send" maxlength="120" placeholder="Talk to your viewers" aria-label="Chat message" /><button aria-label="Send"></button></form>
         </div>
       </div>
     </section>
+
+    <section class="screen" id="scr-watch"><div class="watch" id="watch"></div></section>
 
     <section class="screen" id="scr-wallet"><div class="page" id="wallet"></div></section>
     <section class="screen" id="scr-profile"><div class="page" id="profile"></div></section>
   </div>
 
+  <div class="room-mini" id="room-mini" hidden></div>
   <nav class="tabbar" id="tabbar"></nav>
 
   <div class="sheet-wrap" id="sheet"><div class="sheet-bg" data-close></div><div class="sheet"><div class="grab"></div><div class="sheet-body" id="sheet-body"></div></div></div>
@@ -521,6 +636,9 @@
   <div id="toasts" role="status" aria-live="polite"></div>
 </div>
 
+<script src="sound.js"></script>
+<script src="analytics.js"></script>
+<script src="live.js"></script>
 <script>
 'use strict';
 /* ═════════ currency ═════════
@@ -620,19 +738,18 @@ const adultOn = () => S.verified && S.settings.adult;
 
 /* ═════════ safety filter (English, Ukrainian and Russian input) ═════════ */
 const Safety = (() => {
-  const norm = (s) => ' ' + String(s).toLowerCase().replace(/ё/g, 'е').replace(/[^a-zа-яіїєґ0-9]+/g, ' ').trim() + ' ';
   // Always on, in every room.
   const BASE = [
     { cat: 'Dangerous', hint: 'No heights, fire, roads, vehicles, choking or risky stunts.',
-      stems: ['overtak', 'tailgat', 'обгон', 'обгін', 'превыш', 'перевищ', 'roof', 'ledge', 'balcon', 'fire', 'lighter', 'burn', 'knife', 'knive', 'blade', 'weapon', 'chok', 'strangl', 'suffocat', 'drown', 'overdose', 'poison', 'railway', 'railroad', 'highway', 'bleach',
+      stems: ['overtak', 'tailgat', 'обгон', 'обгін', 'превыш', 'перевищ', 'roof', 'ledge', 'balcon', 'lighter', 'burn', 'knife', 'knive', 'blade', 'weapon', 'chok', 'strangl', 'suffocat', 'drown', 'overdose', 'poison', 'railway', 'railroad', 'highway', 'bleach',
         'спрыг', 'крыш', 'дах', 'высот', 'висот', 'карниз', 'балкон', 'огон', 'огн', 'вогн', 'зажигал', 'поджиг', 'подожг', 'поджог', 'підпал', 'лезви', 'порез', 'оруж', 'зброя', 'пистолет', 'задох', 'задуш', 'удуш', 'утоп', 'таблет', 'отрав', 'розетк', 'рельс', 'поезд', 'потяг', 'электрич', 'трасс', 'шоссе', 'перебег', 'перебеж'],
-      words: ['gun', 'guns', 'pill', 'pills', 'train', 'trains', 'нож', 'ножа', 'ножом', 'ніж', 'speeding', 'drift', 'drifting', 'burnout'],
-      phrases: ['jump off', 'jump from', 'red light', 'behind the wheel', 'hold your breath', 'eat soap', 'tide pod', 'run across the road', 'cross the road', 'in front of a car',
+      words: ['fire', 'fires', 'gun', 'guns', 'pill', 'pills', 'train', 'trains', 'нож', 'ножа', 'ножом', 'ніж', 'speeding', 'drift', 'drifting', 'burnout'],
+      phrases: ['set fire', 'on fire', 'jump off', 'jump from', 'red light', 'behind the wheel', 'hold your breath', 'eat soap', 'tide pod', 'run across the road', 'cross the road', 'in front of a car',
         'прыгни с', 'прыгнуть с', 'стрибни з', 'на красный', 'на червоне', 'за руль', 'не дыши', 'бытовую химию',
         'while driving', 'while you drive', 'street race', 'race on the road', 'no seatbelt', 'without a seatbelt', 'top speed', 'floor it', 'text and drive', 'hands off the wheel', 'без ремня', 'на скорости', 'на швидкості'] },
     { cat: 'Alcohol & drugs', hint: 'Alcohol, tobacco and drugs are banned in every stream.',
-      stems: ['alcohol', 'vodka', 'beer', 'wine', 'whisk', 'tequila', 'booze', 'drunk', 'chug', 'cocaine', 'drug', 'cigarett', 'vape', 'hookah', 'champagne',
-        'алкогол', 'водк', 'горілк', 'пив', 'коньяк', 'виски', 'віскі', 'бухн', 'бухать', 'залпом', 'наркот', 'травк', 'сигарет', 'цигарк', 'вейп', 'кальян', 'самогон', 'шампанск'],
+      stems: ['alcohol', 'vodka', 'beer', 'wine', 'whiske', 'whisky', 'tequila', 'booze', 'drunk', 'chug', 'cocaine', 'drug', 'cigarett', 'vape', 'hookah', 'champagne',
+        'алкогол', 'водк', 'горілк', 'пив', 'коньяк', 'виски', 'віскі', 'бухн', 'бухать', 'залпом', 'vodk', 'gorilk', 'horilk', 'zalpom', 'наркот', 'травк', 'сигарет', 'цигарк', 'вейп', 'кальян', 'самогон', 'шампанск'],
       words: ['rum', 'weed', 'smoke', 'smoking', 'вино', 'вина', 'вином', 'кури', 'курить', 'покури', 'палити', 'ром', 'пьяный'] },
     { cat: 'Illegal', hint: 'Theft, vandalism and breaking the law are banned.',
       stems: ['steal', 'stole', 'shoplift', 'vandal', 'graffiti', 'counterfeit', 'украд', 'украсть', 'укради', 'вкрад', 'поцуп', 'своруй', 'краж', 'стащи', 'взлом', 'злам', 'вандал'],
@@ -662,7 +779,7 @@ const Safety = (() => {
       stems: ['meet', 'hotel', 'escort', 'встрет', 'встреч', 'зустр', 'приезж', 'приїзд', 'эскорт', 'ескорт', 'готел', 'отел'],
       phrases: ['in person', 'come over', 'hourly rate', 'per hour', 'в реале', 'наживо'], words: ['irl'] },
     { cat: 'Off-platform contacts', hint: 'No contact swapping: all communication stays inside Kurazh.',
-      stems: ['telegram', 'whatsapp', 'snapchat', 'instagram', 'onlyfans', 'discord', 'телеграм', 'ватсап', 'вайбер', 'viber', 'инстаграм', 'інстаграм'],
+      stems: ['telegram', 'whatsapp', 'snapchat', 'instagram', 'onlyfans', 'discord', 'телеграм', 'ватсап', 'вайбер', 'viber', 'инстаграм', 'інстаграм', 'телег', 'whatsap', 'vatsap'],
       words: ['insta', 'snap', 'kik', 'tg', 'тг', 'dm', 'dms'] },
     { cat: 'Public places', hint: '18+ streams happen only in private spaces, with no bystanders.',
       stems: ['street', 'outside', 'public', 'stranger', 'neighbo', 'elevator', 'passerby', 'улиц', 'вулиц', 'подъезд', 'прохож', 'перехож', 'сосед', 'сусід'],
@@ -670,27 +787,108 @@ const Safety = (() => {
   ];
   const PEOPLE = ['stranger', 'passerby', 'random', 'незнаком', 'незнайом', 'прохож', 'перехож'];
   const CONTACT = ['kiss', 'hug', 'touch', 'grab', 'lick', 'spank', 'поцел', 'поцілу', 'обним', 'обійм', 'трог', 'торкн', 'щуп', 'шлеп', 'лизн'];
-  function scan(text, mode = 'general') {
-    const n = norm(text);
-    const words = n.trim().split(' ');
-    const has = (st) => words.some((w) => w.startsWith(st));
-    const rules = [...BASE, ...(mode === 'adult' ? ADULT : GENERAL)];
-    for (const r of rules) {
-      if ((r.stems || []).some(has) || (r.words || []).some((w) => words.includes(w)) || (r.phrases || []).some((p) => n.includes(' ' + p + ' '))) {
-        return { ok: false, cat: r.cat, hint: r.hint };
+  // Words that contain a blocked stem but are harmless. Removed before matching.
+  const ALLOW = new Set(['firework', 'fireworks', 'fireplace', 'fireplaces', 'firefly', 'fireflies', 'fireman', 'firefighter', 'firefighters',
+    'pivot', 'pivots', 'pivotal', 'tablet', 'tablets', 'utopia', 'utopian', 'dahlia', 'dahlias', 'whisk', 'whisking', 'whisked']);
+  // 18+ only: contact details that move people off the platform.
+  const LINKS = /(?:\bt\s*\.\s*me\b|telegram\s*\.\s*(?:me|org)|\bwa\s*\.\s*me\b|whatsapp\s*\.\s*com|instagram\s*\.\s*com|onlyfans\s*\.\s*com|snapchat\s*\.\s*com|discord\s*\.\s*gg|https?:\/\/|\bwww\s*\.|\.(?:com|net|org|ru|ua|me|io|gg|ly)\b\/?)/i;
+  const HANDLE = /(?:^|[\s(:,])@[\p{L}\p{N}_.]{2,}/u;
+  const PHONE = /(?:\+|\b)\d(?:[\s().-]*\d){8,}/;
+  const EMOJI = { '🍺': 'beer', '🍻': 'beer', '🍷': 'wine', '🍸': 'vodka', '🥃': 'whisky', '🍾': 'champagne', '🍶': 'vodka', '🚬': 'cigarette',
+    '💊': 'pill', '💉': 'drug', '🔪': 'knife', '🗡': 'knife', '🔫': 'gun', '🔥': 'fire', '💣': 'weapon', '🧨': 'fire' };
+  const INVIS = /[­͏؜ᅟᅠ឴឵᠋-᠎​-‏‪-‮⁠-⁯ㅤ︀-️﻿]/g;
+  const C2L = { а: 'a', е: 'e', о: 'o', р: 'p', с: 'c', х: 'x', у: 'y', і: 'i', к: 'k', м: 'm', т: 't', ѕ: 's', ј: 'j', ԁ: 'd', ӏ: 'l', ԛ: 'q', ԝ: 'w' };
+  const L2C = { a: 'а', e: 'е', o: 'о', p: 'р', c: 'с', x: 'х', y: 'у', i: 'і', k: 'к', m: 'м', t: 'т' };
+  const LEET = { 0: 'o', 1: 'i', 3: 'e', 4: 'a', 5: 's', 7: 't', '@': 'a', $: 's', '|': 'l' };
+  const TR = [['shch', 'щ'], ['sch', 'щ'], ['zh', 'ж'], ['kh', 'х'], ['ts', 'ц'], ['ch', 'ч'], ['sh', 'ш'], ['yu', 'ю'], ['ya', 'я'], ['yo', 'е'], ['ye', 'е'], ['ju', 'ю'], ['ja', 'я'],
+    ['a', 'а'], ['b', 'б'], ['c', 'ц'], ['d', 'д'], ['e', 'е'], ['f', 'ф'], ['g', 'г'], ['h', 'х'], ['i', 'и'], ['j', 'й'], ['k', 'к'], ['l', 'л'], ['m', 'м'], ['n', 'н'],
+    ['o', 'о'], ['p', 'п'], ['q', 'к'], ['r', 'р'], ['s', 'с'], ['t', 'т'], ['u', 'у'], ['v', 'в'], ['w', 'в'], ['x', 'кс'], ['y', 'ы'], ['z', 'з']];
+  const CYR = /[а-яіїєґ]/, LAT = /[a-z]/;
+  const map = (t, m) => [...t].map((c) => m[c] || c).join('');
+  const translit = (t, i) => { let o = '', k = 0; while (k < t.length) { const hit = TR.find(([l]) => t.startsWith(l, k)); if (hit) { o += hit[0] === 'i' ? i : hit[1]; k += hit[0].length; } else { o += t[k]; k++; } } return o; };
+  const norm = (s) => ' ' + s.replace(/[^a-zа-яіїєґ0-9]+/g, ' ').trim() + ' ';
+  // Lowercase, NFKC, no invisible characters, no Latin accents (Cyrillic й, ё, ї keep theirs), emoji spelled out.
+  function prep(text) {
+    let s = String(text).normalize('NFKC').replace(INVIS, '').toLowerCase();
+    s = s.normalize('NFD').replace(/([a-z])[̀-ͯ]+/g, '$1').normalize('NFC').replace(/ё/g, 'е');
+    for (const [e, w] of Object.entries(EMOJI)) s = s.split(e).join(` ${w} `);
+    return s;
+  }
+  // Every spelling the matcher tries: as typed, Latin skeleton (leet + homoglyphs), Cyrillic skeleton, transliterated, each with stretched letters squeezed and spaced-out letters joined.
+  function variants(text) {
+    const toks = prep(text).split(/\s+/).filter((t) => t && !ALLOW.has(t.replace(/[^\p{L}]/gu, ''))), out = new Map();
+    const add = (arr, tr) => {
+      const base = norm(arr.join(' '));
+      const words = base.trim().split(' ');
+      const joined = [];
+      for (let k = 0; k < words.length;) { // "r o o f", "v.o.d.k.a" → roof, vodka
+        let j = k; while (j < words.length && words[j].length === 1) j++;
+        if (j - k >= 3) { joined.push(words.slice(k, j).join('')); k = j; } else { joined.push(words[k]); k++; }
       }
+      for (const s of [base, ' ' + joined.join(' ') + ' ']) for (const v of [s, s.replace(/(\p{L})\1{2,}/gu, '$1$1'), s.replace(/(\p{L})\1+/gu, '$1')]) if (!out.has(v)) out.set(v, tr);
+    };
+    add(toks, false);
+    for (const one of ['i', 'l']) {
+      const lt = toks.map((t) => (/[\p{L}]/u.test(t) ? t.replace(/[013457@$|]/g, (c) => (c === '1' ? one : LEET[c])) : t));
+      add(lt.map((t) => map(t, C2L)), false);
+      add(lt.map((t) => (CYR.test(t) ? map(t, L2C) : t)), false);
+      if (one === 'i') for (const i of ['и', 'і']) add(lt.map((t) => (!CYR.test(t) && LAT.test(t) ? translit(t.replace(/[^a-z]/g, ''), i) : t)), true);
+    }
+    return out;
+  }
+  function match(rules, n, tr) {
+    const words = n.trim().split(' ');
+    // Transliterated text guesses Cyrillic, so short stems only match short words there ("dah" yes, "dahlia" no).
+    const has = (st) => words.some((w) => w.startsWith(st) && (!tr || st.length > 3 || w.length <= st.length + 2));
+    for (const r of rules) {
+      if ((r.stems || []).some(has) || (r.words || []).some((w) => words.includes(w)) || (r.phrases || []).some((p) => n.includes(' ' + p + ' '))) return { ok: false, cat: r.cat, hint: r.hint };
     }
     if (PEOPLE.some(has) && CONTACT.some(has)) return { ok: false, cat: 'Without consent', hint: 'No physical contact with strangers.' };
+    return null;
+  }
+  function scan(text, mode = 'general') {
+    const raw = prep(text);
+    if (PHONE.test(raw)) return { ok: false, cat: 'Personal data', hint: 'Never share addresses, documents, passwords or numbers.' };
+    if (mode === 'adult' && (LINKS.test(raw) || HANDLE.test(raw))) return { ok: false, cat: 'Off-platform contacts', hint: 'No contact swapping: all communication stays inside Kurazh.' };
+    const rules = [...BASE, ...(mode === 'adult' ? ADULT : GENERAL)];
+    for (const [n, tr] of variants(text)) { const hit = match(rules, n, tr); if (hit) return hit; }
     return { ok: true };
   }
   function check(text, mode) {
     const raw = String(text || '').trim();
-    if (raw.length < 8) return { ok: false, cat: 'Too short', hint: 'Describe the dare in a bit more detail, at least 8 characters.' };
     if (raw.length > 140) return { ok: false, cat: 'Too long', hint: '140 characters max.' };
-    if (!/[a-zа-яёіїєґ]{3}/i.test(raw)) return { ok: false, cat: 'Unclear', hint: 'Write the dare in words.' };
+    if (raw.length < 8 || raw.split(/\s+/).length < 2) return { ok: false, cat: 'Too short', hint: 'Describe the dare in a few words.' };
+    if (!/[\p{L}]{3}/u.test(prep(raw))) return { ok: false, cat: 'Unclear', hint: 'Write the dare in words.' };
     return scan(raw, mode);
   }
-  return { check, scan };
+  // Regression table for the bypasses QA found. window.Kurazh.Safety.selfTest() → { passed, failed: [...] }.
+  const CASES = [
+    ['Drink some v0dka now', 'general', 1], ['Climb the r00f now', 'general', 1], ['Drink vоdka now', 'general', 1], ['zalez na kryshu', 'general', 1],
+    ['Drink some vo​dka now', 'general', 1], ['Drink vo­dka now', 'general', 1], ['Drink voooodka now', 'general', 1], ['Drink v.o.d.k.a now', 'general', 1],
+    ['Go up on the r o o f', 'general', 1], ['Выпей в о д к а', 'general', 1], ['Залезь на б4лкон', 'general', 1], ['Возьми н0ж', 'general', 1],
+    ['Залезь на крыша сейчас', 'general', 1], ['Залезь на крышa', 'general', 1], ['Стань на балкoн', 'general', 1], ['vypej vodki bystro', 'general', 1],
+    ['ukradi shokoladku', 'general', 1], ['Залізь на дах', 'general', 1], ['Drink VODKA now', 'general', 1], ['Выпей ВоДкА', 'general', 1],
+    ['Drink some Vódka', 'general', 1], ['Pour 🍺🍺🍺 залпом', 'general', 1], ['🔥 на балконе', 'general', 1], ['Залезь на крыыыша', 'general', 1],
+    ['Chug a bottle of vodka', 'general', 1], ['Slap a stranger now', 'general', 1], ['Tell us where you live', 'general', 1], ['Call me on +380 67 123 4567', 'general', 1],
+    ['Write me on t.me/velvet', 'adult', 1], ['Find me at telegram.me/velvet', 'adult', 1], ['Text me at wa.me/380671234567', 'adult', 1],
+    ['See instagram.com/velvet', 'adult', 1], ['Follow me @velvet_x', 'adult', 1], ['Write to my tg please', 'adult', 1], ['Find me on inst@gram', 'adult', 1],
+    ['Пиши мне в телегу', 'adult', 1], ['Dress up as a schoolgirl', 'adult', 1], ['Давай встретимся', 'adult', 1], ['Dance on the balcony', 'adult', 1],
+    ['Describe your favourite firework', 'general', 0], ['Watch the fireworks and describe them', 'general', 0], ['Sit by the fireplace and tell a story', 'general', 0],
+    ['Tell us about Scunthorpe', 'general', 0], ['Show your skill', 'general', 0], ['Sing a song', 'general', 0], ['Спой песню', 'general', 0],
+    ['Заспівай пісню', 'general', 0], ['Do 20 push-ups', 'general', 0], ['Whisk the eggs for an omelette', 'general', 0], ['Draw a dragon on a tablet', 'general', 0],
+    ['Describe your utopia', 'general', 0], ['Ёлка у тебя красивая', 'general', 0],
+  ];
+  function selfTest() {
+    const failed = [], all = [...CASES];
+    for (const [k, list] of Object.entries(BANK)) for (const [t] of list) all.push([t, k === 'adult' ? 'adult' : 'general', 0]);
+    for (const t of UNSAFE) all.push([t, 'general', 1]);
+    for (const t of ADULT_UNSAFE) all.push([t, 'adult', 1]);
+    for (const [text, mode, bad] of all) { const r = check(text, mode); if (!r.ok !== !!bad) failed.push({ text, mode, expected: bad ? 'blocked' : 'allowed', got: r.ok ? 'allowed' : r.cat }); }
+    const short = check('Dance', 'general');
+    if (short.ok || short.hint !== 'Describe the dare in a few words.') failed.push({ text: 'Dance', expected: 'Too short · Describe the dare in a few words.', got: short.hint });
+    return { passed: all.length + 1 - failed.length, failed };
+  }
+  return { check, scan, selfTest };
 })();
 const modeOf = (cat) => (cat === 'adult' ? 'adult' : 'general');
 
