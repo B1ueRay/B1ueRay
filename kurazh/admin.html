@@ -101,7 +101,7 @@
   .tip b { font: 600 17px/1 var(--serif); color: var(--gold2); display: block; margin-top: 2px; }
   details.daily { margin-top: 10px; font-size: 12px; color: var(--muted); }
   details.daily summary { cursor: pointer; }
-  details.daily table { margin-top: 8px; }
+  details.daily .tablewrap { max-height: 260px; }
 
   .bars { margin-top: 12px; display: grid; gap: 10px; }
   .bars .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; font-size: 13px; }
@@ -116,7 +116,7 @@
   .field { height: 38px; padding: 0 12px; border-radius: 11px; background: var(--s2); border: 1px solid var(--line); min-width: 0; }
   .filters input.field { flex: 1 1 200px; }
   .filters select.field { flex: 0 1 220px; }
-  .tablewrap { margin-top: 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--line); }
+  .tablewrap { margin-top: 12px; overflow: auto; max-height: 560px; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--line); }
   table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
   th { text-align: left; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 700;
     padding: 9px 10px; background: var(--s2); white-space: nowrap; position: sticky; top: 0; }
@@ -344,7 +344,7 @@
     r.bonus = sum(bonus, amt);
 
     var ls = by(E, 'live_start'), le = by(E, 'live_end');
-    r.lives = ls.length; r.livesReal = ls.filter(function (e) { return e.props && e.props.real; }).length;
+    r.lives = ls.length; r.liveEnds = le.length; r.livesReal = ls.filter(function (e) { return e.props && e.props.real; }).length;
     var durs = le.map(function (e) { return (e.props && +e.props.duration_s) || 0; }).filter(function (v) { return v > 0; });
     r.avgDur = durs.length ? durs.reduce(function (s, v) { return s + v; }, 0) / durs.length : 0;
     r.daresDone = sum(le, function (e) { return (e.props && +e.props.dares_done) || 0; });
@@ -378,7 +378,7 @@
       tile('Sign-ups', n0(r.signups), methods) +
       tile('Caller vs Taker', roleTot ? pct(r.callers, roleTot) : '—', roleTot ? n0(r.callers) + ' Callers · ' + n0(r.takers) + ' Takers' : 'No role picks yet',
         { extra: split([['Caller', r.callers, 'var(--gold2)'], ['Taker', r.takers, 'var(--seg2)']]) }) +
-      tile('Caller → Taker', pct(r.c2t, r.callersEver), n0(r.c2t) + ' of ' + n0(r.callersEver) + ' Callers went live side') +
+      tile('Caller → Taker', pct(r.c2t, r.callersEver), n0(r.c2t) + ' of ' + n0(r.callersEver) + ' Callers also became Takers') +
       tile('KYC completion', pct(r.kycDone, r.kycStart), n0(r.kycDone) + ' of ' + n0(r.kycStart) + ' started') +
       tile('Callers who backed', pct(r.callersBacked, r.callersEver), n0(r.callersBacked) + ' of ' + n0(r.callersEver) + ' placed a hold') +
       tile('18+ unlocked', n0(r.adult), 'Verified users') +
@@ -393,9 +393,12 @@
       tile('Platform fee 20%', money(r.captured * FEE), 'Takers earn ' + money(r.captured * (1 - FEE)), { money: true }) +
       tile('Withdrawals', money(r.withdrawals), 'Requested', { money: true });
     $('t-live').innerHTML =
-      tile('Live sessions', n0(r.lives), n0(r.livesReal) + ' real camera') +
-      tile('Avg duration', dur(r.avgDur), n0(r.daresDone) + ' dares done') +
-      tile('Decline rate', pct(r.declines, r.suggested), n0(r.declines) + ' of ' + n0(r.suggested) + ' dares · ' + n0(r.timeouts) + ' timed out') +
+      tile('Live sessions', n0(r.lives), n0(r.liveEnds) + ' ended normally') +
+      tile('Avg duration', dur(r.avgDur), 'Per finished live') +
+      tile('Dares done', n0(r.daresDone), r.liveEnds ? (r.daresDone / r.liveEnds).toFixed(1) + ' per live' : '') +
+      tile('Real camera', pct(r.livesReal, r.lives), n0(r.livesReal) + ' lives on camera') +
+      tile('Decline rate', pct(r.declines, r.suggested), n0(r.declines) + ' of ' + n0(r.suggested) + ' dares') +
+      tile('Timeouts', n0(r.timeouts), pct(r.timeouts, r.suggested) + ' of dares expired') +
       tile('Dares blocked', n0(r.blocked), r.suggested ? pct(r.blocked, r.suggested + r.blocked) + ' of attempts' : 'Safety filter') +
       tile('Reports', n0(r.reports), r.sessions ? (r.reports / r.sessions * 1000).toFixed(1) + ' per 1k sessions' : '');
   }
@@ -455,7 +458,7 @@
       var x = L + i * step + (step - bw) / 2, h = p.v ? Math.max(2, p.v / max * ph) : 0, y = T + ph - h, rr = Math.min(4, bw / 2, h);
       if (h) s += '<path d="M' + x + ',' + (T + ph) + 'V' + (y + rr) + 'Q' + x + ',' + y + ' ' + (x + rr) + ',' + y + 'H' + (x + bw - rr) + 'Q' + (x + bw) + ',' + y + ' ' + (x + bw) + ',' + (y + rr) + 'V' + (T + ph) + 'Z" fill="#b8975a" data-i="' + i + '" class="bar"/>';
       s += '<rect x="' + (L + i * step) + '" y="' + T + '" width="' + step + '" height="' + ph + '" fill="transparent" data-i="' + i + '"/>';
-      if ((n - 1 - i) % every === 0) s += '<text x="' + (L + i * step + step / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10.5" fill="#8f8b7e" font-family="Manrope, system-ui, sans-serif">' +
+      if ((n - 1 - i) % every === 0) s += '<text x="' + (i === n - 1 ? W - R : L + i * step + step / 2) + '" y="' + (H - 8) + '" text-anchor="' + (i === n - 1 ? 'end' : 'middle') + '" font-size="10.5" fill="#8f8b7e" font-family="Manrope, system-ui, sans-serif">' +
         esc(new Date(p.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })) + '</text>';
     });
     s += '</svg><div class="tip" hidden></div>';
@@ -552,7 +555,7 @@
     var stake = function () { return wpick([[3, 6], [5, 22], [10, 20], [15, 9], [20, 13], [25, 6], [40, 3], [50, 4], [100, 1]]); };
     var DAYS = 28, today = startOfDay(Date.now()), out = [];
     var HOUR = [[8, 2], [10, 3], [12, 5], [14, 5], [16, 6], [18, 9], [19, 11], [20, 13], [21, 13], [22, 10], [23, 6], [0, 3]];
-    var DECLINE = [['too_risky', 30], ['not_my_category', 22], ['not_feeling_it', 18], ['low_stake', 14], ['already_done', 9], ['off_camera_needed', 7]];
+    var DECLINE = [['not_feeling_it', 24], ['unsafe', 22], ['too_hard', 18], ['off_category', 14], ['low_stake', 12], ['already_done', 10]];
     var BLOCK = [['dangerous_stunt', 34], ['alcohol_substances', 18], ['driving', 14], ['personal_data', 11], ['violence', 9], ['off_platform', 8], ['minors', 6]];
     var REPORT = [['unsafe_dare', 36], ['harassment', 24], ['spam', 18], ['impersonation', 10], ['underage', 7], ['scam', 5]];
     var TYPES = ['funny', 'physical', 'creative', 'food', 'music', 'talk', 'outdoors'];
@@ -613,8 +616,8 @@
             if (o < 0.6) { ev('vote_cast', { value: 'yes' }); ev('hold_captured', { amount: a }); }
             else if (o < 0.76) { ev('vote_cast', { value: 'no' }); ev('hold_released', { amount: a }); }
             else if (o < 0.93) {
-              var fee = rnd() < 0.45 ? Math.round(a * 0.25 * 100) / 100 : 0;
-              ev('dare_decline', { reason: wpick(DECLINE), fee: fee }); ev('hold_released', { amount: a });
+              var why = wpick(DECLINE), fee = why !== 'unsafe' && rnd() < 0.45 ? Math.round(a * 0.25 * 100) / 100 : 0; // Unsafe is always free
+              ev('dare_decline', { reason: why, fee: fee }); ev('hold_released', { amount: a });
               if (fee) ev('decline_bonus', { amount: fee });
             } else { ev('dare_timeout'); ev('hold_released', { amount: a }); }
           }
