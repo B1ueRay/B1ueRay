@@ -5,7 +5,9 @@
 # Optional: Settings -> Secrets and variables -> Actions -> Variables -> New repository variable
 #   KURAZH_GOOGLE_CLIENT_ID = <id>.apps.googleusercontent.com
 # When the variable is set, the deployed copy gets it in config.js (window.KURAZH_CONFIG.googleClientId).
-# Nothing is committed back to the repository. A Google OAuth client ID is public, not a secret.
+# Nothing is committed back to the repository. A Google OAuth client ID is public, not a secret;
+# the OAuth client SECRET (GOCSPX-...) is never needed by this app and must never be committed.
+# Step-by-step guide (in Russian): kurazh/docs/launch-and-testing.md
 
 name: Kurazh · GitHub Pages
 
@@ -36,6 +38,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Check that the app is there
         run: |
@@ -43,13 +47,42 @@ jobs:
           for f in index.html manifest.webmanifest sw.js; do
             test -f "kurazh/$f" || { echo "::error file=kurazh/$f::kurazh/$f is missing"; exit 1; }
           done
+          # The manifest must be valid JSON, or iOS/Android silently ignore it.
+          python3 -m json.tool kurazh/manifest.webmanifest > /dev/null \
+            || { echo "::error file=kurazh/manifest.webmanifest::manifest.webmanifest is not valid JSON"; exit 1; }
+          # Every standalone script must at least parse (inline <script> blocks are not checked).
+          for f in kurazh/*.js; do
+            [ -e "$f" ] || continue
+            node --check "$f" || { echo "::error file=$f::$f has a JavaScript syntax error"; exit 1; }
+          done
+          # Pages that the Google OAuth consent screen and the app link to. Missing ones are a warning only,
+          # because other teams may still be adding them.
+          for f in legal/privacy.html legal/terms.html support.html admin.html; do
+            test -f "kurazh/$f" || echo "::warning file=kurazh/$f::kurazh/$f is missing (Google consent screen or in-app links may point to it)"
+          done
+
+      - name: Refuse to publish secrets
+        run: |
+          set -eu
+          # A Google OAuth client secret starts with GOCSPX-. The popup sign-in flow never needs it.
+          if grep -rIlE 'GOCSPX-[A-Za-z0-9_-]{10,}' kurazh; then
+            echo "::error::A Google OAuth client secret was found in kurazh/. Remove it, rotate it in Google Cloud Console, and never commit it."
+            exit 1
+          fi
+          # Private keys of any kind.
+          if grep -rIlE -- '-----BEGIN ([A-Z]+ )?PRIVATE KEY-----' kurazh; then
+            echo "::error::A private key was found in kurazh/. Remove it and rotate it."
+            exit 1
+          fi
 
       - name: Inject Google client ID into config.js (only when the variable is set)
         if: ${{ vars.KURAZH_GOOGLE_CLIENT_ID != '' }}
         env:
-          CLIENT_ID: ${{ vars.KURAZH_GOOGLE_CLIENT_ID }}
+          RAW_CLIENT_ID: ${{ vars.KURAZH_GOOGLE_CLIENT_ID }}
         run: |
           set -eu
+          # Pasted values often carry spaces or a trailing newline.
+          CLIENT_ID="$(printf '%s' "$RAW_CLIENT_ID" | tr -d '[:space:]')"
           # Accept only the shape of a real Google web client ID, so nothing else can be injected into JS.
           if ! printf '%s' "$CLIENT_ID" | grep -Eq '^[0-9]+-[a-z0-9]+\.apps\.googleusercontent\.com$'; then
             echo "::error::KURAZH_GOOGLE_CLIENT_ID does not look like <digits>-<id>.apps.googleusercontent.com"
@@ -61,6 +94,7 @@ jobs:
             echo '/* Added at deploy time by .github/workflows/kurazh-pages.yml from the KURAZH_GOOGLE_CLIENT_ID variable. */'
             echo "window.KURAZH_CONFIG = Object.assign(window.KURAZH_CONFIG || {}, { googleClientId: '${CLIENT_ID}' });"
           } >> kurazh/config.js
+          node --check kurazh/config.js
           echo "config.js in the artifact now sets googleClientId=${CLIENT_ID}"
           echo "Google client ID injected: \`${CLIENT_ID}\`" >> "$GITHUB_STEP_SUMMARY"
 
@@ -85,7 +119,18 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v5
 
-      - name: Print the URL
+      - name: Smoke-check the live site
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
-          echo "Kurazh is live at ${{ steps.deployment.outputs.page_url }}"
-          echo "Kurazh is live at ${{ steps.deployment.outputs.page_url }}" >> "$GITHUB_STEP_SUMMARY"
+          set -u
+          echo "Kurazh is live at ${PAGE_URL}"
+          echo "Kurazh is live at ${PAGE_URL}" >> "$GITHUB_STEP_SUMMARY"
+          # The CDN can need a few seconds after deploy. A failed check is a warning, not a failed deploy.
+          for f in '' manifest.webmanifest sw.js; do
+            if curl -fsS -o /dev/null --retry 6 --retry-delay 10 --retry-all-errors "${PAGE_URL}${f}"; then
+              echo "OK  ${PAGE_URL}${f}"
+            else
+              echo "::warning::${PAGE_URL}${f} did not answer with 200 yet; open it in a browser in a minute"
+            fi
+          done
