@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#0a0c0a" />
+<title>Privacy Policy · Kurazh (Draft)</title>
+<meta name="description" content="Draft Privacy Policy for Kurazh. Must be reviewed by a qualified lawyer before launch." />
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<!-- Fonts match the app. Before EU launch, self-host these files (see docs/security-trust-safety.md, 7.7). -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" />
+<style>
+  :root {
+    --bg: #0a0c0a; --s1: #111512; --s2: #161c18; --line: rgba(236,226,207,.1); --line2: rgba(205,178,124,.35);
+    --text: #ece2cf; --muted: #a8a293; --gold: #cdb27c; --gold-d: #b8975a; --bad: #d08a7c;
+    --serif: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
+    --sans: Manrope, Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.65 var(--sans); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 65ch; margin: 0 auto; padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 48px); }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 28px; }
+  .back { color: var(--gold); text-decoration: none; font-weight: 600; font-size: 15px; padding: 8px 0; }
+  .back:hover, .back:focus-visible { text-decoration: underline; }
+  .logo { font: 700 13px/1 var(--sans); letter-spacing: .32em; color: var(--muted); }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.12; color: var(--text); }
+  h1 { font-size: clamp(34px, 9vw, 46px); margin: 0 0 6px; letter-spacing: -.01em; }
+  h2 { font-size: 27px; margin: 44px 0 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+  h3 { font-size: 21px; margin: 26px 0 6px; }
+  .tag { color: var(--gold); font: italic 600 20px/1.3 var(--serif); margin: 0 0 18px; }
+  .meta { color: var(--muted); font-size: 14px; margin: 0 0 22px; }
+  p, ul, ol { margin: 0 0 14px; }
+  ul, ol { padding-left: 22px; }
+  li { margin: 4px 0; }
+  a { color: var(--gold); text-underline-offset: 3px; }
+  strong, b { font-weight: 700; color: var(--text); }
+  .draft { border: 1px solid var(--bad); background: rgba(208,138,124,.08); border-radius: 12px; padding: 14px 16px; margin: 0 0 22px; font-size: 15px; }
+  .draft strong { color: var(--bad); display: block; font-size: 16px; margin-bottom: 4px; }
+  .note { border-left: 2px solid var(--gold-d); background: var(--s1); padding: 10px 14px; border-radius: 0 10px 10px 0; color: var(--muted); font-size: 14px; }
+  .note b { color: var(--gold); }
+  .key { border: 1px solid var(--line2); background: var(--s1); border-radius: 12px; padding: 14px 16px; margin: 0 0 16px; }
+  .key p:last-child, .key ul:last-child { margin-bottom: 0; }
+  nav.toc { background: var(--s1); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 0 0 8px; }
+  nav.toc h2 { border: 0; margin: 0 0 8px; padding: 0; font-size: 20px; }
+  nav.toc ol { margin: 0; columns: 1; font-size: 15px; }
+  @media (min-width: 560px) { nav.toc ol { columns: 2; column-gap: 28px; } }
+  .tbl { overflow-x: auto; margin: 0 0 16px; border: 1px solid var(--line); border-radius: 12px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 460px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--gold); font-weight: 700; background: var(--s2); }
+  tr:last-child td { border-bottom: 0; }
+  .ph { color: var(--gold); font-weight: 600; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  footer a { margin-right: 14px; display: inline-block; padding: 4px 0; }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+  @media print { body { background: #fff; color: #000; } h1, h2, h3, strong, b { color: #000; } a, .tag, .ph, th { color: #5a4716; } .note, .key, nav.toc, th { background: #f4f1ea; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="back" href="../">← Back to Kurazh</a>
+    <span class="logo" aria-hidden="true">KURAZH</span>
+  </header>
+
+  <main>
+    <aside class="draft" role="note">
+      <strong>Draft — must be reviewed by a qualified lawyer before launch.</strong>
+      This is a working draft for legal and data-protection review. It is not in force. Placeholders in [brackets] must be completed, and the list of providers, legal bases and retention periods must be confirmed against the final product and the DPIA.
+    </aside>
+
+    <h1>Privacy Policy</h1>
+    <p class="tag">What we collect, why, and what you control.</p>
+    <p class="meta">Version [0.1-draft] · Effective date: [Effective date] · Last updated: [Date]</p>
+
+    <div class="key">
+      <p><strong>The short version</strong></p>
+      <ul>
+        <li>We collect what we need to run live dares safely: your account, verified identity, payments, streams, chat and votes.</li>
+        <li>Your ID document and selfie are checked by our verification provider. <strong>We do not store the images ourselves</strong>; we get the result.</li>
+        <li>We never see your full card number. Our payment partner handles it.</li>
+        <li>With Google sign-in we get only your Google account ID, email, name and profile picture.</li>
+        <li>We do not sell your data and we do not use it for third-party advertising.</li>
+        <li>You can see, download, correct and delete your data. Some records must be kept by law.</li>
+      </ul>
+    </div>
+
+    <nav class="toc" aria-label="Contents">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#who">Who we are</a></li>
+        <li><a href="#collect">What we collect</a></li>
+        <li><a href="#google">Google sign-in</a></li>
+        <li><a href="#kyc">Identity verification</a></li>
+        <li><a href="#payments">Payments and payouts</a></li>
+        <li><a href="#streams">Streams, chat and safety</a></li>
+        <li><a href="#analytics">Analytics, cookies and local storage</a></li>
+        <li><a href="#use">Why we use your data (legal bases)</a></li>
+        <li><a href="#automated">Automated decisions</a></li>
+        <li><a href="#share">Who we share data with</a></li>
+        <li><a href="#transfers">International transfers</a></li>
+        <li><a href="#retention">How long we keep data</a></li>
+        <li><a href="#security">Security</a></li>
+        <li><a href="#rights">Your rights</a></li>
+        <li><a href="#children">Children</a></li>
+        <li><a href="#changes">Changes</a></li>
+        <li><a href="#contact">Contact and complaints</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="who">1. Who we are</h2>
+    <p>The controller of your personal data is <span class="ph">[Company legal name]</span>, <span class="ph">[Address]</span>, registration number <span class="ph">[Registration number]</span> (“Kurazh”, “we”). Our data protection officer can be reached at <span class="ph">[DPO email]</span>. Our representative in the EU under Article 27 GDPR is <span class="ph">[EU representative name and address]</span>.</p>
+    <p>This policy applies to the Kurazh app and website. It works together with our <a href="terms.html">Terms of Service</a> and <a href="community-guidelines.html">Community Guidelines</a>.</p>
+
+    <h2 id="collect">2. What we collect</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Category</th><th>Examples</th><th>Where it comes from</th></tr></thead>
+      <tbody>
+        <tr><td>Account</td><td>Nickname, email, password (stored only as a strong one-way hash), country, date of birth, acceptance of Terms</td><td>You</td></tr>
+        <tr><td>Google sign-in</td><td>Google account ID, email, whether it is verified, name, profile picture, language</td><td>Google, when you choose it</td></tr>
+        <tr><td>Contact verification</td><td>Phone number, one-time codes (stored as a hash for a few minutes)</td><td>You, our SMS and email providers</td></tr>
+        <tr><td>Identity (KYC)</td><td>Legal name, date of birth, document type, issuing country and expiry, verification result, provider reference. Document images and selfie stay with the provider</td><td>You, via <span class="ph">[KYC provider]</span></td></tr>
+        <tr><td>Payments</td><td>Card token, brand, last four digits, expiry, holds, charges, releases, refunds</td><td><span class="ph">[Payment service provider]</span></td></tr>
+        <tr><td>Payouts and tax (Takers)</td><td>Payout method token, earnings, payouts, tax details where required</td><td>You, our payment partner</td></tr>
+        <tr><td>Streams</td><td>Live video and audio, stream title, categories, settings, clips of dares, moderation snapshots</td><td>You when you go live</td></tr>
+        <tr><td>Dares, chat and votes</td><td>Dares you write or back, chat messages, votes, reports, follows, decline reasons</td><td>You</td></tr>
+        <tr><td>Safety and moderation</td><td>Filter results, reports about you, moderation decisions, appeals</td><td>Our systems, other users</td></tr>
+        <tr><td>Device and security</td><td>IP address, device and browser type, app version, sign-in events, fraud signals</td><td>Your device</td></tr>
+        <tr><td>Location</td><td>Country from IP address; with your permission, approximate location for driving pause and safety alerts</td><td>Your device</td></tr>
+        <tr><td>Support</td><td>Messages you send us</td><td>You</td></tr>
+      </tbody>
+    </table></div>
+    <p>If you join the 18+ section, the fact that you use it may reveal information about your sex life, which is a special category of data. We process it only with your explicit consent and keep access to it restricted.</p>
+
+    <h2 id="google">3. Google sign-in</h2>
+    <p>If you choose “Continue with Google”, Google shares with us your Google account identifier, email address and whether it is verified, your name and your profile picture. We ask only for the basic <code>openid</code>, <code>email</code> and <code>profile</code> permissions. We do not get your Google password, contacts, files or other Google data, and we do not post anything to your Google account.</p>
+    <p>We verify the sign-in token on our servers and use it only to create and secure your account. Signing in with Google does not replace phone or identity verification. Google’s handling of your data is covered by Google’s privacy policy. You can disconnect Kurazh in your Google account settings; you will then need another way to sign in.</p>
+
+    <h2 id="kyc">4. Identity verification</h2>
+    <p>Before money moves, before you go live and before you enter the 18+ section, we need to confirm that you are a real adult and who you are. Our provider <span class="ph">[KYC provider]</span> asks for a photo of your ID document and a short live selfie, compares them, checks the document and screens your name against sanctions and politically-exposed-person lists.</p>
+    <ul>
+      <li>The selfie comparison uses biometric data. It is processed by the provider only for this check, on the basis of your explicit consent <span class="ph">[or the legal obligation identified by counsel]</span>.</li>
+      <li>We receive the result and the details listed in section 2, not the images. The provider keeps the images for <span class="ph">[period]</span> under our contract with them.</li>
+      <li>In the 18+ section, every person who appears on camera is verified in the same way, and their consent records are kept.</li>
+    </ul>
+
+    <h2 id="payments">5. Payments and payouts</h2>
+    <p>Card details are entered in a secure form run by <span class="ph">[Payment service provider]</span>. We never receive or store your full card number or security code. The provider may also act as an independent controller for its own legal duties, such as fraud prevention and anti-money-laundering checks.</p>
+    <p>For Takers we process earnings and payout details to pay you, keep accounting records, and meet tax and anti-money-laundering obligations, including reporting to tax authorities where the law requires.</p>
+
+    <h2 id="streams">6. Streams, chat and safety</h2>
+    <ul>
+      <li>Live streams are shown to viewers in real time. Other users can see your nickname, profile picture, stream, public chat messages, dares you write and your Courage score.</li>
+      <li>To keep people safe, our automated systems analyse dares, chat, and samples of video and audio from live streams, and human moderators can watch streams. This helps us find dangerous acts, minors, nudity outside the 18+ section, threats, self-harm and personal data.</li>
+      <li>We keep short clips of each dare and the voting record so we can handle disputes and chargebacks.</li>
+      <li>Streams are routed through our media servers, so other users do not see your IP address.</li>
+      <li>If someone’s life or safety is at immediate risk, we may share necessary information (for example the stream and approximate location) with emergency services.</li>
+    </ul>
+
+    <h2 id="analytics">7. Analytics, cookies and local storage</h2>
+    <ul>
+      <li><strong>Strictly necessary:</strong> we store a session cookie and a few settings (such as sound, language and your consent choice) on your device. These are needed for the Service to work.</li>
+      <li><strong>Analytics (optional):</strong> with your consent we record how the app is used (screens opened, features used, errors) without your name, email, phone or the text of your dares and chat. You can change your choice in Profile at any time. We respect “Do Not Track” and Global Privacy Control signals.</li>
+      <li>We do not use advertising cookies or sell data to advertisers.</li>
+      <li>The app loads fonts from <span class="ph">[Google Fonts / our own servers]</span>.</li>
+    </ul>
+
+    <h2 id="use">8. Why we use your data (legal bases)</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Purpose</th><th>Legal basis (GDPR / Ukrainian law)</th></tr></thead>
+      <tbody>
+        <tr><td>Creating and running your account, streams, dares, holds, votes and payouts</td><td>Performance of our contract with you</td></tr>
+        <tr><td>Identity, age and sanctions checks, anti-money-laundering, tax and accounting records</td><td>Legal obligation; biometric check with your explicit consent</td></tr>
+        <tr><td>Safety, moderation, fraud prevention, vote integrity and security</td><td>Legitimate interests in keeping people and payments safe; legal obligations (for example reporting child sexual abuse material)</td></tr>
+        <tr><td>Protecting someone’s life in an emergency</td><td>Vital interests</td></tr>
+        <tr><td>18+ section</td><td>Explicit consent</td></tr>
+        <tr><td>Optional analytics and marketing emails</td><td>Consent, which you can withdraw at any time</td></tr>
+        <tr><td>Handling legal claims and requests from authorities</td><td>Legal obligation; legitimate interests</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="automated">9. Automated decisions</h2>
+    <p>Some decisions are made or prepared automatically: the safety filter can block a dare or message, fraud checks can refuse a hold or delay a payout, and moderation tools can pause a stream. Where a decision has a significant effect on you, a person reviews it on request, and you can explain your side and appeal (see section 14 of the <a href="terms.html#moderation">Terms</a>). Exact matches with known child sexual abuse material lead to immediate action and are reported as the law requires.</p>
+
+    <h2 id="share">10. Who we share data with</h2>
+    <ul>
+      <li><strong>Other users:</strong> your public profile, streams, chat, dares and Courage score.</li>
+      <li><strong>Service providers</strong> who work for us under contract: hosting (<span class="ph">[hosting provider]</span>), media servers (<span class="ph">[streaming provider]</span>), payments (<span class="ph">[Payment service provider]</span>), identity verification (<span class="ph">[KYC provider]</span>), SMS and email (<span class="ph">[messaging provider]</span>), content moderation (<span class="ph">[moderation provider]</span>), customer support (<span class="ph">[support tool]</span>).</li>
+      <li><strong>Google</strong>, when you use Google sign-in.</li>
+      <li><strong>Authorities:</strong> law enforcement, regulators, tax authorities and courts when the law requires it or to protect someone’s life or safety. Suspected child sexual abuse material is reported to the competent bodies, for example the National Police of Ukraine (Cyberpolice), national hotlines and NCMEC.</li>
+      <li><strong>A buyer or successor</strong> if our business is reorganised or sold, under the same protections.</li>
+    </ul>
+    <p>We do not sell personal data.</p>
+
+    <h2 id="transfers">11. International transfers</h2>
+    <p>We are based in <span class="ph">[Ukraine]</span> and some providers operate in other countries. When data from the EU/EEA goes to a country without an adequacy decision (including Ukraine), we use the European Commission’s standard contractual clauses and additional safeguards. Transfers from Ukraine follow Ukrainian law on cross-border transfers. You can ask us for a copy of the safeguards.</p>
+
+    <h2 id="retention">12. How long we keep data</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Data</th><th>How long</th></tr></thead>
+      <tbody>
+        <tr><td>Account and profile</td><td>While your account is open, then 30 days after deletion</td></tr>
+        <tr><td>Identity verification result and details</td><td>5 years after our relationship ends (anti-money-laundering law); images at the provider for <span class="ph">[period]</span></td></tr>
+        <tr><td>Payment, payout and tax records</td><td>5 years, or longer where tax or accounting law requires (<span class="ph">[period by country]</span>)</td></tr>
+        <tr><td>Moderation snapshots of live video</td><td>30 days</td></tr>
+        <tr><td>Clips of dares and voting records</td><td>180 days, or until a dispute is closed</td></tr>
+        <tr><td>Chat messages</td><td>90 days</td></tr>
+        <tr><td>Dares and votes</td><td>1 year</td></tr>
+        <tr><td>Reports, moderation decisions and appeals</td><td>2 years</td></tr>
+        <tr><td>Security and device logs</td><td>12 months</td></tr>
+        <tr><td>Optional analytics events</td><td>13 months</td></tr>
+        <tr><td>18+ performer verification and consent records</td><td><span class="ph">[period required by law]</span></td></tr>
+        <tr><td>Evidence of child sexual abuse material</td><td>As required by law, in isolated storage</td></tr>
+      </tbody>
+    </table></div>
+    <p>We may keep data longer if it is needed for an ongoing investigation, legal claim or request from an authority.</p>
+
+    <h2 id="security">13. Security</h2>
+    <p>We use encryption in transit and at rest, strong password hashing, two-step verification and passkeys, access controls and logging for staff, regular security testing and a responsible disclosure programme. If a breach is likely to put you at high risk, we will tell you without undue delay. Report security issues to <span class="ph">[security email]</span>.</p>
+
+    <h2 id="rights">14. Your rights</h2>
+    <p>Depending on where you live (including under the GDPR and the Law of Ukraine “On Personal Data Protection”), you can:</p>
+    <ul>
+      <li>get a copy of your data and information about how we use it;</li>
+      <li>correct inaccurate data;</li>
+      <li>delete your data (Profile → Security → Delete account), except data we must keep by law;</li>
+      <li>restrict or object to some uses, including uses based on legitimate interests;</li>
+      <li>receive your data in a portable format;</li>
+      <li>withdraw consent at any time, without affecting earlier processing;</li>
+      <li>ask for a person to review an automated decision.</li>
+    </ul>
+    <p>Email <span class="ph">[privacy email]</span>. We reply within one month. We may need to confirm your identity first.</p>
+
+    <h2 id="children">15. Children</h2>
+    <p>Kurazh is only for adults aged 18 or over. We do not knowingly collect data from children. If we learn that a child is using Kurazh or appears in a stream, we close the account and delete the data, except what we must keep to protect the child and to report to the authorities. If you believe a child is on Kurazh, report it in the app or at <span class="ph">[safety email]</span>.</p>
+
+    <h2 id="changes">16. Changes</h2>
+    <p>We will tell you about important changes in the app or by email before they take effect. Earlier versions are available at <span class="ph">[archive URL]</span>.</p>
+
+    <h2 id="contact">17. Contact and complaints</h2>
+    <p>Privacy questions: <span class="ph">[privacy email]</span> · DPO: <span class="ph">[DPO email]</span> · Post: <span class="ph">[Company legal name]</span>, <span class="ph">[Address]</span>.</p>
+    <p>You can complain to a data protection authority. In Ukraine this is the Ukrainian Parliament Commissioner for Human Rights. In the EU/EEA it is the authority in the country where you live or work, or where the issue happened.</p>
+    <p class="note"><b>Drafting note:</b> confirm the legal basis for biometric processing, the need for notification to the Ukrainian Commissioner, the DPO requirement, the provider list and retention periods against the DPIA before publishing.</p>
+  </main>
+
+  <footer>
+    <a href="../">← Back to Kurazh</a>
+    <a href="terms.html">Terms of Service</a>
+    <a href="community-guidelines.html">Community Guidelines</a>
+    <p>Draft — must be reviewed by a qualified lawyer before launch.</p>
+  </footer>
+</div>
+</body>
+</html>

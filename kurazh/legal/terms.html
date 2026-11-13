@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#0a0c0a" />
+<title>Terms of Service · Kurazh (Draft)</title>
+<meta name="description" content="Draft Terms of Service for Kurazh. Must be reviewed by a qualified lawyer before launch." />
+<link rel="icon" href="../icon.svg" type="image/svg+xml" />
+<!-- Fonts match the app. Before EU launch, self-host these files (see docs/security-trust-safety.md, 7.7). -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" />
+<style>
+  :root {
+    --bg: #0a0c0a; --s1: #111512; --s2: #161c18; --line: rgba(236,226,207,.1); --line2: rgba(205,178,124,.35);
+    --text: #ece2cf; --muted: #a8a293; --gold: #cdb27c; --gold-d: #b8975a; --bad: #d08a7c;
+    --serif: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
+    --sans: Manrope, Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.65 var(--sans); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 65ch; margin: 0 auto; padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 48px); }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 28px; }
+  .back { color: var(--gold); text-decoration: none; font-weight: 600; font-size: 15px; padding: 8px 0; }
+  .back:hover, .back:focus-visible { text-decoration: underline; }
+  .logo { font: 700 13px/1 var(--sans); letter-spacing: .32em; color: var(--muted); }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.12; color: var(--text); }
+  h1 { font-size: clamp(34px, 9vw, 46px); margin: 0 0 6px; letter-spacing: -.01em; }
+  h2 { font-size: 27px; margin: 44px 0 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+  h3 { font-size: 21px; margin: 26px 0 6px; }
+  .tag { color: var(--gold); font: italic 600 20px/1.3 var(--serif); margin: 0 0 18px; }
+  .meta { color: var(--muted); font-size: 14px; margin: 0 0 22px; }
+  p, ul, ol { margin: 0 0 14px; }
+  ul, ol { padding-left: 22px; }
+  li { margin: 4px 0; }
+  a { color: var(--gold); text-underline-offset: 3px; }
+  strong, b { font-weight: 700; color: var(--text); }
+  .draft { border: 1px solid var(--bad); background: rgba(208,138,124,.08); border-radius: 12px; padding: 14px 16px; margin: 0 0 22px; font-size: 15px; }
+  .draft strong { color: var(--bad); display: block; font-size: 16px; margin-bottom: 4px; }
+  .note { border-left: 2px solid var(--gold-d); background: var(--s1); padding: 10px 14px; border-radius: 0 10px 10px 0; color: var(--muted); font-size: 14px; }
+  .note b { color: var(--gold); }
+  .key { border: 1px solid var(--line2); background: var(--s1); border-radius: 12px; padding: 14px 16px; margin: 0 0 16px; }
+  .key p:last-child, .key ul:last-child { margin-bottom: 0; }
+  nav.toc { background: var(--s1); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 0 0 8px; }
+  nav.toc h2 { border: 0; margin: 0 0 8px; padding: 0; font-size: 20px; }
+  nav.toc ol { margin: 0; columns: 1; font-size: 15px; }
+  @media (min-width: 560px) { nav.toc ol { columns: 2; column-gap: 28px; } }
+  .tbl { overflow-x: auto; margin: 0 0 16px; border: 1px solid var(--line); border-radius: 12px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 460px; }
+  th, td { text-align: left; vertical-align: top; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+  th { color: var(--gold); font-weight: 700; background: var(--s2); }
+  tr:last-child td { border-bottom: 0; }
+  .ph { color: var(--gold); font-weight: 600; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+  footer a { margin-right: 14px; display: inline-block; padding: 4px 0; }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+  @media print { body { background: #fff; color: #000; } h1, h2, h3, strong, b { color: #000; } a, .tag, .ph, th { color: #5a4716; } .note, .key, nav.toc, th { background: #f4f1ea; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="back" href="../">← Back to Kurazh</a>
+    <span class="logo" aria-hidden="true">KURAZH</span>
+  </header>
+
+  <main>
+    <aside class="draft" role="note">
+      <strong>Draft — must be reviewed by a qualified lawyer before launch.</strong>
+      This text is a working draft prepared for legal review. It is not in force, it is not legal advice, and placeholders in [brackets] must be completed. Several mechanics described here are still under legal review (see the drafting notes).
+    </aside>
+
+    <h1>Terms of Service</h1>
+    <p class="tag">Call it or do it.</p>
+    <p class="meta">Version [0.1-draft] · Effective date: [Effective date] · Last updated: [Date]</p>
+
+    <div class="key">
+      <p><strong>The short version</strong></p>
+      <ul>
+        <li>Kurazh is for adults (18+). You need to verify your identity before money moves.</li>
+        <li>Callers write dares and back them with money. Your money is <strong>held</strong> on your card, not charged.</li>
+        <li>It is charged only if at least 60% of eligible voters say the dare counts. Otherwise the hold is released in full.</li>
+        <li>Takers decide. Nobody has to do any dare. <strong>Refusing a dare as unsafe or against the rules is always free.</strong></li>
+        <li>Kurazh keeps a 20% fee from completed dares. The Taker receives the rest.</li>
+        <li>Dangerous, illegal, non-consensual, humiliating and personal-data dares are banned. So is anything sexual outside the 18+ section.</li>
+      </ul>
+    </div>
+
+    <nav class="toc" aria-label="Contents">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#about">About these Terms</a></li>
+        <li><a href="#eligibility">Who can use Kurazh</a></li>
+        <li><a href="#account">Your account and security</a></li>
+        <li><a href="#roles">Callers and Takers</a></li>
+        <li><a href="#dares">How dares work</a></li>
+        <li><a href="#money">Holds, charges and releases</a></li>
+        <li><a href="#voting">Voting</a></li>
+        <li><a href="#declining">Declining dares, free passes and decline fees</a></li>
+        <li><a href="#fees">Fees</a></li>
+        <li><a href="#payouts">Payouts to Takers</a></li>
+        <li><a href="#disputes-pay">Chargebacks, refunds and cancellation</a></li>
+        <li><a href="#content">Content and conduct</a></li>
+        <li><a href="#adult">The 18+ section</a></li>
+        <li><a href="#moderation">Moderation, reports and appeals</a></li>
+        <li><a href="#ranking">Ranking and the Courage score</a></li>
+        <li><a href="#licence">Your content and our licence</a></li>
+        <li><a href="#termination">Suspension and termination</a></li>
+        <li><a href="#risk">Your safety and assumption of risk</a></li>
+        <li><a href="#liability">Liability</a></li>
+        <li><a href="#law">Disputes and governing law</a></li>
+        <li><a href="#changes">Changes to these Terms</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="about">1. About these Terms</h2>
+    <p>These Terms of Service (“Terms”) are a contract between you and <span class="ph">[Company legal name]</span>, a company registered in <span class="ph">[Country]</span> under number <span class="ph">[Registration number]</span>, with its registered office at <span class="ph">[Address]</span> (“Kurazh”, “we”, “us”). They govern your use of the Kurazh app, website and related services (the “Service”).</p>
+    <p>By creating an account or using the Service you agree to these Terms, the <a href="community-guidelines.html">Community Guidelines</a> and any rules shown in the app for a specific feature. Our <a href="privacy.html">Privacy Policy</a> explains how we handle personal data.</p>
+    <p>Payments are processed by our licensed payment partner, <span class="ph">[Payment service provider]</span>, under its own terms, which you accept when you add a card or set up payouts. Identity checks are carried out by <span class="ph">[KYC provider]</span>.</p>
+
+    <h2 id="eligibility">2. Who can use Kurazh</h2>
+    <ul>
+      <li>You must be at least <strong>18 years old</strong>, or the age of majority where you live if that is higher. A Taker may set a higher minimum age (for example 21+) for their stream. We rely on your verified date of birth to enforce it.</li>
+      <li>You must be able to enter a binding contract and must not have been banned from Kurazh before.</li>
+      <li>You must not live in, or use Kurazh from, a country or territory where the Service is not offered or where it would be unlawful, including territories subject to sanctions listed in <span class="ph">[Restricted territories list]</span>. You must not be on a sanctions list.</li>
+      <li>One person, one account. Accounts may not be shared, sold or transferred.</li>
+      <li>Some features (backing dares, voting, going live, payouts, the 18+ section) need identity verification and may not be available in every country.</li>
+    </ul>
+
+    <h2 id="account">3. Your account and security</h2>
+    <ul>
+      <li>You can sign up with an email address and password or with Google sign-in. If you use Google sign-in, we receive basic profile information from Google as described in the <a href="privacy.html">Privacy Policy</a>. Signing in with Google does not replace identity verification.</li>
+      <li>We confirm your email and phone number and use two-step verification. Where offered, we recommend passkeys.</li>
+      <li>Identity verification (“KYC”) uses an ID document and a live selfie check, run by our verification provider. You must give true, current information that matches your document. Your public nickname may differ from your legal name.</li>
+      <li>Keep your sign-in details safe. Tell us at <span class="ph">[security email]</span> straight away if you think someone else has accessed your account. We may ask you to verify again before sensitive actions such as payouts or changing payout details, and we may delay payouts after such changes to protect you.</li>
+      <li>You can delete your account in the app at any time (Profile → Security). Some records must be kept for legal reasons after deletion; see the Privacy Policy.</li>
+    </ul>
+
+    <h2 id="roles">4. Callers and Takers</h2>
+    <p><strong>Callers</strong> write dares, back dares with money and vote on whether a dare counts. <strong>Takers</strong> go live and decide which dares, if any, to take on. You can be both.</p>
+    <p>Kurazh provides the platform. Takers are independent and are not our employees, agents or contractors. A dare is a <strong>suggestion</strong>, not an order or a contract to perform. <strong>No Taker is ever obliged to accept or complete any dare.</strong></p>
+    <p class="note"><b>Drafting note:</b> confirm with counsel whether Takers who stream regularly for income are “traders” under EU consumer law (Omnibus Directive, DSA Art. 30, P2B Regulation) and how that status is shown to Callers. DAC7 reporting may apply.</p>
+
+    <h2 id="dares">5. How dares work</h2>
+    <ol>
+      <li><strong>Taker settings.</strong> Before or during a stream, the Taker chooses: a minimum amount per dare, a minimum viewer age (18+ or 21+), categories, the dare types they accept, and the number of free passes for the stream (3 unless the Taker changes it).</li>
+      <li><strong>Writing a dare.</strong> A Caller writes a short dare in their own words, picks a type and backs it with at least the Taker’s minimum. Every dare is checked by our safety systems before it is shown. Dares that break the <a href="community-guidelines.html">Community Guidelines</a> are blocked or removed.</li>
+      <li><strong>Backing.</strong> Other Callers can add money to a dare’s pot. The pot is the total of all holds on that dare.</li>
+      <li><strong>The Taker decides.</strong> The Taker can accept a dare, decline it (see section 8) or let it wait. Dares are paused while a Taker is driving or on a break, and may be paused for safety reasons (for example during an air-raid alert).</li>
+      <li><strong>Doing the dare.</strong> If the Taker accepts, they try the dare within the time shown. They can stop at any moment.</li>
+      <li><strong>Voting.</strong> When the time ends or the Taker says it is done, eligible viewers vote on whether it counts (section 7).</li>
+    </ol>
+
+    <h2 id="money">6. Holds, charges and releases</h2>
+    <h3>6.1 Holds</h3>
+    <p>When you back a dare, you authorise our payment partner to place an <strong>authorisation hold</strong> on your card for that amount. A hold is not a charge: the money stays in your account but your bank may show it as “pending” and you may not be able to spend it while it is held. You may be asked to confirm the hold with your bank (for example 3-D Secure).</p>
+    <p class="note"><b>Drafting note:</b> if the product moves to a “stream budget” (one hold per stream, partial capture of what was used), describe it here: the full budget is held, only the amount allocated to dares that count is charged, and the rest is released at the end of the stream.</p>
+    <h3>6.2 When a hold is charged</h3>
+    <p>Your hold for a dare is <strong>charged (captured) only if</strong> the Taker completed the dare and <strong>at least 60%</strong> of eligible votes say it counts. The charge is made by <span class="ph">[Payment service provider]</span> and appears on your statement as <span class="ph">[statement descriptor]</span>.</p>
+    <h3>6.3 When a hold is released</h3>
+    <p>Your hold is <strong>released in full</strong> if the dare is declined for any reason, the Taker gives up, time runs out, the vote does not reach 60%, the stream ends before the dare is taken, the dare is removed by moderation, or we stop the stream. Holds that are not taken by the end of a stream are released automatically. We tell our payment partner to release the hold straight away, but <strong>your bank decides when the funds show as available again</strong>; this can take several days.</p>
+    <h3>6.4 Limits</h3>
+    <p>To protect you and others we apply limits, for example a daily hold limit (currently <span class="ph">[$500]</span>, lower for new accounts), a maximum pot per dare and a limit on cards per account. We may refuse or cancel a hold that looks fraudulent or breaks these Terms.</p>
+    <h3>6.5 Currency and taxes</h3>
+    <p>Amounts are shown in <span class="ph">[USD / UAH / EUR]</span>. Your bank may charge currency conversion fees. Prices shown to Callers include any taxes we are required to collect. Takers are responsible for their own taxes on earnings, except where we are required by law to withhold or report them.</p>
+
+    <h2 id="voting">7. Voting</h2>
+    <ul>
+      <li>Only <strong>eligible voters</strong> can vote: verified accounts that watched enough of the dare live, as measured by our servers. The Taker and accounts linked to the Taker cannot vote on the Taker’s dares. Other criteria may apply and are shown in the app.</li>
+      <li>One vote per verified person per dare. Using bots, multiple accounts, paid voting or coordinated voting is forbidden and may lead to the result being reversed and accounts being banned.</li>
+      <li>The result is calculated on our servers. We may review a result if it is close, if the pot is large, or if we detect manipulation, and we may change it after review. If we change a result, holds are captured or released to match the corrected result, within the hold’s validity.</li>
+      <li>Vote by what you saw. “Counts” means the Taker did what the dare said, within the time and the rules.</li>
+    </ul>
+
+    <h2 id="declining">8. Declining dares, free passes and decline fees</h2>
+    <div class="key">
+      <p><strong>You can always refuse an unsafe dare for free.</strong> Choosing “Unsafe / against the rules” never costs anything, never uses a free pass and never lowers your Courage score. The dare goes to our moderation team.</p>
+    </div>
+    <h3>8.1 Ways to decline</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>What the Taker does</th><th>Cost to the Taker</th><th>Free pass used?</th><th>Callers’ holds</th></tr></thead>
+      <tbody>
+        <tr><td>Unsafe / against the rules</td><td>Always free</td><td>No</td><td>Released in full</td></tr>
+        <tr><td>Stop for safety or health (at any moment, including during a dare)</td><td>Always free</td><td>No</td><td>Released in full</td></tr>
+        <tr><td>Involves others without consent, or illegal where I am</td><td>Always free</td><td>No</td><td>Released in full</td></tr>
+        <tr><td>Pass, while free passes remain</td><td>Free</td><td>Yes</td><td>Released in full</td></tr>
+        <tr><td>Pass, after free passes run out</td><td>Decline fee (8.3)</td><td>—</td><td>Released in full</td></tr>
+        <tr><td>Give up, time runs out, or ignoring the top eligible dare for more than 2 minutes</td><td>Counts as a pass (8.2)</td><td>Yes</td><td>Released in full</td></tr>
+      </tbody>
+    </table></div>
+    <h3>8.2 What counts as a pass</h3>
+    <p>Giving up on a dare, letting the time run out, and leaving the top eligible dare unanswered for more than 2 minutes count as a pass, <strong>unless</strong> you chose one of the always-free reasons above. Time does not run while dares are paused (driving, break, safety pause).</p>
+    <h3>8.3 Decline fees</h3>
+    <p>After your free passes for a stream are used up, each extra pass has a decline fee of <strong>10% of that dare’s pot, at least <span class="ph">[$1]</span> and at most $20</strong>. The fee:</p>
+    <ul>
+      <li>is taken only from your earnings <strong>from the same stream</strong> and never exceeds them. If you have no earnings from that stream, no fee is charged. Your balance never goes below zero and you never owe Kurazh a debt for declining;</li>
+      <li>is never charged for the always-free reasons in 8.1, and is never charged for any refusal based on safety, health, consent or the law;</li>
+      <li>is shared among that dare’s backers in proportion to their holds, as a “decline bonus”, in the way described in the app <span class="ph">[credited as / paid to]</span>;</li>
+      <li>is shown to you before you go live and before each paid pass.</li>
+    </ul>
+    <p>We review use of the “Unsafe” reason to improve safety. We will not charge decline fees retroactively because of a review. If someone repeatedly misuses the reason, we may contact them or apply the Community Guidelines.</p>
+    <p class="note"><b>Drafting note (important):</b> paying decline fees to backers is under legal review because it may be classified as betting or gambling (Ukraine: Law No. 768-IX; EU national laws), may pressure Takers to take risks, and requires paying money to Callers. The recommended launch version replaces 8.3 with: “After your free passes run out you can still pass at no cost. Passing affects your Courage score as described in section 15.” An alternative is a voluntary, Taker-set “commitment pledge” paid to a charity, capped per pass and per stream, and taken only from earnings from the same stream. The $1 minimum can exceed 10% of a small pot and should be removed or capped. See docs/security-trust-safety.md, section 5.</p>
+    <h3>8.4 Free passes</h3>
+    <p>Free passes reset at the start of each stream and cannot be carried over, sold or transferred. A Taker can set more free passes than the default.</p>
+
+    <h2 id="fees">9. Fees</h2>
+    <ul>
+      <li>Backing a dare is free for Callers unless the app clearly shows otherwise. If a dare counts, the amount charged is exactly the amount you backed.</li>
+      <li>From every completed dare, Kurazh keeps a <strong>platform fee of 20%</strong> of the pot. The Taker’s earnings are the pot minus this fee, minus any decline fees under section 8.3.</li>
+      <li>Payment partner and payout fees, if any, are shown before you confirm a payout.</li>
+      <li>We will give at least <span class="ph">[30]</span> days’ notice before increasing fees (at least 15 days for business users under applicable law).</li>
+    </ul>
+
+    <h2 id="payouts">10. Payouts to Takers</h2>
+    <ul>
+      <li>To receive payouts you must complete identity verification, pass sanctions screening, and add a payout method in your own name. We may ask for more information (for example tax details or source of funds) as required by law or by our payment partner.</li>
+      <li>The minimum payout is <span class="ph">[$20]</span>. Your first payout is available <span class="ph">[7]</span> days after your first earnings. We may keep a rolling reserve of <span class="ph">[10%]</span> of earnings for <span class="ph">[90]</span> days to cover chargebacks and refunds.</li>
+      <li>We apply amounts in this order: chargebacks and reversals, reserve, platform fee, decline fees (if any), then your payout.</li>
+      <li>We may delay or withhold a payout while we investigate suspected fraud, collusion, vote manipulation, money laundering, a breach of these Terms or a legal request, and we may reverse earnings that came from fraudulent payments.</li>
+      <li>You are responsible for reporting and paying taxes on your earnings unless we are required to withhold them. We may report your earnings to tax authorities where the law requires (for example under EU DAC7).</li>
+      <li>Payment for dares must stay on Kurazh. Asking for or accepting payment outside the platform for anything connected with a dare is forbidden.</li>
+    </ul>
+
+    <h2 id="disputes-pay">11. Chargebacks, refunds and cancellation</h2>
+    <ul>
+      <li>If you think a charge is wrong, contact us first at <span class="ph">[support email]</span>. We keep clips of dares and voting records for <span class="ph">[180]</span> days to review disputes.</li>
+      <li>Raising a chargeback for a dare that was completed and voted as counted, without contacting us, may lead to restrictions on your account.</li>
+      <li><strong>Right of withdrawal (EU/EEA and where applicable).</strong> A dare is a service performed live, immediately. When you back a dare, you expressly ask for it to be performed straight away and you acknowledge that you lose your right to withdraw once the dare has been fully performed and counted. Until then your hold can be released as described in section 6.</li>
+    </ul>
+
+    <h2 id="content">12. Content and conduct</h2>
+    <p>You must follow the <a href="community-guidelines.html">Community Guidelines</a>. In short, you must not post, suggest, back, perform or stream anything that is:</p>
+    <ul>
+      <li><strong>dangerous</strong> (heights, fire, weapons, choking, roads, vehicles in motion, risky stunts), or involves <strong>alcohol, tobacco or drugs</strong>;</li>
+      <li><strong>illegal</strong> (theft, vandalism, trespass, breaking local rules, including martial-law restrictions such as filming military sites or air-defence activity);</li>
+      <li><strong>without consent</strong> (involving other people without their clear agreement, pranks, physical contact with strangers);</li>
+      <li><strong>personal data</strong> (addresses, documents, passwords, card or phone numbers, yours or anyone else’s);</li>
+      <li><strong>humiliating</strong>, bullying, hateful or threatening, or encouraging self-harm;</li>
+      <li><strong>sexual or explicit</strong> outside the 18+ section, and anything at all that sexualises minors;</li>
+      <li>spam, scams, impersonation, or manipulation of votes, pots or rankings.</li>
+    </ul>
+    <p><strong>Vehicles:</strong> dares pause while you drive. You must never take a dare while driving, and racing is allowed only on a closed track at an organised event.</p>
+    <p>Our safety filter and moderation help, but they are not perfect. Passing the filter does not make a dare safe or lawful. You remain responsible for what you suggest and what you do.</p>
+
+    <h2 id="adult">13. The 18+ section</h2>
+    <p class="note"><b>Drafting note:</b> the 18+ section is recommended to stay disabled in Ukraine (Criminal Code Art. 301) and elsewhere until counsel confirms what is lawful, a specialised payment partner is in place, and age-verification requirements per country are met. Keep this section only if the 18+ section launches.</p>
+    <ul>
+      <li>The 18+ section is separate from the main feed and is available only in <span class="ph">[permitted countries]</span>, to verified adults who accept its rules.</li>
+      <li><strong>Every person who appears on camera</strong> in an 18+ stream must be verified as an adult by our provider <strong>before</strong> appearing, and must consent to the stream. The Taker must not allow anyone else into frame.</li>
+      <li>Strictly forbidden: minors or anything suggesting minors (including role-play), meeting in person or offering offline services, swapping contacts or moving to other platforms, public places or bystanders, alcohol and drugs, violence, and personal data.</li>
+      <li>We moderate 18+ streams in real time and may end any stream immediately. Recording, capturing or redistributing 18+ content is forbidden.</li>
+      <li>Reports from the 18+ section are handled with priority. Any suspected involvement of a minor is reported to the authorities.</li>
+    </ul>
+
+    <h2 id="moderation">14. Moderation, reports and appeals</h2>
+    <ul>
+      <li>We use automated tools (keyword and machine-learning filters on text, video and audio) and human moderators. We can remove content, block dares, mute chat, end streams, restrict features, release holds or suspend accounts. Automated decisions that significantly affect you can be reviewed by a person.</li>
+      <li>Anyone can report content or users with the Report button or at <span class="ph">[report URL]</span>, including content they believe is illegal. Reports should explain why and where.</li>
+      <li>When we restrict your content or account we tell you what we did, why, and how to appeal, unless the law or safety prevents it.</li>
+      <li>You can appeal within <strong>6 months</strong> in the app or at <span class="ph">[appeals email]</span>. A different person reviews your appeal. If you are in the EU you may also use a certified out-of-court dispute settlement body.</li>
+      <li>We report suspected crimes that threaten someone’s life or safety, and child sexual abuse material, to the competent authorities.</li>
+    </ul>
+
+    <h2 id="ranking">15. Ranking and the Courage score</h2>
+    <p>The order of streams and dares is based mainly on: whether the stream is live and matches your filters and age, the categories you follow, pot size (for dares), viewer activity, safety signals and the Taker’s <strong>Courage score</strong>. Paid promotion, if we ever offer it, will be clearly labelled.</p>
+    <p>The Courage score reflects how often a Taker takes on dares. <strong>Refusals as unsafe, for safety, health, consent or legal reasons, and timeouts do not lower it.</strong> <span class="ph">[Describe whether Takers can hide their score.]</span></p>
+
+    <h2 id="licence">16. Your content and our licence</h2>
+    <ul>
+      <li>You keep ownership of what you create: streams, dares, chat messages and your profile (“your content”).</li>
+      <li>You give Kurazh a worldwide, non-exclusive, royalty-free licence to host, store, transmit, display, moderate and record your content to run, secure and improve the Service, and to keep evidence for disputes, safety and legal duties. This licence ends when your content is deleted, except for copies we must keep under the Privacy Policy.</li>
+      <li>We will not use your stream in advertising without your separate consent.</li>
+      <li>You must have the rights to everything you stream, including music and the images of other people. Copyright complaints go to <span class="ph">[copyright email]</span>.</li>
+    </ul>
+
+    <h2 id="termination">17. Suspension and termination</h2>
+    <ul>
+      <li>You can stop using Kurazh and delete your account at any time. Pending holds are released; earnings above the minimum payout are paid out after any reserve period, subject to section 10.</li>
+      <li>We may suspend or close your account, with notice where possible, if you break these Terms or the Community Guidelines, if required by law or our partners, for fraud or security reasons, or to protect people from harm. Serious violations (threats to life, child safety, trafficking, doxxing, fraud) lead to an immediate permanent ban.</li>
+      <li>Repeated violations are handled with a step-by-step approach described in the Community Guidelines. We also act against people who often file reports that are clearly unfounded.</li>
+    </ul>
+
+    <h2 id="risk">18. Your safety and assumption of risk</h2>
+    <p>Takers decide what to do and are responsible for doing it safely and lawfully. Do not take any dare that could hurt you or anyone else, even if it passed our filter. If something feels wrong, stop: stopping for safety is always free.</p>
+    <p>In an emergency, contact local emergency services (112 in Ukraine and the EU). Kurazh is not an emergency service.</p>
+
+    <h2 id="liability">19. Liability</h2>
+    <ul>
+      <li>Nothing in these Terms limits or excludes liability that cannot legally be limited, including for death or personal injury caused by negligence, for fraud, or your statutory rights as a consumer.</li>
+      <li>Subject to that, the Service is provided “as is”. We are not liable for the acts of Takers, Callers or other users, or for losses that were not reasonably foreseeable.</li>
+      <li>Subject to that, our total liability to you for any claim related to the Service is limited to the greater of (a) the fees Kurazh received from your activity in the 12 months before the claim and (b) <span class="ph">[amount]</span>.</li>
+      <li>If you use Kurazh for business purposes, you agree to compensate us for losses caused by your breach of these Terms or the law, to the extent permitted by law.</li>
+    </ul>
+    <p class="note"><b>Drafting note:</b> liability limits and any indemnity must be checked against Ukrainian consumer law and EU Directive 93/13/EEC (unfair terms). Consumer indemnities are often unenforceable.</p>
+
+    <h2 id="law">20. Disputes and governing law</h2>
+    <ul>
+      <li>Please contact us first at <span class="ph">[support email]</span>; we aim to reply within <span class="ph">[14]</span> days.</li>
+      <li>These Terms are governed by the laws of <span class="ph">[Ukraine]</span>. If you are a consumer, you also keep the protection of the mandatory laws of the country where you live, and you can bring proceedings in your local courts.</li>
+      <li>Business users have access to our internal complaint handling system at <span class="ph">[business complaints email]</span> and to mediation through <span class="ph">[mediator]</span>.</li>
+    </ul>
+
+    <h2 id="changes">21. Changes to these Terms</h2>
+    <p>We may update these Terms to reflect changes to the Service or the law. For important changes we will notify you in the app or by email at least <span class="ph">[30]</span> days before they take effect (at least 15 days for business users), unless a shorter period is needed for legal or safety reasons. If you do not agree, you can close your account before the change takes effect. We keep earlier versions available at <span class="ph">[archive URL]</span>.</p>
+
+    <h2 id="contact">22. Contact</h2>
+    <p><span class="ph">[Company legal name]</span>, <span class="ph">[Address]</span><br />
+    Support: <span class="ph">[support email]</span> · Security: <span class="ph">[security email]</span> · Legal and authorities: <span class="ph">[legal contact email]</span><br />
+    EU legal representative (DSA Art. 13): <span class="ph">[EU representative name and address]</span></p>
+  </main>
+
+  <footer>
+    <a href="../">← Back to Kurazh</a>
+    <a href="privacy.html">Privacy Policy</a>
+    <a href="community-guidelines.html">Community Guidelines</a>
+    <p>Draft — must be reviewed by a qualified lawyer before launch.</p>
+  </footer>
+</div>
+</body>
+</html>

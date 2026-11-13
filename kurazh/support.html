@@ -1,0 +1,946 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0c0a" />
+<meta name="color-scheme" content="dark" />
+<meta name="description" content="Kurazh Help center: holds and payments, streaming, declines and free passes, safety, payouts and troubleshooting." />
+<title>Kurazh Help</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Manrope:wght@400;500;600;700&display=swap" />
+<style>
+:root {
+  --bg: #0a0c0a;
+  --surface: #101410;
+  --surface-2: #141a15;
+  --green: #1e3a2c;
+  --green-2: #244634;
+  --gold: #b8975a;
+  --gold-2: #cdb27c;
+  --cashmere: #c8b69a;
+  --vanilla: #ece2cf;
+  --text: #ece2cf;
+  --muted: rgba(236, 226, 207, 0.64);
+  --faint: rgba(236, 226, 207, 0.42);
+  --line: rgba(200, 182, 154, 0.14);
+  --line-2: rgba(200, 182, 154, 0.26);
+  --ok: #86b393;
+  --warn: #d2a85e;
+  --alert: #cf7b68;
+  --alert-bg: rgba(207, 123, 104, 0.09);
+  --radius: 16px;
+  --serif: 'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif;
+  --sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --gutter: max(16px, env(safe-area-inset-left), env(safe-area-inset-right));
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background: var(--bg); }
+body {
+  margin: 0; min-height: 100vh; min-height: 100dvh;
+  background: var(--bg); color: var(--text);
+  font: 400 15px/1.55 var(--sans);
+  overflow-x: hidden; overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+a { color: var(--gold-2); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 3px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 2px; border-radius: 8px; }
+svg.i { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.wrap { width: 100%; max-width: 680px; margin: 0 auto; padding-left: var(--gutter); padding-right: var(--gutter); }
+
+/* header */
+.top {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(10, 12, 10, 0.94);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+  padding-top: env(safe-area-inset-top);
+}
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 52px; }
+.back { display: inline-flex; align-items: center; gap: 6px; color: var(--cashmere); font-size: 14px; font-weight: 500; min-height: 44px; }
+.back:hover { text-decoration: none; color: var(--vanilla); }
+.brand { font-family: var(--serif); font-size: 21px; font-weight: 600; letter-spacing: 0.02em; color: var(--vanilla); white-space: nowrap; }
+.brand em { font-style: italic; color: var(--gold-2); font-weight: 500; }
+.chip-btn {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px;
+  border: 1px solid var(--line-2); border-radius: 999px; background: transparent; color: var(--cashmere);
+  font-size: 13px; font-weight: 600;
+}
+.chip-btn:hover { border-color: var(--gold); color: var(--vanilla); }
+.search { position: relative; padding-bottom: 12px; }
+.search svg { position: absolute; left: 14px; top: 13px; color: var(--faint); }
+.search input {
+  width: 100%; height: 46px; padding: 0 44px 0 42px;
+  font-size: 16px; /* prevents iOS zoom */
+  background: var(--surface); border: 1px solid var(--line-2); border-radius: 14px; color: var(--vanilla);
+  -webkit-appearance: none; appearance: none;
+}
+.search input::placeholder { color: var(--faint); }
+.search input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184, 151, 90, 0.16); }
+.search input::-webkit-search-cancel-button { display: none; }
+.clear { position: absolute; right: 4px; top: 3px; width: 40px; height: 40px; border: 0; background: none; color: var(--faint); display: none; align-items: center; justify-content: center; }
+.search.has .clear { display: inline-flex; }
+
+main { padding-top: 18px; padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
+
+/* type */
+.eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); margin: 0 0 8px; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 600; color: var(--vanilla); letter-spacing: 0.005em; margin: 0; }
+h1 { font-size: 34px; line-height: 1.08; }
+h2 { font-size: 25px; line-height: 1.15; }
+h3 { font-size: 20px; line-height: 1.2; }
+.lede { color: var(--muted); margin: 10px 0 0; font-size: 15px; }
+.section { margin-top: 30px; }
+.section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.small { font-size: 13px; color: var(--muted); }
+.demo { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cashmere); border: 1px solid var(--line-2); border-radius: 999px; padding: 2px 8px; vertical-align: middle; }
+
+/* hero */
+.hero { padding: 6px 0 4px; }
+.hero h1 em { font-style: italic; color: var(--gold-2); font-weight: 500; }
+
+/* cards */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.pad { padding: 16px; }
+.urgent {
+  display: flex; gap: 14px; align-items: flex-start; padding: 16px;
+  border: 1px solid rgba(207, 123, 104, 0.35); background: var(--alert-bg); border-radius: var(--radius);
+  color: var(--text); width: 100%; text-align: left;
+}
+.urgent:hover { text-decoration: none; border-color: var(--alert); }
+.urgent .ic { color: var(--alert); margin-top: 2px; }
+.urgent b { display: block; font-weight: 700; color: var(--vanilla); font-size: 15px; }
+.urgent span { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cat {
+  display: flex; flex-direction: column; gap: 10px; padding: 14px; min-height: 116px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  color: var(--text); text-align: left;
+}
+.cat:hover { text-decoration: none; border-color: var(--line-2); background: var(--surface-2); }
+.cat .ic, .cat-ic { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: var(--green); color: var(--gold-2); }
+.cat b { font-weight: 600; font-size: 14px; line-height: 1.3; color: var(--vanilla); }
+.cat span { font-size: 12px; color: var(--faint); }
+
+.list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.list li + li { border-top: 1px solid var(--line); }
+.row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; min-height: 52px; color: var(--text); width: 100%; background: none; border: 0; text-align: left; }
+.row:hover { text-decoration: none; background: var(--surface-2); }
+.row .t { flex: 1; min-width: 0; }
+.row .t b { display: block; font-weight: 600; font-size: 14.5px; color: var(--vanilla); }
+.row .t span { display: block; font-size: 12.5px; color: var(--faint); margin-top: 2px; }
+.row .chev { color: var(--faint); }
+mark { background: rgba(205, 178, 124, 0.22); color: var(--vanilla); border-radius: 3px; padding: 0 1px; }
+
+/* breadcrumb */
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; color: var(--faint); margin-bottom: 14px; }
+.crumbs a { color: var(--cashmere); }
+.crumbs svg { width: 14px; height: 14px; }
+
+/* article */
+.article h1 { font-size: 32px; }
+.prose { margin-top: 16px; color: rgba(236, 226, 207, 0.86); font-size: 15.5px; }
+.prose p { margin: 0 0 12px; }
+.prose ul, .prose ol { margin: 0 0 12px; padding-left: 20px; }
+.prose li { margin: 4px 0; }
+.prose li::marker { color: var(--gold); }
+.prose h3 { margin: 22px 0 8px; font-size: 20px; }
+.prose strong { color: var(--vanilla); font-weight: 600; }
+.prose .note { border-left: 2px solid var(--gold); padding: 10px 12px; background: var(--surface); border-radius: 0 10px 10px 0; font-size: 14px; color: var(--muted); margin: 14px 0; }
+.prose .note.alert { border-left-color: var(--alert); background: var(--alert-bg); color: var(--text); }
+.prose table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 0 0 14px; table-layout: fixed; }
+.prose th, .prose td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.prose th { color: var(--gold-2); font-weight: 600; font-size: 12px; letter-spacing: 0.04em; }
+.prose code { font-size: 13px; background: var(--surface-2); padding: 1px 6px; border-radius: 6px; color: var(--cashmere); }
+
+.helpful { margin-top: 26px; padding: 14px 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.helpful .btns { display: flex; gap: 8px; }
+
+/* buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 48px; padding: 0 20px; border-radius: 14px; border: 1px solid transparent;
+  font-weight: 700; font-size: 15px; letter-spacing: 0.01em;
+}
+.btn:hover { text-decoration: none; }
+.btn.primary { background: var(--gold); color: #14120c; }
+.btn.primary:hover { background: var(--gold-2); }
+.btn.ghost { background: transparent; color: var(--vanilla); border-color: var(--line-2); }
+.btn.ghost:hover { border-color: var(--gold); }
+.btn.danger { background: var(--alert); color: #160d0a; }
+.btn.block { width: 100%; }
+.btn[disabled] { opacity: 0.55; cursor: default; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.btn-row .btn { flex: 1 1 160px; }
+
+/* status */
+.status-head { display: flex; align-items: center; gap: 10px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px rgba(134, 179, 147, 0.15); flex: none; }
+.status-list { list-style: none; margin: 12px 0 0; padding: 0; }
+.status-list li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.status-list li span:last-child { color: var(--ok); font-weight: 600; font-size: 13px; white-space: nowrap; }
+
+/* form */
+.field { margin-top: 14px; }
+.field label { display: block; font-size: 13px; font-weight: 600; color: var(--cashmere); margin-bottom: 6px; }
+.field .hint { font-size: 12px; color: var(--faint); margin-top: 5px; }
+.field input, .field select, .field textarea {
+  width: 100%; font-size: 16px; color: var(--vanilla);
+  background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 12px;
+  padding: 12px 14px; -webkit-appearance: none; appearance: none;
+}
+.field select {
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23c8b69a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+}
+.field select option { background: #141a15; color: var(--vanilla); }
+.field textarea { min-height: 132px; resize: vertical; line-height: 1.5; }
+.field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184, 151, 90, 0.16); }
+.field.err input, .field.err select, .field.err textarea { border-color: var(--alert); }
+.field .msg { display: none; font-size: 12px; color: var(--alert); margin-top: 5px; }
+.field.err .msg { display: block; }
+.count { float: right; font-weight: 500; color: var(--faint); }
+
+.toast {
+  margin-top: 16px; padding: 14px 16px; border-radius: 14px; display: flex; gap: 12px; align-items: flex-start;
+  background: rgba(30, 58, 44, 0.55); border: 1px solid rgba(134, 179, 147, 0.35); color: var(--vanilla); font-size: 14px;
+}
+.toast .ic { color: var(--ok); margin-top: 1px; }
+.toast b { font-weight: 700; }
+
+/* tickets */
+.ticket { padding: 14px 16px; }
+.ticket + .ticket { border-top: 1px solid var(--line); }
+.ticket-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ticket-id { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 13px; color: var(--gold-2); letter-spacing: 0.04em; }
+.ticket h4 { margin: 6px 0 2px; font-size: 14.5px; font-weight: 600; color: var(--vanilla); }
+.ticket .meta { font-size: 12px; color: var(--faint); }
+.ticket .acts { margin-top: 8px; display: flex; gap: 14px; }
+.linkbtn { background: none; border: 0; padding: 4px 0; color: var(--gold-2); font-size: 13px; font-weight: 600; }
+.pill { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border-radius: 999px; padding: 3px 9px; white-space: nowrap; border: 1px solid; }
+.pill.open { color: var(--gold-2); border-color: rgba(205, 178, 124, 0.4); }
+.pill.review { color: var(--cashmere); border-color: var(--line-2); }
+.pill.escalated { color: var(--alert); border-color: rgba(207, 123, 104, 0.45); }
+.pill.closed { color: var(--faint); border-color: var(--line); }
+.empty { padding: 22px 16px; text-align: center; color: var(--faint); font-size: 14px; }
+
+.steps { counter-reset: s; list-style: none; padding: 0; margin: 14px 0 0; }
+.steps li { position: relative; padding: 0 0 14px 40px; }
+.steps li::before { counter-increment: s; content: counter(s); position: absolute; left: 0; top: -1px; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line-2); display: grid; place-items: center; font-size: 12px; font-weight: 700; color: var(--gold-2); }
+.steps li b { color: var(--vanilla); }
+.call { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.call a { flex: 1 1 120px; }
+
+footer { border-top: 1px solid var(--line); margin-top: 36px; padding-top: 20px; color: var(--faint); font-size: 13px; }
+footer nav { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 12px; }
+footer nav a { color: var(--cashmere); }
+
+@media (min-width: 560px) {
+  .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  h1 { font-size: 40px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .view { animation: fade 0.22s ease-out; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></symbol>
+    <symbol id="i-id" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M5.5 15.5c.5-1.3 1.6-2 3-2s2.5.7 3 2M14 10h4M14 13h3"/></symbol>
+    <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 9.5h18M7 14.5h4"/></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="3" y="6.5" width="12.5" height="11" rx="2"/><path d="M15.5 10.5l5-3v9l-5-3"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.5l7 2.5v5.5c0 4.4-3 7.8-7 9-4-1.2-7-4.6-7-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-adult" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8 9.5l1.5-1v7M13.5 10a1.7 1.7 0 113.4 0c0 1-1.7 1.6-1.7 1.6s1.9.5 1.9 1.9a1.8 1.8 0 01-3.6 0"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M4 7.5A2.5 2.5 0 016.5 5H18v3"/><rect x="4" y="8" width="16.5" height="11" rx="2"/><circle cx="16" cy="13.5" r="1"/></symbol>
+    <symbol id="i-tool" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 005 5L13 18a2.1 2.1 0 01-3-3z" transform="translate(-2 0)"/><path d="M15 4.5l-2 2 4.5 4.5 2-2"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17.2v.1"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4.5 6.5A2 2 0 016.5 4.5h11a2 2 0 012 2v8a2 2 0 01-2 2H10l-4.5 3.5v-3.5h-1z" transform="translate(0 .5)"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.3 4.6-4.8"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.5 4h3l1.5 4-2 1.3a10 10 0 005.7 5.7l1.3-2 4 1.5v3a2 2 0 01-2 2A15 15 0 014.5 6a2 2 0 012-2z"/></symbol>
+    <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M4 7.5a1.5 1.5 0 011.5-1.5h13A1.5 1.5 0 0120 7.5V10a2 2 0 000 4v2.5a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 014 16.5V14a2 2 0 000-4z"/><path d="M14 6.5v11" stroke-dasharray="1.5 2"/></symbol>
+    <symbol id="i-thumb-up" viewBox="0 0 24 24"><path d="M8 10.5V19H5.5A1.5 1.5 0 014 17.5v-5.5a1.5 1.5 0 011.5-1.5zM8 10.5l3.5-6a2 2 0 012 2.4L13 10h5a2 2 0 012 2.3l-1 5.4A2 2 0 0117 19.5H8"/></symbol>
+    <symbol id="i-thumb-down" viewBox="0 0 24 24"><g transform="rotate(180 12 12)"><path d="M8 10.5V19H5.5A1.5 1.5 0 014 17.5v-5.5a1.5 1.5 0 011.5-1.5zM8 10.5l3.5-6a2 2 0 012 2.4L13 10h5a2 2 0 012 2.3l-1 5.4A2 2 0 0117 19.5H8"/></g></symbol>
+  </defs>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <div class="bar">
+      <a class="back" href="./" data-tap><svg class="i"><use href="#i-back"/></svg><span>Back to Kurazh</span></a>
+      <a class="brand" href="?" data-nav="" aria-label="Kurazh Help home">Kurazh <em>Help</em></a>
+    </div>
+    <form class="search" role="search" id="searchForm" autocomplete="off">
+      <label for="q" class="sr">Search help articles</label>
+      <svg class="i"><use href="#i-search"/></svg>
+      <input id="q" type="search" inputmode="search" enterkeyhint="search" placeholder="Search: hold pending, free passes, payout…" />
+      <button type="button" class="clear" id="clearQ" aria-label="Clear search"><svg class="i"><use href="#i-x"/></svg></button>
+    </form>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="view" class="view" tabindex="-1" aria-live="polite"></div>
+
+  <footer>
+    <nav aria-label="Legal">
+      <a href="legal/terms.html">Terms of Service</a>
+      <a href="legal/privacy.html">Privacy Policy</a>
+      <a href="legal/community-guidelines.html">Community Guidelines</a>
+      <a href="?topic=contact" data-nav="contact">Contact support</a>
+    </nav>
+    <p style="margin:0 0 6px">Kurazh · Call it or do it. All users must be 18 or older.</p>
+    <p style="margin:0"><span class="demo">Demo</span> This is a demo help center. Tickets are stored only on this device, service status is not live monitoring, and no real emails or messages are sent.</p>
+  </footer>
+</main>
+
+<script src="analytics.js"></script>
+<script src="sound.js"></script>
+<script>
+'use strict';
+(function () {
+  /* ───────── helpers ───────── */
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var ico = function (n, cls) { return '<svg class="i' + (cls ? ' ' + cls : '') + '" aria-hidden="true"><use href="#i-' + n + '"/></svg>'; };
+  function track(name, props) { try { window.KurazhAnalytics && window.KurazhAnalytics.track && window.KurazhAnalytics.track(name, props || {}); } catch (e) {} }
+  function tap() { try { window.KurazhSound && window.KurazhSound.play && window.KurazhSound.play('tap'); } catch (e) {} }
+  function lsGet(k, d) { try { var v = window.localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+  function lsSet(k, v) { try { window.localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+
+  /* ───────── content ───────── */
+  var CATS = [
+    { id: 'start', name: 'Getting started', blurb: 'Caller vs Taker, first dare', icon: 'compass' },
+    { id: 'account', name: 'Account & sign-in', blurb: 'Google, two-step, recovery', icon: 'user' },
+    { id: 'kyc', name: 'Identity verification', blurb: 'Documents, selfie, results', icon: 'id' },
+    { id: 'payments', name: 'Payments & holds', blurb: 'Holds, bonus, disputes', icon: 'card' },
+    { id: 'streaming', name: 'Streaming', blurb: 'Going live, passes, score', icon: 'video' },
+    { id: 'safety', name: 'Safety & reporting', blurb: 'Rules, reports, blocking', icon: 'shield' },
+    { id: 'adult', name: '18+ section', blurb: 'Access and rules', icon: 'adult' },
+    { id: 'payouts', name: 'Payouts for Takers', blurb: 'Earnings and withdrawals', icon: 'wallet' },
+    { id: 'troubleshooting', name: 'Troubleshooting', blurb: 'Camera, sound, connection', icon: 'tool' }
+  ];
+
+  var A = [
+    /* Getting started */
+    { id: 'what-is-kurazh', cat: 'start', title: 'What is Kurazh?', tags: 'about overview how it works intro dare app',
+      body: '<p>Kurazh is a live app built around one line: <strong>Call it or do it.</strong> People watching a live stream write dares and back them with money. The person streaming decides which dares to take on, and viewers vote on whether each one counts.</p>' +
+      '<ul><li>Money is never taken up front. Backing a dare places a <strong>hold</strong> on your card, which is captured only if at least 60% of voters say the dare counts.</li>' +
+      '<li>If the dare is declined, times out or fails the vote, every hold is released in full.</li>' +
+      '<li>Everyone on Kurazh must be 18 or older. Dares are checked by a safety filter and live moderation.</li></ul>' +
+      '<div class="note">In the demo, other streams, viewers, chat and money are simulated on your device. No real payments are made.</div>' },
+    { id: 'caller-vs-taker', cat: 'start', title: 'Caller vs Taker: the two roles', tags: 'roles switch viewer streamer caller taker difference',
+      body: '<p>Every account can play both roles and switch between them at any time.</p>' +
+      '<table><thead><tr><th>Caller</th><th>Taker</th></tr></thead><tbody>' +
+      '<tr><td>Watches streams and writes dares</td><td>Goes live and chooses which dares to take</td></tr>' +
+      '<tr><td>Backs a dare with a card hold, or adds to someone else&rsquo;s dare</td><td>Sets a minimum stake, viewer age limit, categories, dare types and free passes</td></tr>' +
+      '<tr><td>Votes &ldquo;Does it count?&rdquo;</td><td>Gets the pot minus 20% when a dare counts</td></tr></tbody></table>' +
+      '<p>To switch, tap the centre button to go live as a Taker, or open any stream to call dares as a Caller. Anything involving money (backing dares, going live, withdrawing) needs a verified identity.</p>' },
+    { id: 'first-dare', cat: 'start', title: 'Calling your first dare', tags: 'call dare write create propose back stake amount caller how to',
+      body: '<ol><li>Open a live stream and tap <strong>Dares</strong>.</li>' +
+      '<li>Write a clear, doable dare. The safety check runs as you type and blocks anything dangerous or against the rules.</li>' +
+      '<li>Pick an amount. It has to be at least the Taker&rsquo;s minimum, shown on the stream as <strong>&ldquo;Dares from $X&rdquo;</strong>. Set a time limit.</li>' +
+      '<li>Confirm on the <strong>Hold</strong> screen. The amount is held on your card, not charged.</li></ol>' +
+      '<p>Other viewers can back your dare to grow the pot. You can also back any dare already in the queue. Bigger pots rise to the top.</p>' +
+      '<div class="note">Good dares are specific, safe and fun to watch: &ldquo;Sing the chorus of your favourite song in a cowboy accent&rdquo; works better than &ldquo;do something crazy&rdquo;.</div>' },
+    { id: 'voting', cat: 'start', title: 'How voting works', tags: 'vote does it count 60% percent result poll',
+      body: '<p>When the Taker taps <strong>Done</strong>, viewers in the stream get a short <strong>&ldquo;Does it count?&rdquo;</strong> vote.</p>' +
+      '<ul><li><strong>60% or more vote yes:</strong> all holds on that dare are captured. The Taker receives the pot minus the 20% platform fee.</li>' +
+      '<li><strong>Under 60%:</strong> every hold is released in full. Nobody is charged.</li></ul>' +
+      '<p>Votes are counted on our side, and unusual patterns, such as sudden waves of new accounts, are checked for manipulation. If you think a result was wrong, see <a href="?topic=disputes" data-nav="disputes">Disputing a vote or charge</a>.</p>' },
+
+    /* Account */
+    { id: 'google-signin', cat: 'account', title: 'Sign in with Google', tags: 'google login sign in failed error account gmail oauth',
+      body: '<p>Tap <strong>Continue with Google</strong> and choose your Google account. Kurazh receives your name, email and profile photo. You then confirm your date of birth and set up SMS two-step verification.</p>' +
+      '<h3>If Google sign-in fails</h3><ul>' +
+      '<li>Make sure pop-ups aren&rsquo;t blocked and your device&rsquo;s date and time are set automatically.</li>' +
+      '<li>If you installed Kurazh to your Home Screen and the Google window stays blank, open Kurazh in Safari, sign in there, then reopen the Home Screen app.</li>' +
+      '<li>If you first signed up with email and password, a different Google address creates a separate account. Sign in with your password, then link Google under <strong>Profile → Security</strong>.</li>' +
+      '<li>Still stuck? Contact support (category Account & sign-in). Include the time you tried and any error text. Never send us your password.</li></ul>' },
+    { id: 'two-step', cat: 'account', title: 'Two-step verification (email + SMS)', tags: '2fa two factor sms code email code verification not received otp',
+      body: '<p>Kurazh protects accounts in two steps:</p><ol>' +
+      '<li><strong>Email:</strong> when you sign up, we send a 6-digit code to confirm your address.</li>' +
+      '<li><strong>Phone:</strong> you add a mobile number and confirm it with an SMS code. After that, every sign-in needs your password (or Google) <em>and</em> a fresh SMS code.</li></ol>' +
+      '<h3>Code didn&rsquo;t arrive?</h3><ul><li>Wait 60 seconds, then tap <strong>Resend</strong>.</li><li>Check that the number includes the right country code.</li><li>Check spam or promotions folders for email codes.</li><li>Codes expire after a few minutes. Always use the newest one.</li></ul>' +
+      '<div class="note">In the demo, codes are shown on screen (&ldquo;Demo inbox&rdquo;, &ldquo;Demo SMS&rdquo;) instead of being sent.</div>' },
+    { id: 'recovery', cat: 'account', title: 'Recover your account or reset your password', tags: 'forgot password reset recovery lost phone new number change email access',
+      body: '<h3>Forgot your password</h3><p>On the sign-in screen tap <strong>Forgot password</strong>. We email you a code, then you choose a new password (at least 8 characters, with a letter and a number).</p>' +
+      '<h3>Lost your phone or number</h3><p>Without your SMS code we can&rsquo;t let you in automatically. Contact support (category Account & sign-in) from any device. To protect your money, we confirm it&rsquo;s you with a new selfie check against your verified ID before changing the number.</p>' +
+      '<h3>Lost access to your email</h3><p>Same process: contact support and we&rsquo;ll verify your identity before updating it. Kurazh staff will never ask for your password or codes.</p>' },
+    { id: 'account-locked', cat: 'account', title: 'My account is locked', tags: 'locked blocked too many attempts suspended frozen cannot sign in',
+      body: '<p>After <strong>5 wrong passwords or codes</strong> in a row, sign-in is paused for a short time to stop someone guessing. The screen shows when you can try again. Waiting is usually all you need.</p>' +
+      '<p>An account can also be restricted for safety or payment reasons, for example during an open chargeback or a Trust & Safety review. In that case you&rsquo;ll see a notice in the app explaining what&rsquo;s limited. Contact support (category Account & sign-in) and we&rsquo;ll tell you what we need to restore access.</p>' },
+    { id: 'delete-account', cat: 'account', title: 'Delete your account', tags: 'delete close remove account data erase',
+      body: '<p>Go to <strong>Profile → Security → Delete account</strong>. Before you do:</p><ul>' +
+      '<li>Withdraw any Stream earnings. You can&rsquo;t withdraw after deletion.</li>' +
+      '<li>Active holds are released. Dares you&rsquo;re backing are cancelled.</li></ul>' +
+      '<p>Some records, such as payments and moderation history, are kept for as long as the law requires. See the <a href="legal/privacy.html">Privacy Policy</a>.</p>' },
+
+    /* KYC */
+    { id: 'kyc-why', cat: 'kyc', title: 'Why we verify your identity', tags: 'kyc identity verification why required need verify',
+      body: '<p>Real money moves on Kurazh, so we confirm who everyone is. This keeps out minors and stops fraud and stolen cards.</p>' +
+      '<p><strong>Without verification</strong> you can watch streams and chat.</p>' +
+      '<p><strong>With verification</strong> you can also call and back dares, go live as a Taker, withdraw earnings and enter the 18+ section.</p>' +
+      '<p>You can skip verification at sign-up and finish it later under <strong>Profile → Verify identity</strong>.</p>' },
+    { id: 'kyc-steps', cat: 'kyc', title: 'How identity verification works', tags: 'kyc steps document passport id card driving licence selfie liveness how long',
+      body: '<ol><li>Choose a document (passport, national ID card or driver&rsquo;s licence) and the country that issued it.</li>' +
+      '<li>Take a photo of the document. ID cards and licences need both sides.</li>' +
+      '<li>Take a short selfie check to show you&rsquo;re a real person and the face matches.</li>' +
+      '<li>We check that the name and date of birth match your account.</li></ol>' +
+      '<p>Most checks finish in a few minutes. A manual review can take up to 24 hours.</p>' +
+      '<div class="note">In the demo, no photos are taken and the check is simulated. In the live version, a certified verification provider runs the checks.</div>' },
+    { id: 'kyc-failed', cat: 'kyc', title: 'Verification failed', tags: 'kyc failed rejected declined denied verification error retry',
+      body: '<p>The most common reasons:</p><ul>' +
+      '<li>Blurry photo, glare, or a document with cut-off corners</li>' +
+      '<li>An expired document</li>' +
+      '<li>A name or date of birth that doesn&rsquo;t match your account</li>' +
+      '<li>A selfie in poor light, or with a hat or sunglasses on</li>' +
+      '<li>Being under 18. Kurazh is adults only, and this can&rsquo;t be overridden.</li></ul>' +
+      '<p>Try again in good, even light with the whole document in frame. If it fails three times, contact support (category Identity verification). We can&rsquo;t approve an identity by hand without a successful check, but we can tell you what went wrong.</p>' },
+
+    /* Payments */
+    { id: 'holds', cat: 'payments', title: 'How holds work', tags: 'hold authorization authorisation freeze reserve card money how payment pre-auth',
+      body: '<p>Kurazh doesn&rsquo;t take your money when you back a dare. It places a <strong>hold</strong> (a card authorization), the same way hotels and car rentals do.</p>' +
+      '<ol><li>You confirm an amount on the Hold screen. Your bank sets that amount aside, usually shown as &ldquo;pending&rdquo;.</li>' +
+      '<li>If the dare is done and at least 60% vote it counts, the hold is <strong>captured</strong> (charged).</li>' +
+      '<li>In every other case the hold is <strong>released in full</strong>.</li></ol>' +
+      '<p>Your <strong>Wallet</strong> shows what&rsquo;s held right now and on which dares. History labels every step: HELD, CHARGED, RELEASED.</p>' +
+      '<p>There&rsquo;s a daily hold limit of <strong>$500</strong> per account.</p>' },
+    { id: 'hold-pending', cat: 'payments', title: 'My bank still shows a pending hold', tags: 'pending bank statement still showing released not returned money missing hold pending',
+      body: '<p>A pending entry is the hold, not a charge. Check <strong>Wallet → History</strong>:</p><ul>' +
+      '<li><strong>HELD</strong> means the dare isn&rsquo;t finished yet.</li>' +
+      '<li><strong>RELEASED</strong> means we&rsquo;ve told your bank to drop the hold. Your bank removes the pending line on its own schedule, often within minutes but sometimes up to <strong>7 business days</strong> (rarely up to 30 for some cards).</li>' +
+      '<li><strong>CHARGED</strong> means the dare counted and the money was captured.</li></ul>' +
+      '<p>We can&rsquo;t speed up your bank, but each release has a reference in History that you can show them. If a hold is still pending after 7 business days, contact support with the dare and date.</p>' },
+    { id: 'capture-release', cat: 'payments', title: 'When a hold is captured or released', tags: 'captured charged released refund when cases outcome',
+      body: '<table><thead><tr><th>What happened</th><th>Your hold</th></tr></thead><tbody>' +
+      '<tr><td>Dare done, 60% or more voted yes</td><td>Captured</td></tr>' +
+      '<tr><td>Vote under 60%</td><td>Released in full</td></tr>' +
+      '<tr><td>Taker passed, gave up, or ignored the dare for more than 2 minutes</td><td>Released, plus a <a href="?topic=decline-bonus" data-nav="decline-bonus">decline bonus</a> if the Taker had no free passes left</td></tr>' +
+      '<tr><td>Time limit ran out</td><td>Released (counts as a pass)</td></tr>' +
+      '<tr><td>Declined as unsafe, or removed by moderation</td><td>Released in full</td></tr>' +
+      '<tr><td>Stream ended before the dare</td><td>Released in full</td></tr></tbody></table>' +
+      '<p>A hold is never partly captured. It&rsquo;s either your full amount or nothing.</p>' },
+    { id: 'hold-expiry', cat: 'payments', title: 'Hold expiry', tags: 'expiry expire expired how long hold lasts 7 days stuck',
+      body: '<p>A hold lasts only as long as its dare. As soon as the dare is resolved, we capture or release it.</p>' +
+      '<p>If something stops a dare from finishing, such as a crashed stream or a lost connection, we release the hold automatically when the stream ends. Card authorizations also expire on their own. Most banks drop them after about 7 days, and an expired hold can never be captured.</p>' +
+      '<p>Kurazh never captures money after a dare has ended without a valid vote.</p>' },
+    { id: 'decline-bonus', cat: 'payments', title: 'Decline bonus: what it is and when you get it', tags: 'decline bonus compensation pass fee backers not received missing',
+      body: '<p>Each Taker gets a few <strong>free passes</strong> per stream (3 by default). If they pass on your dare after those run out, they pay a decline fee: <strong>10% of the dare&rsquo;s pot, minimum $1, maximum $20</strong>. The fee goes to that dare&rsquo;s backers as a <strong>decline bonus</strong>, and every hold is released in full.</p>' +
+      '<ul><li>The bonus is split among backers in proportion to what each one put in.</li>' +
+      '<li><strong>Example:</strong> the pot is $40 and you backed $10 (25%). The fee is $4, so your bonus is $1.</li>' +
+      '<li>Give ups, timeouts and dares ignored for more than 2 minutes count as passes too.</li></ul>' +
+      '<p><strong>No bonus is paid</strong> when the Taker uses a free pass, declines a dare as unsafe or against the rules, the vote fails, or moderation removes the dare.</p>' +
+      '<p>The bonus is shown in Wallet → History as DECLINE BONUS and sent to the card you backed with. Your bank may take 3–5 business days to show it. If it&rsquo;s missing after that, contact support with the stream link.</p>' },
+    { id: 'disputes', cat: 'payments', title: 'Disputing a vote or charge', tags: 'dispute vote wrong unfair charged but dare not done refund appeal complaint',
+      body: '<p>If you were charged but think the dare wasn&rsquo;t really done, or the vote looks manipulated, tell us within <strong>7 days</strong>.</p>' +
+      '<ol><li>Open <a href="?topic=contact" data-nav="contact">Contact support</a> and choose Payments & holds.</li>' +
+      '<li>Include the stream link, the dare text and roughly when it happened.</li></ol>' +
+      '<p>We review the vote log, the stream record and reports. If the dare didn&rsquo;t meet its own wording, or votes were manipulated, we refund the captured amount. Most disputes are settled within 3 business days.</p>' +
+      '<div class="note">Please contact us before filing a chargeback with your bank. It&rsquo;s faster for you, and a chargeback pauses payments on your account while it&rsquo;s open.</div>' },
+    { id: 'chargebacks', cat: 'payments', title: 'Chargebacks', tags: 'chargeback bank dispute card reversal fraud unauthorized stolen card',
+      body: '<p>A chargeback is when you ask your bank to reverse a payment. You always have that right, but it&rsquo;s slow (often weeks) and works outside Kurazh.</p>' +
+      '<ul><li>While a chargeback is open, holds and backing are paused on the account that filed it.</li>' +
+      '<li>We send the bank the dare, vote record and hold history. The bank decides the outcome.</li>' +
+      '<li><strong>For Takers:</strong> if a backer&rsquo;s chargeback succeeds, that amount is taken from your Stream earnings. You can send us evidence through support.</li>' +
+      '<li>Repeated chargebacks for dares that clearly counted can lead to the account being closed.</li></ul>' +
+      '<p>If you see a payment you don&rsquo;t recognise, your card may have been used by someone else. Contact support right away and we&rsquo;ll lock the account.</p>' },
+    { id: 'cards-limits', cat: 'payments', title: 'Cards, wallets and daily limit', tags: 'card add change primary backup apple pay google pay declined limit 500',
+      body: '<p>You can link several cards in <strong>Wallet</strong> and pick a primary and backups. Visa, Mastercard, Apple Pay and Google Pay are supported.</p>' +
+      '<ul><li>The daily hold limit is <strong>$500</strong>. The Hold screen shows how much you have left today.</li>' +
+      '<li>If a hold is declined, check your available balance, your online payment settings and whether your bank blocked the payment. Then try a backup card.</li>' +
+      '<li>Card details are entered in our payment provider&rsquo;s secure form. Kurazh never sees or stores your full card number.</li></ul>' +
+      '<div class="note">In the demo, a test card is linked and no real money moves.</div>' },
+
+    /* Streaming */
+    { id: 'going-live', cat: 'streaming', title: 'Going live as a Taker', tags: 'go live start stream broadcast setup taker camera',
+      body: '<ol><li>Verify your identity (one time).</li>' +
+      '<li>Tap the centre button, then <strong>Go live</strong>.</li>' +
+      '<li>Set up your stream: title, up to 3 themes, categories, the dare types you accept, your <a href="?topic=min-stake" data-nav="min-stake">minimum stake</a>, the <a href="?topic=age-limit" data-nav="age-limit">minimum viewer age</a> and your <a href="?topic=declines" data-nav="declines">free passes</a>.</li>' +
+      '<li>Allow camera and microphone, pick the front or back camera, and start.</li></ol>' +
+      '<p>Incoming dares show who&rsquo;s backing them and the pot. You can accept, pass or decline as unsafe. When you finish a dare, tap <strong>Done</strong> to start the vote, or <strong>Give up</strong>, which counts as a pass.</p>' },
+    { id: 'iphone-permissions', cat: 'streaming', title: 'iPhone camera and microphone permissions', tags: 'iphone ios safari camera microphone mic permission denied allow access black screen',
+      body: '<p>When you go live, Safari asks to use your camera and microphone. Tap <strong>Allow</strong>.</p>' +
+      '<h3>If you tapped Don&rsquo;t Allow</h3><ol>' +
+      '<li>In Safari, tap the <strong>aA</strong> (page menu) icon in the address bar → <strong>Website Settings</strong> → set Camera and Microphone to <strong>Allow</strong> or <strong>Ask</strong>.</li>' +
+      '<li>Or open <strong>Settings → Apps → Safari</strong> (on older iOS: Settings → Safari) and set Camera and Microphone to Ask or Allow.</li>' +
+      '<li>Reload Kurazh and try again.</li></ol>' +
+      '<p>Also check <strong>Settings → Screen Time → Content &amp; Privacy Restrictions</strong>, and close FaceTime or any other app that&rsquo;s using the camera. Camera access only works over HTTPS.</p>' },
+    { id: 'share-stream', cat: 'streaming', title: 'Share your stream by link or QR code', tags: 'share link qr code invite friends another device join stream url',
+      body: '<p>On your live stream, tap <strong>Share</strong>:</p><ul>' +
+      '<li><strong>Copy link</strong> to send it in any messenger.</li>' +
+      '<li><strong>Show QR</strong> so someone nearby can scan it with their phone camera.</li></ul>' +
+      '<p>The link opens your stream in the browser, with no install needed. Viewers need to sign in to call or back dares, and they must meet your minimum viewer age. A link only works while you&rsquo;re live.</p>' +
+      '<p>If the link doesn&rsquo;t open, see <a href="?topic=cant-connect" data-nav="cant-connect">Can&rsquo;t connect to a stream</a>.</p>' },
+    { id: 'min-stake', cat: 'streaming', title: 'Minimum stake', tags: 'minimum stake price amount dares from cheapest set',
+      body: '<p>Takers set the smallest pot a new dare can start with, using a preset (for example $2, $5, $10 or $20) or a custom amount. Viewers see <strong>&ldquo;Dares from $X&rdquo;</strong> on your stream and can&rsquo;t call a dare for less.</p>' +
+      '<p>Others can then back the dare in smaller amounts to grow the pot. You can change the minimum between streams. Viewers can filter the feed by minimum stake.</p>' },
+    { id: 'age-limit', cat: 'streaming', title: 'Minimum viewer age (18+ or 21+)', tags: 'age limit 21 18 viewer age restriction minimum age',
+      body: '<p>Everyone on Kurazh is 18 or older. Takers can raise the limit for their stream to <strong>21+</strong>.</p>' +
+      '<ul><li>The age check uses the verified date of birth from identity verification.</li>' +
+      '<li>Viewers under your limit don&rsquo;t see the stream in their feed and can&rsquo;t open it by link.</li>' +
+      '<li>This setting is separate from the <a href="?topic=adult" data-nav="adult">18+ section</a>, which has its own access rules.</li></ul>' },
+    { id: 'themes', cat: 'streaming', title: 'Stream themes and categories', tags: 'themes categories forest city gym kitchen road trip filter topics',
+      body: '<p>Choose up to 3 themes that describe your stream: Forest, Mountains, Sea &amp; lakes, Outdoors, City, Night out, Road trip, Cars, Racing · track, Gym, Kitchen, Studio, At home.</p>' +
+      '<p>Themes help viewers find you through feed filters and help them suggest dares that fit. Road trip, Cars and Racing themes turn on <a href="?topic=driving-mode" data-nav="driving-mode">driving mode</a>.</p>' +
+      '<p>You also pick which dare types and categories you accept. Dares outside them won&rsquo;t reach you.</p>' },
+    { id: 'declines', cat: 'streaming', title: 'Free passes and decline fees', tags: 'pass decline fee free passes give up timeout ignore unsafe refuse skip cost 10%',
+      body: '<p>Takers never have to do a dare. There are two ways to say no:</p>' +
+      '<table><thead><tr><th>Option</th><th>Cost</th></tr></thead><tbody>' +
+      '<tr><td><strong>Unsafe / against the rules</strong></td><td>Always free. The dare goes to moderation and doesn&rsquo;t use a pass.</td></tr>' +
+      '<tr><td><strong>Pass</strong></td><td>Uses one free pass. You get 3 per stream by default and can change this in stream setup.</td></tr>' +
+      '<tr><td><strong>Pass with no free passes left</strong></td><td>10% of that dare&rsquo;s pot, minimum $1, maximum $20</td></tr></tbody></table>' +
+      '<p>The fee goes to the dare&rsquo;s backers as a <a href="?topic=decline-bonus" data-nav="decline-bonus">decline bonus</a>, and their holds are released. It&rsquo;s taken from your Stream earnings, or charged to your linked card if your earnings don&rsquo;t cover it.</p>' +
+      '<p><strong>Examples:</strong> $6 pot → $1 fee (the minimum) · $45 pot → $4.50 · $350 pot → $20 (the maximum).</p>' +
+      '<h3>These also count as passes</h3><ul><li>Tapping <strong>Give up</strong> after accepting</li><li>Running out of time on a dare</li><li>Ignoring a dare for more than 2 minutes</li></ul>' +
+      '<p>Free passes reset at the start of every stream. Only use &ldquo;Unsafe&rdquo; for dares that really are unsafe. Moderation reviews these, and repeated misuse can lead to the fee being applied and restrictions on your account.</p>' },
+    { id: 'courage-score', cat: 'streaming', title: 'Courage score', tags: 'courage score acceptance rate percentage public profile stat dispute wrong',
+      body: '<p>Your Courage score is your <strong>public acceptance rate</strong>: the share of dares you took on out of all the dares you answered. It appears on your profile and your streams.</p>' +
+      '<ul><li><strong>Counts against it:</strong> passes, including free passes, give ups, timeouts and dares ignored for more than 2 minutes.</li>' +
+      '<li><strong>Doesn&rsquo;t count:</strong> dares declined as unsafe or against the rules, and dares removed by moderation.</li>' +
+      '<li>Whether a dare counted in the vote doesn&rsquo;t change the score. Accepting it is what matters.</li></ul>' +
+      '<p>If a stream crashed or lost connection and dares were marked as timed out, contact support with the stream link and we can remove them from your score.</p>' },
+    { id: 'driving-mode', cat: 'streaming', title: 'Driving mode and vehicle safety', tags: 'driving car road trip racing vehicle moving pause stopped safety track',
+      body: '<p>On streams with the Road trip, Cars or Racing theme, dares are <strong>paused while the vehicle is moving</strong>. Use the <strong>Driving / Stopped</strong> switch to change mode.</p>' +
+      '<ul><li>While you&rsquo;re driving, timers stop, so paused dares never count as ignored or timed out.</li>' +
+      '<li>Racing dares are allowed only on a closed track.</li>' +
+      '<li>The filter blocks dares about speeding, overtaking, using a phone at the wheel, driving without a seatbelt and street racing.</li></ul>' +
+      '<div class="note alert">Never operate a phone while driving. Mount it, or let a passenger run the stream.</div>' },
+
+    /* Safety */
+    { id: 'safety-rules', cat: 'safety', title: 'What is not allowed', tags: 'rules banned forbidden safety filter dangerous community guidelines prohibited',
+      body: '<p>A safety filter checks dares, chat messages, nicknames and stream titles in English, Ukrainian and Russian. Live moderators review reports. These are never allowed:</p><ul>' +
+      '<li>Dangerous stunts, heights, fire, weapons, or anything risking injury</li>' +
+      '<li>Alcohol, drugs or other substances</li><li>Violence, threats, harassment or hate</li>' +
+      '<li>Involving strangers or bystanders without their consent</li><li>Sharing personal data such as addresses, phone numbers or documents</li>' +
+      '<li>Anyone under 18, in any way</li><li>Anything illegal where you are</li></ul>' +
+      '<p>See the full <a href="legal/community-guidelines.html">Community Guidelines</a>.</p>' },
+    { id: 'report', cat: 'safety', title: 'Report a stream, dare, message or user', tags: 'report flag abuse complaint moderation harassment inappropriate',
+      body: '<ol><li>Tap <strong>Report</strong> on the stream, or press and hold a dare, chat message or profile.</li>' +
+      '<li>Choose a reason and add details if you can.</li>' +
+      '<li>Send. The person you reported isn&rsquo;t told who reported them.</li></ol>' +
+      '<p>Live moderation reviews reports as they arrive. Reports from the 18+ section and reports about minors or immediate danger go to the front of the queue. Moderators can remove dares, mute chat or <strong>stop a stream immediately</strong>.</p>' +
+      '<p>If someone is in danger right now, see <a href="?topic=urgent" data-nav="urgent">Urgent safety issue</a>.</p>' },
+    { id: 'harassment', cat: 'safety', title: 'Being harassed on stream', tags: 'harassed harassment abuse bullying threats taker chat hate',
+      body: '<p>You&rsquo;re in control of your stream:</p><ul>' +
+      '<li>Decline any abusive dare as <strong>Unsafe / against the rules</strong>. It&rsquo;s free and goes to moderation.</li>' +
+      '<li>Block the user from their profile. They can no longer join your streams or call you dares.</li>' +
+      '<li>Report the user so moderation can act on their account.</li>' +
+      '<li>End the stream at any time. Holds on open dares are released.</li></ul>' +
+      '<p>Threats or harassment that continue off-platform can be reported through Contact support, with screenshots. If you feel unsafe, contact local emergency services.</p>' },
+    { id: 'blocking', cat: 'safety', title: 'Blocking, and being blocked', tags: 'block blocked unblock taker blocked me caller ban',
+      body: '<p><strong>To block someone:</strong> open their profile and tap <strong>Block</strong>. You can unblock them later in Profile → Blocked users.</p>' +
+      '<p><strong>If a Taker blocked you:</strong> you can&rsquo;t see or join their streams or call them dares, and holds on any of your dares to them are released. A block is a personal choice, so support can&rsquo;t undo it. If you think the block is part of harassment or fraud, you can still report it.</p>' },
+    { id: 'minors', cat: 'safety', title: 'Suspect someone is under 18', tags: 'minor underage child kid teen under 18 young',
+      body: '<p>Kurazh is strictly 18+, and every account goes through identity verification before it can stream, call dares or handle money. If you think a minor is on camera, in chat or on a stream:</p>' +
+      '<ol><li>Report the stream or profile and choose <strong>Minor on Kurazh</strong>.</li>' +
+      '<li>Don&rsquo;t share or record the content.</li></ol>' +
+      '<p>These reports are top priority. Moderators can stop the stream immediately and suspend the account while we check.</p>' },
+    { id: 'urgent-help', cat: 'safety', title: 'Someone is in danger right now', tags: 'emergency danger urgent hurt injury 112 police help now',
+      body: '<div class="note alert"><strong>Contact local emergency services first.</strong> In Ukraine and across the EU, call <strong>112</strong>. Elsewhere, use your local number (for example 911 in the US and Canada, 999 in the UK).</div>' +
+      '<p>Then send an <a href="?topic=urgent" data-nav="urgent">urgent safety report</a>. Live moderation can stop a stream immediately and keep the information emergency services may ask for.</p>' },
+
+    /* Adult */
+    { id: 'adult-access', cat: 'adult', title: 'Accessing the 18+ section', tags: '18+ adult nsfw access enable toggle explicit section',
+      body: '<p>The 18+ section is a separate category. It never appears in the main feed.</p><ul>' +
+      '<li><strong>Viewers</strong> need a verified identity and must accept the section rules, then turn it on in <strong>Profile → 18+ section</strong>.</li>' +
+      '<li><strong>Takers</strong> need the same, and must also confirm that everyone on camera is over 18 and agrees to be streamed.</li></ul>' +
+      '<p>You can turn the section off at any time.</p>' },
+    { id: 'adult-rules', cat: 'adult', title: '18+ section rules', tags: 'adult rules banned allowed explicit meetups contacts offline',
+      body: '<p>Explicit themes are allowed in this section, under stricter rules:</p><ul>' +
+      '<li>No minors, and no content made to look like minors. Ever.</li>' +
+      '<li>No meeting in person and no offline services</li>' +
+      '<li>No sharing contacts or moving to other platforms</li>' +
+      '<li>No public places and no bystanders</li></ul>' +
+      '<p>The general bans still apply: danger, alcohol and substances, violence and personal data. Reports from this section are handled as priority.</p>' },
+
+    /* Payouts */
+    { id: 'payouts-how', cat: 'payouts', title: 'How Taker earnings and withdrawals work', tags: 'payout withdraw earnings stream earnings 20% fee cash out minimum',
+      body: '<p>When a dare counts, the captured pot minus the <strong>20% platform fee</strong> goes to your <strong>Stream earnings</strong>. For example, a $50 pot earns you $40.</p>' +
+      '<ul><li>Withdraw to your card from <strong>$20</strong>, once your identity is verified.</li>' +
+      '<li>The card must be in your own name, matching your verified identity.</li>' +
+      '<li>History shows EARNED and PAYOUT entries. Decline fees and successful chargebacks are deducted from earnings.</li>' +
+      '<li>You&rsquo;re responsible for any taxes on your earnings where you live.</li></ul>' +
+      '<div class="note">In the demo, no real payouts are made.</div>' },
+    { id: 'payout-delayed', cat: 'payouts', title: 'My payout is delayed', tags: 'payout delayed late missing withdrawal not arrived pending',
+      body: '<p>Most payouts reach your card within minutes. Some banks take <strong>1–3 business days</strong>. A payout can be held up when:</p><ul>' +
+      '<li>Your identity verification is pending or has expired</li>' +
+      '<li>The card name doesn&rsquo;t match your verified name</li>' +
+      '<li>A dispute or chargeback is open on a dare in that balance</li>' +
+      '<li>Unusual activity triggered a security review, which usually takes up to 48 hours</li>' +
+      '<li>There&rsquo;s a weekend or bank holiday</li></ul>' +
+      '<p>If more than 3 business days have passed, contact support (category Payouts) with the payout date and amount.</p>' },
+
+    /* Troubleshooting */
+    { id: 'camera', cat: 'troubleshooting', title: 'Camera not working', tags: 'camera black screen not working no video front back switch',
+      body: '<ul><li>Check that Kurazh has camera permission. See <a href="?topic=iphone-permissions" data-nav="iphone-permissions">iPhone permissions</a>.</li>' +
+      '<li>Close other apps using the camera, such as FaceTime, Instagram or Zoom.</li>' +
+      '<li>Make sure you opened Kurazh over HTTPS. Camera access is blocked on insecure pages.</li>' +
+      '<li>Switch between the front and back cameras, or reload the page.</li>' +
+      '<li>If there&rsquo;s still no camera, Kurazh shows a placeholder screen, and you can stay live with sound only.</li></ul>' },
+    { id: 'cant-connect', cat: 'troubleshooting', title: 'Can&rsquo;t connect to a stream', tags: 'connect connection stream not loading link not working buffering offline join',
+      body: '<ul><li>Check that the stream is still live. Links stop working when it ends.</li>' +
+      '<li>Make sure you meet the stream&rsquo;s minimum viewer age, and that the Taker hasn&rsquo;t blocked you.</li>' +
+      '<li>Switch between Wi-Fi and mobile data. Some office and public networks block live video.</li>' +
+      '<li>Turn off VPN or Low Data Mode, then reload.</li>' +
+      '<li>Scanning a QR code? Open the link in Safari or Chrome rather than an in-app browser.</li></ul>' +
+      '<p>If one stream won&rsquo;t load but others do, contact support with the link.</p>' },
+    { id: 'no-sound', cat: 'troubleshooting', title: 'No sound on iPhone', tags: 'sound audio mute muted volume iphone silent no sound speaker',
+      body: '<ul><li>Streams start muted because of browser autoplay rules. Tap the <strong>speaker icon</strong> on the stream to unmute.</li>' +
+      '<li>Turn up the volume and check whether audio is going to Bluetooth headphones or a speaker.</li>' +
+      '<li>App sound effects follow your Ring/Silent switch or Action button. In Silent mode you&rsquo;ll still hear streams but not tap sounds.</li>' +
+      '<li>Check that sound is on in <strong>Profile → Sound</strong>.</li></ul>' },
+    { id: 'install', cat: 'troubleshooting', title: 'Install Kurazh to your Home Screen', tags: 'install home screen pwa app add to home screen icon iphone android',
+      body: '<p><strong>iPhone (Safari):</strong> open Kurazh, tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>, then <strong>Add</strong>.</p>' +
+      '<p><strong>Android (Chrome):</strong> tap <strong>⋮</strong>, then <strong>Install app</strong>.</p>' +
+      '<p>The installed app opens full screen and keeps working offline for basic screens. If the option is missing, make sure you&rsquo;re in Safari (iPhone) or Chrome (Android) and the page loaded over HTTPS.</p>' },
+    { id: 'app-outdated', cat: 'troubleshooting', title: 'App looks outdated or stuck', tags: 'update outdated stuck frozen cache reload old version',
+      body: '<p>Kurazh updates itself in the background. If a screen looks old or stuck, close the app completely and reopen it. If that doesn&rsquo;t help, reload the page in Safari or Chrome.</p>' +
+      '<p>If nothing changes, remove the Home Screen icon and install it again. Your account isn&rsquo;t affected.</p>' }
+  ];
+
+  var ALIASES = {
+    'getting-started': 'start', 'gs': 'start', 'identity': 'kyc', 'verification': 'kyc', 'payment': 'payments', 'hold': 'holds',
+    'decline': 'declines', 'passes': 'declines', 'free-passes': 'declines', 'reports': 'report', 'reporting': 'report',
+    '18': 'adult', '18plus': 'adult', 'payout': 'payouts', 'withdraw': 'payouts', 'help': 'troubleshooting', 'support': 'contact',
+    'courage': 'courage-score', 'driving': 'driving-mode', 'emergency': 'urgent', 'my-tickets': 'tickets', 'dispute': 'disputes', 'chargeback': 'chargebacks'
+  };
+  var POPULAR = ['holds', 'hold-pending', 'declines', 'decline-bonus', 'iphone-permissions', 'payout-delayed'];
+
+  var byId = {}; A.forEach(function (a) { byId[a.id] = a; });
+  var catById = {}; CATS.forEach(function (c) { catById[c.id] = c; });
+
+  /* ───────── search ───────── */
+  function fold(s) { return String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’‘]/g, "'"); }
+  function plain(html) { var d = document.createElement('div'); d.innerHTML = html; return (d.textContent || '').replace(/\s+/g, ' ').trim(); }
+  A.forEach(function (a) {
+    a.plainTitle = plain(a.title);
+    a.text = plain(a.body);
+    a._t = fold(a.plainTitle); a._g = fold(a.tags + ' ' + catById[a.cat].name); a._b = fold(a.text);
+  });
+  function terms(q) { return fold(q).replace(/[^a-z0-9%+$.\s'-]/g, ' ').split(/\s+/).filter(function (t) { return t.length > 1 || /\d/.test(t); }); }
+  function search(q) {
+    var ts = terms(q); if (!ts.length) return [];
+    var out = [];
+    A.forEach(function (a) {
+      var score = 0, all = true;
+      ts.forEach(function (t) {
+        var s = 0;
+        if (a._t.indexOf(t) > -1) s += 6;
+        if (a._g.indexOf(t) > -1) s += 3;
+        var n = a._b.split(t).length - 1; if (n) s += Math.min(n, 4);
+        if (!s) all = false;
+        score += s;
+      });
+      if (all && score) out.push({ a: a, s: score });
+    });
+    out.sort(function (x, y) { return y.s - x.s; });
+    return out.map(function (r) { return r.a; });
+  }
+  function hl(text, ts) {
+    var safe = esc(text);
+    if (!ts.length) return safe;
+    var re = new RegExp('(' + ts.map(function (t) { return esc(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('|') + ')', 'gi');
+    return safe.replace(re, '<mark>$1</mark>');
+  }
+  function snippet(a, ts) {
+    var b = a._b, i = -1;
+    for (var k = 0; k < ts.length && i < 0; k++) i = b.indexOf(ts[k]);
+    var start = Math.max(0, i - 50), s = a.text.slice(start, start + 140);
+    return (start > 0 ? '…' : '') + s + (start + 140 < a.text.length ? '…' : '');
+  }
+
+  /* ───────── tickets ───────── */
+  var TKEY = 'kurazh.support.tickets';
+  var memTickets = null, storageOk = true;
+  function loadTickets() {
+    var t = lsGet(TKEY, null);
+    if (Array.isArray(t)) return t.filter(function (x) { return x && typeof x.id === 'string'; });
+    return memTickets || [];
+  }
+  function saveTickets(list) { memTickets = list; storageOk = lsSet(TKEY, list); return storageOk; }
+  function newId(existing) {
+    var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', id;
+    do {
+      var r = new Uint8Array(6);
+      try { crypto.getRandomValues(r); } catch (e) { for (var j = 0; j < 6; j++) r[j] = Math.floor(Math.random() * 256); }
+      id = 'KZ-' + Array.prototype.map.call(r, function (n) { return abc[n % abc.length]; }).join('');
+    } while (existing.some(function (t) { return t.id === id; }));
+    return id;
+  }
+  function displayStatus(t) {
+    if (t.status === 'closed') return { k: 'closed', l: 'Closed' };
+    if (t.priority === 'urgent') return { k: 'escalated', l: 'Escalated' };
+    if (Date.now() - t.createdAt > 2 * 60 * 1000) return { k: 'review', l: 'In review' };
+    return { k: 'open', l: 'Open' };
+  }
+  var CONTACT_CATS = [
+    ['start', 'Getting started'], ['account', 'Account & sign-in'], ['kyc', 'Identity verification'], ['payments', 'Payments & holds'],
+    ['streaming', 'Streaming'], ['safety', 'Safety & reporting'], ['adult', '18+ section'], ['payouts', 'Payouts for Takers'],
+    ['troubleshooting', 'Troubleshooting'], ['other', 'Something else']
+  ];
+  var catLabel = function (id) { var c = CONTACT_CATS.filter(function (x) { return x[0] === id; })[0]; return id === 'urgent' ? 'Urgent safety' : (c ? c[1] : 'Other'); };
+  function fmtDate(ms) { try { return new Date(ms).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } }
+
+  /* ───────── views ───────── */
+  var view = $('#view');
+  var row = function (a, sub) {
+    return '<li><a class="row" href="?topic=' + a.id + '" data-nav="' + a.id + '"><div class="t"><b>' + (sub && sub.title || a.title) + '</b>' +
+      (sub && sub.text ? '<span>' + sub.text + '</span>' : '') + '</div>' + ico('chev', 'chev') + '</a></li>';
+  };
+  function urgentCard() {
+    return '<a class="urgent" href="?topic=urgent" data-nav="urgent">' + ico('alert', 'ic') +
+      '<div><b>Urgent safety issue</b><span>Someone in danger or a harmful live stream? Live moderation can stop a stream immediately.</span></div></a>';
+  }
+  function statusBlock() {
+    var sys = ['Live streaming', 'Payments & holds', 'Payouts', 'Sign-in & SMS codes', 'Identity verification', 'Moderation'];
+    return '<section class="section" id="status" aria-labelledby="st-h"><div class="card pad"><div class="status-head"><span class="dot" aria-hidden="true"></span>' +
+      '<h3 id="st-h" style="font-size:19px">All systems operational</h3></div>' +
+      '<ul class="status-list">' + sys.map(function (s) { return '<li><span>' + s + '</span><span>Operational</span></li>'; }).join('') + '</ul>' +
+      '<p class="small" style="margin:10px 0 0"><span class="demo">Demo</span> Sample status, not live monitoring. Checked ' + fmtDate(Date.now()) + '.</p></div></section>';
+  }
+  function contactCta(cat) {
+    return '<div class="card pad section" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">' +
+      '<div style="flex:1 1 200px"><h3 style="font-size:19px">Still need help?</h3><p class="small" style="margin:4px 0 0">Send us a ticket. We reply within 24 hours, and payment and safety issues come first.</p></div>' +
+      '<a class="btn ghost" href="?topic=contact' + (cat ? '&amp;cat=' + cat : '') + '" data-nav="contact" data-cat="' + (cat || '') + '">' + ico('chat') + 'Contact support</a></div>';
+  }
+
+  function renderHome(notice) {
+    view.innerHTML =
+      (notice ? '<div class="card pad" style="margin-bottom:16px"><p class="small" style="margin:0">' + notice + '</p></div>' : '') +
+      '<section class="hero"><p class="eyebrow">Help center</p><h1>How can we <em>help?</em></h1>' +
+      '<p class="lede">Answers about holds, dares, streaming and payouts, for Callers and Takers alike.</p></section>' +
+      '<div class="section" style="margin-top:20px">' + urgentCard() + '</div>' +
+      '<section class="section" aria-labelledby="cat-h"><div class="section-head"><h2 id="cat-h">Browse topics</h2></div><div class="grid">' +
+      CATS.map(function (c) {
+        var n = A.filter(function (a) { return a.cat === c.id; }).length;
+        return '<a class="cat" href="?topic=' + c.id + '" data-nav="' + c.id + '"><span class="ic">' + ico(c.icon) + '</span><b>' + c.name + '</b><span>' + n + ' articles · ' + c.blurb + '</span></a>';
+      }).join('') + '</div></section>' +
+      '<section class="section" aria-labelledby="pop-h"><div class="section-head"><h2 id="pop-h">Popular</h2></div><ul class="list">' +
+      POPULAR.map(function (id) { var a = byId[id]; return row(a, { text: catById[a.cat].name }); }).join('') + '</ul></section>' +
+      statusBlock() + contactCta() +
+      '<p class="small section" style="text-align:center"><a href="?topic=tickets" data-nav="tickets">My tickets</a></p>';
+  }
+
+  function renderCategory(c) {
+    var list = A.filter(function (a) { return a.cat === c.id; });
+    view.innerHTML = '<nav class="crumbs" aria-label="Breadcrumb"><a href="?" data-nav="">Help center</a>' + ico('chev') + '<span>' + c.name + '</span></nav>' +
+      '<div style="display:flex;gap:14px;align-items:center"><span class="ic cat-ic">' + ico(c.icon) + '</span><h1 style="font-size:30px">' + c.name + '</h1></div>' +
+      '<p class="lede">' + list.length + ' articles</p>' +
+      (c.id === 'safety' ? '<div class="section" style="margin-top:16px">' + urgentCard() + '</div>' : '') +
+      '<ul class="list section" style="margin-top:16px">' + list.map(function (a) { return row(a, { text: a.text.slice(0, 84) + '…' }); }).join('') + '</ul>' +
+      contactCta(c.id === 'start' ? 'start' : c.id);
+  }
+
+  function renderArticle(a) {
+    var c = catById[a.cat];
+    var fb = lsGet('kurazh.support.feedback', {}) || {};
+    var related = A.filter(function (x) { return x.cat === a.cat && x.id !== a.id; }).slice(0, 4);
+    view.innerHTML = '<article class="article"><nav class="crumbs" aria-label="Breadcrumb"><a href="?" data-nav="">Help center</a>' + ico('chev') +
+      '<a href="?topic=' + c.id + '" data-nav="' + c.id + '">' + c.name + '</a></nav>' +
+      '<h1>' + a.title + '</h1><div class="prose">' + a.body + '</div>' +
+      '<div class="card helpful" id="fb"><span class="small" style="color:var(--cashmere)">' + (fb[a.id] ? 'Thanks for the feedback.' : 'Was this helpful?') + '</span>' +
+      (fb[a.id] ? '' : '<div class="btns"><button class="chip-btn" data-fb="yes">' + ico('thumb-up') + 'Yes</button><button class="chip-btn" data-fb="no">' + ico('thumb-down') + 'No</button></div>') + '</div></article>' +
+      (related.length ? '<section class="section"><div class="section-head"><h2 style="font-size:22px">Related</h2></div><ul class="list">' + related.map(function (r) { return row(r); }).join('') + '</ul></section>' : '') +
+      contactCta(a.cat);
+    var fbEl = $('#fb');
+    fbEl.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-fb]'); if (!b) return;
+      var m = lsGet('kurazh.support.feedback', {}) || {}; m[a.id] = b.getAttribute('data-fb'); lsSet('kurazh.support.feedback', m);
+      track('support_feedback', { article: a.id, helpful: b.getAttribute('data-fb') === 'yes' });
+      fbEl.innerHTML = '<span class="small" style="color:var(--cashmere)">Thanks for the feedback.' + (b.getAttribute('data-fb') === 'no' ? ' Tell us what was missing through Contact support.' : '') + '</span>';
+    });
+  }
+
+  function renderSearch(q) {
+    var res = search(q), ts = terms(q);
+    view.innerHTML = '<p class="eyebrow">Search</p><h1 style="font-size:28px">' + res.length + ' result' + (res.length === 1 ? '' : 's') + ' for &ldquo;' + esc(q) + '&rdquo;</h1>' +
+      (res.length ? '<ul class="list section" style="margin-top:16px" id="results">' + res.map(function (a) {
+        return row(a, { title: hl(a.plainTitle, ts), text: hl(snippet(a, ts), ts) });
+      }).join('') + '</ul>' :
+      '<div class="card empty section" style="margin-top:16px" id="results">Nothing matched. Try other words, such as &ldquo;pending&rdquo;, &ldquo;pass&rdquo; or &ldquo;payout&rdquo;, or contact us.</div>') +
+      contactCta();
+  }
+
+  function ticketsHtml() {
+    var list = loadTickets().slice().sort(function (x, y) { return y.createdAt - x.createdAt; });
+    if (!list.length) return '<div class="empty">No tickets yet.</div>';
+    return list.map(function (t) {
+      var s = displayStatus(t);
+      return '<div class="ticket" data-id="' + esc(t.id) + '"><div class="ticket-top"><span class="ticket-id">' + esc(t.id) + '</span><span class="pill ' + s.k + '">' + s.l + '</span></div>' +
+        '<h4>' + esc(t.subject) + '</h4><div class="meta">' + esc(catLabel(t.category)) + ' · ' + esc(fmtDate(t.createdAt)) + (t.streamLink ? ' · stream link attached' : '') + '</div>' +
+        '<div class="acts"><button class="linkbtn" data-act="' + (t.status === 'closed' ? 'reopen' : 'close') + '">' + (t.status === 'closed' ? 'Reopen' : 'Mark as resolved') + '</button></div></div>';
+    }).join('');
+  }
+
+  function formHtml(opts) {
+    var urgent = opts.urgent, cat = opts.cat || '';
+    return '<form id="ticketForm" novalidate>' +
+      (urgent ? '<input type="hidden" name="category" value="urgent" />' :
+      '<div class="field"><label for="f-cat">Category</label><select id="f-cat" name="category" required><option value="">Choose a category</option>' +
+      CONTACT_CATS.map(function (c) { return '<option value="' + c[0] + '"' + (c[0] === cat ? ' selected' : '') + '>' + c[1] + '</option>'; }).join('') +
+      '</select><div class="msg">Choose a category.</div></div>') +
+      '<div class="field"><label for="f-subj">' + (urgent ? 'What is happening?' : 'Subject') + '</label><input id="f-subj" name="subject" maxlength="120" autocomplete="off" placeholder="' + (urgent ? 'e.g. Taker is about to climb a roof' : 'e.g. Hold still pending after 5 days') + '" required /><div class="msg">Add a short subject (at least 3 characters).</div></div>' +
+      '<div class="field"><label for="f-msg">Message <span class="count" id="f-count">0 / 2000</span></label><textarea id="f-msg" name="message" maxlength="2000" placeholder="' + (urgent ? 'Who is at risk, what you saw and when.' : 'What happened, when, and what you expected. Never include your password, codes or full card number.') + '" required></textarea><div class="msg">Please describe the issue (at least 10 characters).</div></div>' +
+      '<div class="field"><label for="f-link">Stream link ' + (urgent ? '' : '<span style="color:var(--faint);font-weight:500">(optional)</span>') + '</label><input id="f-link" name="streamLink" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://… or stream ID" /><div class="hint">Paste the link from Share on the stream, if you have it.</div><div class="msg">That doesn&rsquo;t look like a link or stream ID.</div></div>' +
+      '<div class="btn-row"><button class="btn ' + (urgent ? 'danger' : 'primary') + ' block" type="submit">' + (urgent ? ico('alert') + 'Send urgent report' : ico('ticket') + 'Create ticket') + '</button></div>' +
+      '<div id="formResult" role="status" aria-live="polite"></div></form>';
+  }
+
+  function renderContact(opts) {
+    opts = opts || {};
+    var urgent = !!opts.urgent;
+    view.innerHTML = '<nav class="crumbs" aria-label="Breadcrumb"><a href="?" data-nav="">Help center</a>' + ico('chev') + '<span>' + (urgent ? 'Urgent safety issue' : 'Contact support') + '</span></nav>' +
+      (urgent ?
+        '<p class="eyebrow" style="color:var(--alert)">Urgent</p><h1>Urgent safety issue</h1>' +
+        '<div class="card pad section" style="margin-top:16px;border-color:rgba(207,123,104,.35);background:var(--alert-bg)"><ol class="steps" style="margin:0">' +
+        '<li><b>If someone is in danger, contact local emergency services first.</b><br><span class="small">In Ukraine and the EU, call 112. In the US and Canada, call 911. In the UK, call 999.</span></li>' +
+        '<li><b>Tap Report on the stream</b>, which reaches live moderation directly, or send the form below.</li>' +
+        '<li style="padding-bottom:0"><b>Live moderation can stop a stream immediately</b>, remove dares and suspend accounts while we review.</li></ol>' +
+        '<div class="call"><a class="btn danger" href="tel:112">' + ico('phone') + 'Call 112</a><a class="btn ghost" href="?topic=minors" data-nav="minors">Minor on stream</a></div></div>' :
+        '<p class="eyebrow">We reply within 24 hours</p><h1>Contact support</h1><p class="lede">Payment and safety issues are handled first. For anything happening live right now, use the <a href="?topic=urgent" data-nav="urgent">urgent safety path</a>.</p>') +
+      '<section class="card pad section" style="margin-top:18px">' + formHtml({ urgent: urgent, cat: opts.cat }) +
+      '<p class="small" style="margin:14px 0 0"><span class="demo">Demo</span> Tickets are saved only on this device. ' + (urgent ? 'No moderator is notified and no one is contacted.' : 'No real emails are sent.') + '</p></section>' +
+      '<section class="section" id="tickets" aria-labelledby="tk-h"><div class="section-head"><h2 id="tk-h">My tickets</h2><span class="small" id="tk-n"></span></div>' +
+      '<div class="card" id="ticketList">' + ticketsHtml() + '</div></section>' +
+      (urgent ? '' : '<p class="small section">Channels: in-app tickets (here) and email replies in the live version. Telegram support is coming later.</p>');
+    updateCount();
+    bindForm(urgent);
+    if (opts.scrollTickets) setTimeout(function () { var el = $('#tickets'); el && el.scrollIntoView({ block: 'start' }); }, 30);
+  }
+  function updateCount() { var n = loadTickets().length, el = $('#tk-n'); if (el) el.textContent = n ? n + ' total' : ''; }
+
+  function bindForm(urgent) {
+    var f = $('#ticketForm'); if (!f) return;
+    var msg = $('#f-msg'), cnt = $('#f-count');
+    msg.addEventListener('input', function () { cnt.textContent = msg.value.length + ' / 2000'; });
+    f.addEventListener('input', function (e) { var fld = e.target.closest('.field'); fld && fld.classList.remove('err'); });
+    f.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var data = {
+        category: urgent ? 'urgent' : f.elements.category.value,
+        subject: f.elements.subject.value.trim(),
+        message: f.elements.message.value.trim(),
+        streamLink: f.elements.streamLink.value.trim()
+      };
+      var bad = [];
+      if (!data.category) bad.push(f.elements.category);
+      if (data.subject.length < 3) bad.push(f.elements.subject);
+      if (data.message.length < 10) bad.push(f.elements.message);
+      if (data.streamLink && !/^(https?:\/\/\S+|[A-Za-z0-9_-]{4,64})$/.test(data.streamLink)) bad.push(f.elements.streamLink);
+      document.querySelectorAll('#ticketForm .field').forEach(function (x) { x.classList.remove('err'); });
+      if (bad.length) { bad.forEach(function (el) { el.closest('.field').classList.add('err'); }); bad[0].focus(); return; }
+      var list = loadTickets();
+      var t = { id: newId(list), category: data.category, subject: data.subject, message: data.message, streamLink: data.streamLink || null,
+        createdAt: Date.now(), status: 'open', priority: urgent ? 'urgent' : (data.category === 'payments' || data.category === 'safety' || data.category === 'payouts' ? 'high' : 'normal') };
+      list.push(t);
+      var ok = saveTickets(list);
+      track('support_ticket_created', { category: t.category, priority: t.priority, has_link: !!t.streamLink });
+      f.reset(); $('#f-count').textContent = '0 / 2000';
+      if (!urgent && f.elements.category) f.elements.category.value = data.category;
+      $('#formResult').innerHTML = '<div class="toast">' + ico('check', 'ic') + '<div><b>Ticket ' + t.id + ' created · we reply within 24 hours</b>' +
+        (urgent ? '<div class="small" style="margin-top:4px">Marked urgent for live moderation. If anyone is in danger, call emergency services now.</div>' : '') +
+        (ok ? '' : '<div class="small" style="margin-top:4px">This browser blocked storage, so the ticket is kept only until you leave this page.</div>') + '</div></div>';
+      $('#ticketList').innerHTML = ticketsHtml(); updateCount();
+    });
+    $('#ticketList').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-act]'); if (!b) return;
+      var id = b.closest('.ticket').getAttribute('data-id'), list = loadTickets();
+      list.forEach(function (t) { if (t.id === id) t.status = b.getAttribute('data-act') === 'close' ? 'closed' : 'open'; });
+      saveTickets(list); $('#ticketList').innerHTML = ticketsHtml();
+    });
+  }
+
+  /* ───────── routing ───────── */
+  function resolve(topic) {
+    var t = String(topic || '').toLowerCase().trim();
+    if (ALIASES[t]) t = ALIASES[t];
+    if (!t) return { type: 'home' };
+    if (t === 'contact' || t === 'urgent' || t === 'tickets') return { type: t };
+    if (t === 'status') return { type: 'home', anchor: 'status' };
+    if (catById[t]) return { type: 'cat', c: catById[t] };
+    if (byId[t]) return { type: 'article', a: byId[t] };
+    return { type: 'home', unknown: true };
+  }
+  function render(params, focus) {
+    var q = params.get('q') || '';
+    var topic = params.get('topic') || '';
+    var r = resolve(topic);
+    var input = $('#q');
+    if (q) { if (input.value !== q) input.value = q; renderSearch(q); }
+    else {
+      if (document.activeElement !== input) input.value = '';
+      if (r.type === 'home') renderHome(r.unknown ? 'We couldn&rsquo;t find the topic &ldquo;' + esc(topic) + '&rdquo;. Here&rsquo;s everything else.' : '');
+      else if (r.type === 'cat') renderCategory(r.c);
+      else if (r.type === 'article') renderArticle(r.a);
+      else if (r.type === 'contact') renderContact({ cat: params.get('cat') || '' });
+      else if (r.type === 'tickets') renderContact({ scrollTickets: true });
+      else if (r.type === 'urgent') renderContact({ urgent: true });
+    }
+    $('#searchForm').classList.toggle('has', !!input.value);
+    var title = r.type === 'article' ? r.a.plainTitle : r.type === 'cat' ? r.c.name : r.type === 'contact' ? 'Contact support' : r.type === 'urgent' ? 'Urgent safety issue' : r.type === 'tickets' ? 'My tickets' : '';
+    document.title = (q ? 'Search' : title ? title : 'Help') + ' · Kurazh Help';
+    view.classList.remove('view'); void view.offsetWidth; view.classList.add('view');
+    if (r.anchor && !q) setTimeout(function () { var el = document.getElementById(r.anchor); el && el.scrollIntoView(); }, 30);
+    else if (focus && !(r.type === 'tickets')) { window.scrollTo(0, 0); try { view.focus({ preventScroll: true }); } catch (e) {} }
+  }
+  function go(qs, replace) {
+    var url = location.pathname + (qs ? '?' + qs : '');
+    try { history[replace ? 'replaceState' : 'pushState'](null, '', url); } catch (e) {}
+    render(new URLSearchParams(qs), !replace);
+  }
+
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('a, button');
+    if (el) tap();
+    var a = e.target.closest('a[data-nav]');
+    if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+    e.preventDefault();
+    var topic = a.getAttribute('data-nav'), cat = a.getAttribute('data-cat');
+    var qs = topic ? 'topic=' + encodeURIComponent(topic) + (cat ? '&cat=' + encodeURIComponent(cat) : '') : '';
+    track('support_view', { topic: topic || 'home' });
+    go(qs);
+  });
+  window.addEventListener('popstate', function () { render(new URLSearchParams(location.search), true); });
+
+  var input = $('#q'), timer = null, lastLogged = '';
+  input.addEventListener('input', function () {
+    clearTimeout(timer);
+    $('#searchForm').classList.toggle('has', !!input.value);
+    timer = setTimeout(function () {
+      var q = input.value.trim();
+      go(q ? 'q=' + encodeURIComponent(q) : '', true);
+      if (q && q !== lastLogged && q.length > 2) {
+        lastLogged = q;
+        track('support_search', { query_length: q.length, results: search(q).length });
+      }
+    }, 140);
+  });
+  $('#searchForm').addEventListener('submit', function (e) { e.preventDefault(); input.blur(); });
+  $('#clearQ').addEventListener('click', function () { input.value = ''; go('', true); input.focus(); });
+
+  var initial = new URLSearchParams(location.search);
+  render(initial, false);
+  track('support_open', { topic: initial.get('topic') || (initial.get('q') ? 'search' : 'home') });
+})();
+</script>
+</body>
+</html>
