@@ -1573,7 +1573,7 @@ function cardHTML(st) {
       <div class="c-tags" data-el="tags">${tagsHTML(st)}</div>
       <div class="c-title" data-k="title">${esc(st.title)}</div>
       <div class="chat" data-el="chat"></div>
-      <form class="say" data-act="say"><input enterkeyhint="send" maxlength="120" placeholder="${real ? 'Say something' : `Say something to ${esc(firstName(st.name))}`}" aria-label="Chat message" /><button type="button" class="mic" data-act="mic" aria-label="Speak instead of typing" ${window.KurazhVoice?.can.stt ? '' : 'hidden'}>${ico('mic', 18)}</button><button aria-label="Send">${ico('send', 18)}</button></form>
+      <form class="say" data-act="say"><input enterkeyhint="send" maxlength="120" placeholder="${real ? 'Say something' : `Say something to ${esc(firstName(st.name))}`}" aria-label="Chat message" /><button type="button" class="mic" data-act="mic" aria-label="Speak instead of typing">${ico('mic', 18)}</button><button aria-label="Send">${ico('send', 18)}</button></form>
     </div>
     <div class="rail">
       <button class="rbtn ${st.liked ? 'liked' : ''}" data-act="like" aria-label="Like"><span>${ico('heart', 21)}</span><b data-k="likes" class="num">${fmt(st.likes)}</b></button>
@@ -1773,14 +1773,15 @@ function toggleVoice(st, btn) {
   if (!on) { KV?.stopSpeaking(); toast('Taker voice off'); return; }
   if (!KV?.can.tts) { toast('Your browser can’t read aloud here, so replies stay in chat', 'bad'); return; }
   KV.unlock();
-  toast(KV.can.ai ? `Voice on. Talk to ${firstName(st.name)}: Claude answers` : `Voice on. Talk to ${firstName(st.name)}`, 'gold');
+  toast(`Voice on · ${KV.describe()}`, 'gold');
   takerSay(st, scriptedReply(st, 'hi'), { chat: true });
   track('voice_on', { ai: !!KV.can.ai });
 }
 let micFor = null;
 function toggleMic(st, btn) {
   const KV = window.KurazhVoice, form = btn.closest('form'), inp = form.querySelector('input');
-  if (!KV?.can.stt) { toast('Voice input isn’t available in this browser. Type instead', 'bad'); return; }
+  const keyboard = () => { inp.focus(); toast('Tap the mic on your keyboard and speak, then Send', 'gold'); };
+  if (!KV?.can.stt) { keyboard(); return; }
   if (KV.listening) { KV.stopListening(); return; }
   micFor = { st, form, inp, btn, base: inp.value.trim(), orig: inp.value.trim() };
   const done = () => { btn.classList.remove('on'); btn.setAttribute('aria-label', 'Speak instead of typing'); };
@@ -1789,13 +1790,12 @@ function toggleMic(st, btn) {
     onState: (state) => { if (state === 'listening') { btn.classList.add('on'); btn.setAttribute('aria-label', 'Stop listening'); } else { done(); if (micFor && micFor.inp.value.trim() && micFor.inp.value.trim() !== micFor.orig) { const m = micFor; micFor = null; sendChat(m.st, m.form); } else micFor = null; } },
     onPartial: (t) => { if (!micFor) return; micFor.inp.value = (micFor.base ? micFor.base + ' ' : '') + t; micFor.inp.classList.toggle('partial', !!t); },
     onFinal: (t) => { if (!micFor) return; micFor.base = ((micFor.base ? micFor.base + ' ' : '') + String(t).trim()).trim(); micFor.inp.value = micFor.base; micFor.inp.classList.remove('partial'); if (window.KurazhVoice?.engine.stt === 'claude') { /* Claude dictation keeps listening: send on each settled phrase */ const m = micFor; micFor = { ...m, base: '', orig: '' }; sendChat(m.st, m.form); } },
-    onError: (code) => { done(); micFor = null; toast(code === 'not_granted' ? 'Microphone access is off. You can still type' : code === 'no-speech' ? 'Didn’t catch that. Tap the mic and try again' : 'Voice input stopped. You can still type', code === 'no-speech' ? '' : 'bad'); },
+    onError: (code) => { done(); micFor = null; if (code === 'no-speech') { toast('Didn’t catch that. Tap the mic and try again'); return; } keyboard(); },
   });
   sfx('tap');
 }
 // show the mic once some speech input exists
-function syncMic() { const ok = !!window.KurazhVoice?.can.stt; $$('.say .mic').forEach((b) => { b.hidden = !ok; }); }
-window.addEventListener('kurazh-voice', syncMic);
+
 function sendChat(st, form) {
   const inp = form.querySelector('input'), text = inp.value.trim(); if (!text) return;
   const r = Safety.scan(text, modeOf(st.cat));

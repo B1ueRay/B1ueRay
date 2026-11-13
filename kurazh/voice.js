@@ -15,6 +15,7 @@
   'use strict';
   const V = { can: { tts: false, stt: false, ai: false }, listening: false, engine: { tts: 'none', stt: 'none', ai: 'none' } };
   let ctts = null, cdict = null, csample = null, ttsOff = false, rec = null, handlers = null, voices = [];
+  const live = new Set();
 
   /* ---------- discovery ---------- */
   const hasBrowserTTS = typeof window.speechSynthesis !== 'undefined' && typeof window.SpeechSynthesisUtterance !== 'undefined';
@@ -75,12 +76,18 @@
     if (!hasBrowserTTS) return Promise.resolve(false);
     return new Promise((res) => {
       try {
+        const syn = window.speechSynthesis;
+        if (!voices.length) { try { voices = syn.getVoices() || []; } catch { /* ignore */ } }
         const u = new SpeechSynthesisUtterance(text), lang = langOf(text), v = pickVoice(lang, who.gender);
         u.lang = v?.lang || lang; if (v) u.voice = v;
         u.pitch = who.pitch ?? (who.gender === 'm' ? 0.9 : 1.08); u.rate = who.rate ?? 1.02; u.volume = 1;
-        u.onend = () => res(true); u.onerror = () => res(false);
-        window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
-        setTimeout(() => res(false), 20000);
+        const end = (ok) => { live.delete(u); res(ok); };
+        u.onend = () => end(true); u.onerror = () => end(false);
+        live.add(u); // keep a reference: Safari drops unreferenced utterances
+        if (syn.speaking || syn.pending) syn.cancel();
+        if (syn.paused) syn.resume();
+        syn.speak(u);
+        setTimeout(() => end(false), 20000);
       } catch { res(false); }
     });
   };
@@ -140,5 +147,9 @@
     }
   };
 
+  V.describe = function () {
+    const e = V.engine, n = { claude: 'Claude', browser: 'phone', scripted: 'scripted', none: 'off', off: 'off' };
+    return `Voice: ${n[e.tts]} · Mic: ${n[e.stt] === 'off' ? 'keyboard' : n[e.stt]} · Replies: ${n[e.ai]}`;
+  };
   window.KurazhVoice = V;
 })();
