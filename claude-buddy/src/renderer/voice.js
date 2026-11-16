@@ -36,6 +36,8 @@ export class Voice {
     this.round = 0;
     this.onSentenceStart = null;
     this.onIdle = null;
+    this.gen = 0; // растёт на каждом stop(): старые таймеры очереди узнают, что они устарели
+    this.nextTimer = 0;
     if (this.synth) {
       const load = () => {
         this.voices = this.synth.getVoices();
@@ -80,6 +82,8 @@ export class Voice {
   }
 
   stop() {
+    this.gen += 1;
+    clearTimeout(this.nextTimer);
     const pending = this.queue;
     this.queue = [];
     pending.forEach((q) => q.done?.());
@@ -120,7 +124,10 @@ export class Voice {
       this.timeline = [];
       this.fakeUntil = 0;
       item.done?.();
-      setTimeout(() => this.next(), 60);
+      const gen = this.gen;
+      this.nextTimer = setTimeout(() => {
+        if (gen === this.gen) this.next();
+      }, 60);
     };
 
     const voice = this.pickVoice();
@@ -251,8 +258,9 @@ export class Mic {
         for (let i = 0; i < buf.length; i += 1) sum += buf[i] * buf[i];
         const rms = Math.sqrt(sum / buf.length);
         const now = performance.now();
-        if (now - t0 < 350) floor = Math.max(floor, rms);
-        const thr = Math.max(0.018, floor * 2.2);
+        // шумовой пол меряем по первым 350 мс, но с потолком: если сразу заговорил — речь не станет "шумом"
+        if (now - t0 < 350) floor = Math.min(0.02, Math.max(floor, rms));
+        const thr = Math.max(0.016, floor * 2.2);
         if (rms > thr) {
           lastLoud = now;
           if (!speechAt) speechAt = now;

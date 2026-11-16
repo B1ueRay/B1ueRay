@@ -81,7 +81,10 @@ function save(cfg) {
     }
   }
   fs.mkdirSync(path.dirname(file()), { recursive: true });
-  fs.writeFileSync(file(), JSON.stringify(out, null, 2), 'utf8');
+  // атомарно: пишем во временный файл и переименовываем — краш посреди записи не убьёт ключи
+  const tmp = `${file()}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(out, null, 2), 'utf8');
+  fs.renameSync(tmp, file());
 }
 
 // То, что можно показать в renderer: без секретов.

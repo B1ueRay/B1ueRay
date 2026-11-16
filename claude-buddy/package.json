@@ -7,7 +7,7 @@
   "scripts": {
     "start": "electron .",
     "preview": "node scripts/preview-server.js",
-    "check": "node --check src/main/main.js && node --check src/main/brain.js && node --check src/main/config.js && node --check src/main/stt.js && node --check src/preload.js",
+    "check": "node --check src/main/main.js && node --check src/main/brain.js && node --check src/main/config.js && node --check src/main/stt.js && node --check src/main/memory.js && node --check src/preload.js",
     "dist": "electron-builder --win portable"
   },
   "dependencies": {

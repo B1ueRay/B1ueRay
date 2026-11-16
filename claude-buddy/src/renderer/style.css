@@ -88,10 +88,12 @@ body.dragging * {
   visibility: hidden;
 }
 .bubble.micro {
-  font-size: 12px;
-  padding: 6px 10px 7px;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 6px 11px 7px;
   border-radius: 14px;
   font-style: italic;
+  color: #7a2f17;
 }
 .bubble .dots {
   display: none;
@@ -381,6 +383,34 @@ body.dragging * {
   }
   100% {
     transform: translate(-20px, -110px) scale(1.2) rotate(12deg);
+    opacity: 0;
+  }
+}
+
+.sticker {
+  position: absolute;
+  font-size: 30px;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 2px 0 rgba(42, 23, 18, 0.6));
+  animation: sticker 1.8s cubic-bezier(0.2, 1.6, 0.4, 1) forwards;
+}
+@keyframes sticker {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  15% {
+    transform: translate(-50%, -50%) scale(1.25);
+    opacity: 1;
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -80%) scale(0.9);
     opacity: 0;
   }
 }

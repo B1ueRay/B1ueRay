@@ -20,11 +20,43 @@ let brain = null;
 let ignoring = true;
 let dragTimer = null;
 let cursorTimer = null;
+let quitting = false;
+let latestChatId = 0; // самый свежий запрос из окна: всё, что старее, выкидываем
+let lastLoginItem = null;
 
-if (!app.requestSingleInstanceLock()) {
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
   app.quit();
 } else {
-  app.on('second-instance', () => send('command', { name: 'toggle', forceShow: true }));
+  app.on('second-instance', () => {
+    if (!win) createOverlay();
+    send('command', { name: 'toggle', forceShow: true });
+  });
+}
+app.on('before-quit', () => {
+  quitting = true;
+});
+
+const RENDERER_DIR = path.join(__dirname, '..', 'renderer');
+// IPC принимаем только от наших собственных страниц
+function trusted(e, page) {
+  try {
+    const url = new URL(e.senderFrame.url);
+    if (url.protocol !== 'file:') return false;
+    const ci = (x) => (process.platform === 'win32' ? x.toLowerCase() : x);
+    const file = ci(path.normalize(decodeURIComponent(url.pathname).replace(/^\/([a-zA-Z]:)/, '$1')));
+    const dir = ci(RENDERER_DIR);
+    return page ? file === ci(path.join(RENDERER_DIR, page)) : file.startsWith(dir);
+  } catch {
+    return false;
+  }
+}
+function lockDown(w) {
+  w.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https:\/\//.test(url)) shell.openExternal(url);
+    return { action: 'deny' };
+  });
+  w.webContents.on('will-navigate', (e) => e.preventDefault());
 }
 
 // Прозрачные окна + WebGL: на некоторых видеокартах без этого бывает чёрный фон.
@@ -71,11 +103,11 @@ function createOverlay() {
   ignoring = true;
   win.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
   win.once('ready-to-show', () => win.showInactive());
-  win.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https:\/\//.test(url)) shell.openExternal(url);
-    return { action: 'deny' };
+  lockDown(win);
+  // Alt+F4 по оверлею не должен убивать бадди навсегда — живём до "Выйти"
+  win.on('close', (e) => {
+    if (!quitting) e.preventDefault();
   });
-  win.webContents.on('will-navigate', (e) => e.preventDefault());
   win.on('closed', () => {
     win = null;
   });
@@ -122,6 +154,7 @@ function openSettings() {
       sandbox: true,
     },
   });
+  lockDown(settingsWin);
   settingsWin.loadFile(path.join(__dirname, '..', 'renderer', 'settings.html'));
   settingsWin.on('closed', () => {
     settingsWin = null;
@@ -134,8 +167,11 @@ function trayIcon() {
 }
 
 function buildTray() {
-  tray = new Tray(trayIcon());
-  tray.setToolTip('Claude Buddy');
+  if (!tray) {
+    tray = new Tray(trayIcon());
+    tray.setToolTip('Claude Buddy');
+    tray.on('click', () => command('toggle'));
+  }
   const menu = Menu.buildFromTemplate([
     { label: 'Поговорить', click: () => command('talk') },
     { label: 'Посмотри на мой экран', click: () => command('look') },
@@ -148,10 +184,10 @@ function buildTray() {
     { label: 'Выйти', click: () => app.quit() },
   ]);
   tray.setContextMenu(menu);
-  tray.on('click', () => command('toggle'));
 }
 
 function command(name) {
+  if (!win) createOverlay();
   if (name === 'talk' && win) {
     win.show();
     win.focus();
@@ -180,15 +216,26 @@ function applyConfig(patch) {
   if (cfg.size !== prevSize && win) {
     win.setBounds(overlayBounds(screen.getDisplayMatching(win.getBounds())));
   }
-  try {
-    app.setLoginItemSettings({ openAtLogin: Boolean(cfg.launchAtLogin) });
-  } catch {
-    /* не на всех платформах */
-  }
+  syncLoginItem();
   registerHotkeys();
   send('config', config.publicView(cfg));
   if (tray) buildTray();
   return config.publicView(cfg);
+}
+
+function syncLoginItem() {
+  const want = Boolean(cfg.launchAtLogin);
+  if (want === lastLoginItem) return;
+  lastLoginItem = want;
+  try {
+    // portable-сборка распаковывается во временную папку — регистрируем сам .exe;
+    // при запуске через `electron .` нужен путь к приложению аргументом
+    const exe = process.env.PORTABLE_EXECUTABLE_FILE || process.execPath;
+    const args = app.isPackaged ? [] : [app.getAppPath()];
+    app.setLoginItemSettings({ openAtLogin: want, path: exe, args });
+  } catch {
+    /* не на всех платформах */
+  }
 }
 
 async function captureScreen() {
@@ -210,8 +257,8 @@ async function captureScreen() {
 }
 
 function setupIpc() {
-  ipcMain.on('mouse:ignore', (_e, value) => {
-    if (!win || value === ignoring) return;
+  ipcMain.on('mouse:ignore', (e, value) => {
+    if (!trusted(e, 'index.html') || !win || value === ignoring) return;
     ignoring = value;
     win.setIgnoreMouseEvents(value, { forward: true });
   });
@@ -233,10 +280,12 @@ function setupIpc() {
     if (!win) return;
     // Прилипаем к рабочей области того монитора, куда притащили.
     const b = win.getBounds();
-    const d = screen.getDisplayNearestPoint({ x: b.x + b.width / 2, y: b.y + 10 });
-    const wa = d.workArea;
-    const x = Math.min(Math.max(b.x, wa.x), wa.x + wa.width - b.width);
-    win.setBounds({ x, y: wa.y, width: b.width, height: wa.height });
+    snapTo(screen.getDisplayNearestPoint({ x: b.x + b.width / 2, y: b.y + 10 }));
+  });
+
+  ipcMain.on('focus:release', () => {
+    // после закрытия чата отдаём клавиатуру обратно тому окну, где ты работал
+    if (win && win.isFocused()) win.blur();
   });
 
   ipcMain.on('focus:request', () => {
@@ -247,11 +296,22 @@ function setupIpc() {
   });
 
   ipcMain.handle('config:get', () => config.publicView(cfg));
-  ipcMain.handle('config:set', (_e, patch) => applyConfig(patch || {}));
+  ipcMain.handle('config:set', (e, patch) => {
+    patch = { ...(patch || {}) };
+    // секреты, адреса и хоткеи меняются только из окна настроек
+    if (!trusted(e, 'settings.html')) {
+      const allowed = ['muted'];
+      Object.keys(patch).forEach((k) => {
+        if (!allowed.includes(k)) delete patch[k];
+      });
+    }
+    return applyConfig(patch);
+  });
   ipcMain.on('settings:open', openSettings);
   ipcMain.on('app:quit', () => app.quit());
 
-  ipcMain.handle('stt:transcribe', async (_e, buf, mime) => {
+  ipcMain.handle('stt:transcribe', async (e, buf, mime) => {
+    if (!trusted(e, 'index.html')) return { ok: false, code: 'denied', message: 'denied' };
     try {
       return { ok: true, text: await transcribe(Buffer.from(buf), mime, cfg) };
     } catch (err) {
@@ -259,9 +319,27 @@ function setupIpc() {
     }
   });
 
-  ipcMain.on('chat:abort', () => brain.abort());
+  ipcMain.on('chat:abort', (e) => {
+    if (!trusted(e, 'index.html')) return;
+    latestChatId = Infinity; // отменяет и снимок экрана, который ещё не успел сделаться
+    brain.abort();
+  });
+  ipcMain.on('chat:reset', (e) => {
+    if (!trusted(e, 'index.html')) return;
+    latestChatId = Infinity;
+    brain.reset();
+  });
+  ipcMain.handle('memory:stats', () => require('./memory').stats());
+  ipcMain.handle('memory:clear', (e) => {
+    if (!trusted(e, 'settings.html')) return false;
+    require('./memory').clear();
+    brain.reset();
+    return true;
+  });
 
-  ipcMain.on('chat:send', async (_e, { id, text, withScreen }) => {
+  ipcMain.on('chat:send', async (e, { id, text, withScreen }) => {
+    if (!trusted(e, 'index.html')) return;
+    latestChatId = id;
     const emit = (ev) => send('chat:event', { id, ...ev });
     let screenshot = null;
     if (withScreen) {
@@ -276,6 +354,8 @@ function setupIpc() {
         emit({ type: 'error', code: 'screen', message: err.message });
         return;
       }
+      // пока снимали экран, пользователь мог написать новое или спрятать бадди
+      if (id !== latestChatId) return;
     }
     await brain.send(text, {
       screenshot,
@@ -287,13 +367,22 @@ function setupIpc() {
           await new Promise((r) => setTimeout(r, 450));
           return captureScreen();
         },
-        hide_myself: async () => {},
       },
     });
   });
 }
 
+function snapTo(display) {
+  if (!win) return;
+  const b = win.getBounds();
+  const nb = overlayBounds(display);
+  const wa = display.workArea;
+  const x = Math.min(Math.max(b.x, wa.x), wa.x + wa.width - nb.width);
+  win.setBounds({ ...nb, x });
+}
+
 app.whenReady().then(() => {
+  if (!gotLock) return;
   cfg = config.load();
   brain = new Brain(() => cfg);
 
@@ -309,12 +398,13 @@ app.whenReady().then(() => {
   registerHotkeys();
   if (!cfg.apiKey) setTimeout(openSettings, 4500);
 
-  screen.on('display-metrics-changed', () => {
-    if (!win) return;
-    const b = win.getBounds();
-    const d = screen.getDisplayMatching(b);
-    win.setBounds({ ...b, y: d.workArea.y, height: d.workArea.height });
-  });
+  const resnap = () => {
+    if (win) snapTo(screen.getDisplayMatching(win.getBounds()));
+  };
+  screen.on('display-metrics-changed', resnap);
+  screen.on('display-removed', resnap);
+  lastLoginItem = null;
+  syncLoginItem();
 });
 
 app.on('will-quit', () => globalShortcut.unregisterAll());

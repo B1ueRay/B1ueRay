@@ -27,6 +27,41 @@ let cfg = await api.getConfig();
 voice.configure(cfg);
 
 const EMOTION_RE = /^(neutral|happy|laugh|surprised|sad|angry|thinking|love|smug|sleepy|scared|embarrassed|wink)$/i;
+const ACTION_RE = /^(jetpack|backflip|dance|stretch|wave|hide)$/i;
+// синонимы, которые модель иногда придумывает сама
+const EMOTION_ALIAS = {
+  excited: 'happy', joy: 'happy', joyful: 'happy', cheerful: 'happy', grin: 'happy', smile: 'happy',
+  laughing: 'laugh', lol: 'laugh', shocked: 'surprised', shock: 'surprised', amazed: 'surprised', wow: 'surprised',
+  cry: 'sad', crying: 'sad', upset: 'sad', mad: 'angry', annoyed: 'angry', furious: 'angry',
+  confused: 'thinking', curious: 'thinking', hmm: 'thinking', shy: 'embarrassed', blush: 'embarrassed',
+  proud: 'smug', sly: 'smug', tired: 'sleepy', afraid: 'scared', fear: 'scared', heart: 'love', calm: 'neutral',
+};
+// наклейки над головой — эмоции читаются даже на пёстром рабочем столе
+const EMO_FX = { angry: '💢', scared: '💦', embarrassed: '💦', thinking: '❓', sad: '💧', love: '💕', surprised: '❗' };
+let lastFx = { emo: '', at: 0 };
+function emoFx(emo) {
+  const icon = EMO_FX[emo];
+  const now = performance.now();
+  if (!icon || (lastFx.emo === emo && now - lastFx.at < 8000)) return;
+  lastFx = { emo, at: now };
+  const p = scene.headScreen();
+  const el = document.createElement('div');
+  el.className = 'sticker';
+  el.textContent = icon;
+  el.style.left = `${p.x + 46}px`;
+  el.style.top = `${p.y + 26}px`;
+  els.fx.appendChild(el);
+  setTimeout(() => el.remove(), 1800);
+}
+// убираем то, что синтезатор прочитал бы вслух как мусор
+function cleanSpeech(text) {
+  return text
+    .replace(/\*[^*\n]{1,60}\*/g, ' ') // *смеётся*
+    .replace(/\[[a-z_ -]{1,20}\]/gi, ' ') // забытые теги
+    .replace(/[*_`#>~|]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
@@ -96,17 +131,23 @@ function zzz() {
 
 // ---------------- речь ----------------
 voice.onSentenceStart = (item) => {
-  if (item.emotion) scene.setEmotion(item.emotion, 6);
+  if (item.emotion) {
+    scene.setEmotion(item.emotion, 6);
+    emoFx(item.emotion);
+  }
 };
 voice.onIdle = () => {
   if (state.pendingHide) {
     state.pendingHide = false;
-    setTimeout(() => hide(), 300);
+    setTimeout(() => whenFree(() => hide()), 300);
   }
 };
 
 function say(text, emotion = 'happy', opts = {}) {
-  if (emotion) scene.setEmotion(emotion, 5);
+  if (emotion) {
+    scene.setEmotion(emotion, 5);
+    emoFx(emotion);
+  }
   showBubble(text, opts);
   return voice.say(text, { emotion, ...opts });
 }
@@ -136,7 +177,7 @@ async function appear({ kuku = true } = {}) {
     await island;
     state.visible = true;
     scene.waveHello(1.8);
-    if (!reply) greet(); // если пока падали уже что-то спросили — не перебиваем ответ
+    if (!reply || reply.done) greet(); // если пока падали уже что-то спросили — не перебиваем ответ
   } finally {
     state.seq = false;
     touch();
@@ -163,6 +204,9 @@ function greet() {
 async function hide() {
   if (!state.visible || state.seq) return;
   state.seq = true;
+  state.pendingHide = false;
+  state.listenGen = (state.listenGen || 0) + 1; // недослушанная фраза уже никуда не уйдёт
+  if (mic.recording) mic.stop();
   try {
     closeChat();
     voice.stop();
@@ -182,13 +226,39 @@ async function hide() {
   }
 }
 
-function toggle(forceShow = false) {
-  if (state.seq) return;
-  if (state.visible && !forceShow) hide();
-  else if (!state.visible) {
-    if (scene.mode === 'peeking') state.peekClick?.();
-    else appear();
+// если подглядывает сверху — любое обращение = "нашёл!", он спрыгивает
+function catchPeek() {
+  if (scene.mode === 'peeking' && state.peekClick) {
+    state.peekClick();
+    return true;
   }
+  return false;
+}
+
+// пока идёт сценарий (появление, трюк) — запоминаем последнюю просьбу и выполняем после
+let queuedTimer = 0;
+function whenFree(fn) {
+  clearInterval(queuedTimer);
+  if (!state.seq) return fn();
+  queuedTimer = setInterval(() => {
+    if (state.seq) return;
+    clearInterval(queuedTimer);
+    fn();
+  }, 200);
+  return undefined;
+}
+
+function ensureShown() {
+  if (catchPeek()) return;
+  if (!state.visible && !state.seq) appear({ kuku: false });
+}
+
+function toggle(forceShow = false) {
+  if (catchPeek()) return;
+  whenFree(() => {
+    if (state.visible && !forceShow) hide();
+    else if (!state.visible) appear();
+  });
 }
 
 function schedulePeek() {
@@ -217,7 +287,7 @@ async function peek() {
       await isl;
       state.visible = true;
       scene.waveHello(1.5);
-      say(pick(['Нашёл меня! Ну ладно, остаюсь.', 'О, заметил! Я тут посижу, ладно?']), 'laugh');
+      if (!reply || reply.done) say(pick(['Нашёл меня! Ну ладно, остаюсь.', 'О, заметил! Я тут посижу, ладно?']), 'laugh');
     } else {
       showBubble('ну и ладно…', { micro: true });
       voice.say('ну и ладно', { micro: true });
@@ -341,6 +411,7 @@ let reqId = 0;
 let reply = null;
 
 function newReply() {
+  state.pendingHide = false; // прощание из прошлого ответа не должно сработать на новом
   reply = { id: ++reqId, raw: '', pos: 0, shown: '', sent: '', emotion: 'neutral', gotText: false, done: false };
   return reply;
 }
@@ -349,7 +420,7 @@ function send(text, withScreen = false) {
   text = (text || '').trim();
   if (!text && !withScreen) return;
   touch();
-  if (!state.visible && !state.seq) appear({ kuku: false });
+  ensureShown();
   voice.stop();
   const r = newReply();
   els.input.value = '';
@@ -389,13 +460,20 @@ function feed(r, delta) {
       r.pos = i + 1;
       continue;
     }
-    const tag = r.raw.slice(i + 1, j).trim();
-    if (EMOTION_RE.test(tag)) {
+    const tag = r.raw.slice(i + 1, j).trim().toLowerCase();
+    const emo = EMOTION_RE.test(tag) ? tag : EMOTION_ALIAS[tag];
+    if (emo) {
       if (r.sent.trim()) flushSentence(r);
-      r.emotion = tag.toLowerCase();
-      if (!voice.active) scene.setEmotion(r.emotion, 6);
-    } else {
-      pushText(r, r.raw.slice(i, j + 1));
+      r.emotion = emo;
+      if (!voice.active) {
+        scene.setEmotion(r.emotion, 6);
+        emoFx(r.emotion);
+      }
+    } else if (ACTION_RE.test(tag)) {
+      if (tag === 'hide') state.pendingHide = true;
+      else doTrick(tag); // трюк — сразу, пока он говорит
+    } else if (!/^[a-z_ -]{1,20}$/.test(tag)) {
+      pushText(r, r.raw.slice(i, j + 1)); // обычные квадратные скобки в тексте
     }
     r.pos = j + 1;
   }
@@ -405,7 +483,7 @@ function pushText(r, text) {
   if (!text) return;
   r.shown += text;
   r.sent += text;
-  const shown = r.shown.replace(/\s+/g, ' ').trim();
+  const shown = cleanSpeech(r.shown);
   if (shown) {
     els.bubble.classList.remove('thinking');
     showBubble(shown, { sticky: true });
@@ -432,7 +510,7 @@ function flushSentence(r) {
 }
 
 function enqueueSentence(r, text) {
-  const clean = text.replace(/\s+/g, ' ').trim();
+  const clean = cleanSpeech(text);
   if (clean) voice.enqueue({ text: clean, emotion: r.emotion });
 }
 
@@ -451,11 +529,12 @@ api.onChatEvent((ev) => {
             setTimeout(() => pop('щёлк', 'small'), 420);
           }
         }
-      } else if (ev.name === 'hide_myself') {
-        state.pendingHide = true;
-      } else if (ev.name === 'do_trick' && ev.type === 'tool') {
-        doTrick(ev.input?.trick);
       }
+      break;
+    case 'memory':
+      if (ev.kind === 'self') pop('урок усвоен', 'small');
+      else if (ev.kind === 'user' && !ev.duplicate) pop('запомнил!', 'small');
+      else if (ev.kind === 'forget') pop('забыл', 'small');
       break;
     case 'text': {
       if (!r.gotText) {
@@ -483,7 +562,7 @@ api.onChatEvent((ev) => {
         if (ev.stop === 'refusal') say('Не, вот на это я отвечать не буду. Давай что-нибудь другое?', 'embarrassed');
         else hideBubble();
       } else {
-        showBubble(r.shown.replace(/\s+/g, ' ').trim());
+        showBubble(cleanSpeech(r.shown));
       }
       if (state.pendingHide && !voice.active) voice.onIdle();
       break;
@@ -528,6 +607,7 @@ async function listen() {
   }
   voice.stop();
   api.abortChat();
+  const gen = (state.listenGen = (state.listenGen || 0) + 1);
   scene.setActivity({ listening: true, thinking: false });
   setStatus('слушаю…');
   els.mic.classList.add('rec');
@@ -536,11 +616,19 @@ async function listen() {
   try {
     blob = await mic.start({ onLevel: (l) => (scene.micLevel = l) });
   } catch (err) {
+    els.mic.classList.remove('rec');
+    scene.setActivity({ listening: false });
+    setStatus('');
     say(`Не могу включить микрофон: ${err.message}`, 'sad');
+    return;
   }
   els.mic.classList.remove('rec');
   scene.setActivity({ listening: false });
   scene.micLevel = 0;
+  if (gen !== state.listenGen || !state.visible) {
+    setStatus('');
+    return; // пока слушал — спрятали или начали новую запись
+  }
   if (!blob) {
     setStatus('');
     say('Не расслышал. Скажешь ещё раз?', 'embarrassed');
@@ -549,6 +637,7 @@ async function listen() {
   setStatus('распознаю…');
   const res = await api.transcribe(await blob.arrayBuffer(), blob.type);
   setStatus('');
+  if (gen !== state.listenGen || !state.visible) return;
   if (!res.ok) {
     say(res.code === 'stt_auth' ? 'Ключ распознавания речи не подходит.' : `Распознавание сломалось: ${res.message}`, 'sad');
     return;
@@ -562,7 +651,7 @@ async function listen() {
 
 // ---------------- панель чата ----------------
 function openChat() {
-  if (!state.visible && !state.seq) appear({ kuku: false });
+  ensureShown();
   state.chatOpen = true;
   els.chat.classList.add('on');
   api.requestFocus();
@@ -570,9 +659,11 @@ function openChat() {
   touch();
 }
 function closeChat() {
+  const wasOpen = state.chatOpen;
   state.chatOpen = false;
   els.chat.classList.remove('on');
   els.input.blur();
+  if (wasOpen) api.releaseFocus?.(); // клавиатуру — обратно твоему окну
 }
 
 els.input.addEventListener('keydown', (e) => {
@@ -597,7 +688,41 @@ const POKES = [
   ['Ой! Ну чего?', 'surprised'],
   ['Я тут, я тут, не дави.', 'embarrassed'],
   ['Пиу!', 'happy'],
+  ['Ну ёпт, я ж чуть с гриба не свалился!', 'scared'],
+  ['Тыкнул — плати. Шутка. Или нет.', 'smug'],
+  ['Ещё раз тыкнешь — включу капслок тебе навсегда.', 'angry'],
+  ['О, внимание! Обожаю внимание.', 'love'],
+  ['Бип-буп. Робот активирован. Ну чего, кожаный?', 'wink'],
+  ['Щекотно, блин! Я ж колобок, у меня везде бока.', 'laugh'],
 ];
+
+// сам заговаривает, если долго тихо (без API — бесплатно)
+const IDLE_LINES = [
+  ['Эй, ты там живой? Моргни, если да.', 'thinking'],
+  ['Скучно, бл… блин. Давай что-нибудь сломаем? В смысле, починим.', 'smug'],
+  ['Я тут сижу, гриб грею. Если что — зови.', 'happy'],
+  ['Ты так сосредоточенно смотришь в экран. Уважаю. Пойду тоже сосредоточусь… на кружке кофе.', 'wink'],
+  ['Напоминаю: попить воды — это тоже продуктивность.', 'neutral'],
+  ['Слушай, а ты сегодня вставал из-за компа? Разомнись, я подожду.', 'thinking'],
+];
+function timeLine() {
+  const h = new Date().getHours();
+  if (h >= 0 && h < 5) return ['Уже ночь, ёпта. Может, спать? Я-то колобок, мне норм.', 'sleepy'];
+  if (h < 11) return ['Доброе утро! Кофе уже был? У меня вот кружка пустая.', 'happy'];
+  if (h >= 18 && h < 24 && Math.random() < 0.5) return ['Вечереет. Если работаешь — ты красавчик. Если залипаешь — тоже.', 'smug'];
+  return pick(IDLE_LINES);
+}
+state.nextChat = performance.now() + 150000;
+setInterval(() => {
+  if (!state.visible || state.seq || state.sleeping || state.chatOpen || voice.active || mic.recording) return;
+  if (scene.activity.thinking || scene.activity.listening) return;
+  const now = performance.now();
+  if (now < state.nextChat || now - state.lastInteraction < 120000) return;
+  state.nextChat = now + (2 + Math.random() * 3) * 60000;
+  if (Math.random() > 0.35) return;
+  const [text, emo] = timeLine();
+  say(text, emo);
+}, 15000);
 const pokeTimes = [];
 function poke() {
   touch();
@@ -703,7 +828,7 @@ els.menu.addEventListener('click', async (e) => {
   if (!act) return;
   if (act === 'talk') openChat();
   if (act === 'look') send('Посмотри на мой экран и прокомментируй, что видишь.', true);
-  if (act === 'hide') hide();
+  if (act === 'hide') whenFree(() => hide());
   if (act === 'jetpack') doTrick('jetpack');
   if (act === 'dance') doTrick('dance');
   if (act === 'reset') resetChat();
@@ -713,6 +838,7 @@ els.menu.addEventListener('click', async (e) => {
 });
 
 function resetChat() {
+  api.resetChat?.();
   voice.stop();
   reply = null;
   say('Всё, я всё забыл. Начнём с чистого листа!', 'wink');
@@ -723,12 +849,10 @@ api.onCommand(({ name, forceShow }) => {
   touch();
   if (name === 'toggle') toggle(forceShow);
   if (name === 'talk') {
-    if (!state.visible && !state.seq) appear({ kuku: false });
     openChat();
     if (cfg.sttReady) listen();
   }
   if (name === 'look') {
-    if (!state.visible && !state.seq) appear({ kuku: false });
     send('Посмотри на мой экран и прокомментируй, что видишь.', true);
   }
   if (name === 'reset') resetChat();

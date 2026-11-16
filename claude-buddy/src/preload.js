@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('buddy', {
   dragStart: () => ipcRenderer.send('drag:start'),
   dragEnd: () => ipcRenderer.send('drag:end'),
   requestFocus: () => ipcRenderer.send('focus:request'),
+  releaseFocus: () => ipcRenderer.send('focus:release'),
 
   getConfig: () => ipcRenderer.invoke('config:get'),
   setConfig: (patch) => ipcRenderer.invoke('config:set', patch),
@@ -26,5 +27,8 @@ contextBridge.exposeInMainWorld('buddy', {
 
   chat: (id, text, withScreen) => ipcRenderer.send('chat:send', { id, text, withScreen: Boolean(withScreen) }),
   abortChat: () => ipcRenderer.send('chat:abort'),
+  resetChat: () => ipcRenderer.send('chat:reset'),
+  memoryStats: () => ipcRenderer.invoke('memory:stats'),
+  clearMemory: () => ipcRenderer.invoke('memory:clear'),
   transcribe: (arrayBuffer, mime) => ipcRenderer.invoke('stt:transcribe', arrayBuffer, mime),
 });

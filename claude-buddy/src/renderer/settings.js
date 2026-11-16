@@ -22,6 +22,9 @@ function outputs() {
   $('sizeOut').textContent = `${Math.round(Number($('size').value) * 100)}%`;
 }
 
+let savedVoice = '';
+speechSynthesis.addEventListener('voiceschanged', () => fillVoices($('voiceName').value || savedVoice));
+
 async function load() {
   const cfg = await buddy.getConfig();
   FIELDS.forEach((f) => {
@@ -36,7 +39,7 @@ async function load() {
   $('apiKeyState').textContent = cfg.has_apiKey ? 'ключ сохранён (оставь поле пустым, чтобы не менять)' : '';
   $('sttKeyState').textContent = cfg.has_sttApiKey ? 'ключ сохранён' : '';
   fillVoices(cfg.voiceName);
-  speechSynthesis.addEventListener('voiceschanged', () => fillVoices($('voiceName').value || cfg.voiceName));
+  savedVoice = cfg.voiceName;
   outputs();
 }
 
@@ -62,6 +65,16 @@ async function save() {
   load();
 }
 
+async function memStats() {
+  const m = await buddy.memoryStats();
+  $('memStats').textContent = `Фактов о тебе: ${m.user}, уроков себе: ${m.self}`;
+}
+$('clearMem').addEventListener('click', async () => {
+  if (!confirm('Стереть всю долгую память бадди? Это не отменить.')) return;
+  await buddy.clearMemory();
+  memStats();
+});
+memStats();
 $('save').addEventListener('click', save);
 ['voicePitch', 'voiceRate', 'size'].forEach((f) => $(f).addEventListener('input', outputs));
 $('testVoice').addEventListener('click', () => {

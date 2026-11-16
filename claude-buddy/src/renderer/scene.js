@@ -139,14 +139,14 @@ const FACES = {
   happy: { eye: 0.95, shape: 'open', pupil: 1.05, browY: 0.025, browA: 0.05, smile: 0.85, open: 0.12, width: 1.1, blush: 0.4 },
   laugh: { eye: 1, shape: 'arc', pupil: 1, browY: 0.04, browA: 0.1, smile: 1, open: 0.62, width: 1.15, blush: 0.6, bounce: 1 },
   surprised: { eye: 1.25, shape: 'open', pupil: 0.72, browY: 0.07, browA: 0.12, smile: 0, open: 0.55, width: 0.62, blush: 0.1, round: 1 },
-  sad: { eye: 0.8, shape: 'open', pupil: 1.1, browY: 0.0, browA: 0.42, smile: -0.7, open: 0.05, width: 0.85, blush: 0.05, droop: 1 },
-  angry: { eye: 0.72, shape: 'open', pupil: 0.9, browY: -0.03, browA: -0.5, smile: -0.45, open: 0.18, width: 0.95, blush: 0.55, shake: 0.4 },
+  sad: { eye: 0.8, shape: 'open', pupil: 1.1, browY: 0.0, browA: 0.62, smile: -0.7, open: 0.05, width: 0.85, blush: 0.05, droop: 1 },
+  angry: { eye: 0.7, shape: 'open', pupil: 0.85, browY: 0.0, browA: -0.8, smile: -0.7, open: 0.18, width: 0.95, blush: 0.55, shake: 0.4 },
   thinking: { eye: 0.85, shape: 'open', pupil: 1, browY: 0.02, browA: 0.15, browAsym: 0.06, smile: -0.05, open: 0.02, width: 0.7, blush: 0.1, mouthX: 0.06 },
   love: { eye: 1, shape: 'heart', pupil: 1, browY: 0.03, browA: 0.1, smile: 0.8, open: 0.1, width: 1, blush: 0.9 },
   smug: { eye: 0.52, shape: 'open', pupil: 1, browY: 0.01, browA: -0.05, browAsym: 0.07, smile: 0.6, open: 0, width: 1.05, blush: 0.25, mouthX: 0.05 },
   sleepy: { eye: 0.22, shape: 'open', pupil: 1, browY: -0.01, browA: 0.15, smile: 0, open: 0.1, width: 0.6, blush: 0.2, droop: 0.6 },
   sleep: { eye: 0, shape: 'closed', pupil: 1, browY: -0.01, browA: 0.05, smile: 0.1, open: 0.08, width: 0.5, blush: 0.3, droop: 0.4 },
-  scared: { eye: 1.22, shape: 'open', pupil: 0.6, browY: 0.06, browA: 0.45, smile: -0.55, open: 0.35, width: 0.9, blush: 0, shake: 1 },
+  scared: { eye: 1.22, shape: 'open', pupil: 0.45, browY: 0.06, browA: 0.55, smile: -0.8, open: 0.35, width: 0.7, blush: 0, shake: 1 },
   embarrassed: { eye: 0.85, shape: 'open', pupil: 1, browY: 0.02, browA: 0.3, smile: 0.35, open: 0.05, width: 0.8, blush: 1.1, lookAway: 1 },
   wink: { eye: 1, shape: 'wink', pupil: 1, browY: 0.03, browA: 0.05, smile: 0.8, open: 0.1, width: 1.05, blush: 0.4 },
 };
@@ -513,7 +513,7 @@ export class BuddyScene {
     g.add(inner);
     const white = new THREE.Mesh(new THREE.SphereGeometry(0.13, 24, 18), toon(C.eyeWhite));
     white.scale.set(1, 1.22, 0.55);
-    outline(white, 1.09);
+    const whiteEdge = outline(white, 1.09);
     inner.add(white);
     const pupilG = new THREE.Group();
     inner.add(pupilG);
@@ -541,6 +541,9 @@ export class BuddyScene {
     // веко: полусфера цвета тела. rotation.x: -PI/2 открыто, 0 полуприкрыто, +PI/2 закрыто
     const lidGeo = new THREE.SphereGeometry(0.13 * 1.07, 24, 12, 0, TAU, 0, Math.PI / 2);
     const lid = new THREE.Mesh(lidGeo, toon(C.body, { side: THREE.DoubleSide }));
+    const lidEdge = new THREE.Mesh(lidGeo, OUTLINE);
+    lidEdge.scale.setScalar(1.08); // ресничный контур: закрытый глаз читается как глаз, а не как пятно
+    lid.add(lidEdge);
     const lidWrap = new THREE.Group();
     lidWrap.scale.set(1.05, 1.22 * 1.05, 0.55 * 1.45);
     lidWrap.add(lid);
@@ -553,7 +556,7 @@ export class BuddyScene {
     arc.visible = false;
     g.add(arc);
 
-    return { group: g, inner, white, pupilG, heart, lid, arc, side, lidAngle: -Math.PI / 2 };
+    return { group: g, inner, white, whiteEdge, pupilG, heart, lid, arc, side, lidAngle: -Math.PI / 2 };
   }
 
   makeBrow(side) {
@@ -627,9 +630,13 @@ export class BuddyScene {
   }
 
   buildThread() {
-    const geo = new THREE.CylinderGeometry(0.012, 0.012, 1, 6);
+    const geo = new THREE.CylinderGeometry(0.014, 0.014, 1, 6);
     geo.translate(0, 0.5, 0);
-    this.thread = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 }));
+    this.thread = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xfff6ec }));
+    // тёмная обводка, чтобы нитку было видно и на белых окнах
+    const edgeGeo = new THREE.CylinderGeometry(0.024, 0.024, 1, 6);
+    edgeGeo.translate(0, 0.5, 0);
+    this.thread.add(new THREE.Mesh(edgeGeo, new THREE.MeshBasicMaterial({ color: C.outline, side: THREE.BackSide })));
     this.thread.visible = false;
     this.scene.add(this.thread);
   }
@@ -1093,6 +1100,8 @@ export class BuddyScene {
       const lidTarget = lerp(Math.PI / 2, -Math.PI / 2, open);
       e.lidAngle = lidTarget; // моргание уже сглажено синусом
       e.lid.rotation.x = e.lidAngle;
+      // почти закрытый глаз: контур белка торчал бы "кольцом" из-под века
+      e.whiteEdge.visible = open > 0.45;
       const useArc = f.shape === 'arc' || f.shape === 'closed' || (f.shape === 'wink' && e.side === 1);
       e.arc.visible = useArc;
       e.white.visible = !useArc;
