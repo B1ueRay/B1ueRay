@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: mediastream:; connect-src 'self'" />
+    <title>Claude Buddy</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <canvas id="scene"></canvas>
+
+    <div id="bubble" class="bubble"><span id="bubbleText"></span><i class="dots"><b></b><b></b><b></b></i></div>
+    <div id="status" class="status"></div>
+    <div id="fx"></div>
+    <div id="toast" class="toast"></div>
+    <div id="you" class="you"></div>
+
+    <form id="chat" class="chat ui">
+      <input id="chatInput" type="text" autocomplete="off" spellcheck="false" placeholder="Скажи что-нибудь… (Enter)" />
+      <button id="micBtn" type="button" class="icon" title="Сказать голосом">
+        <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
+      </button>
+      <button id="lookBtn" type="button" class="icon" title="Посмотри на мой экран">
+        <svg viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>
+      </button>
+      <button id="closeBtn" type="button" class="icon" title="Свернуть">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+    </form>
+
+    <div id="menu" class="menu ui">
+      <button data-act="talk">Поговорить</button>
+      <button data-act="look">Посмотри на экран</button>
+      <button data-act="hide">Спрятаться</button>
+      <button data-act="mute">Без звука</button>
+      <button data-act="reset">Забыть разговор</button>
+      <button data-act="settings">Настройки…</button>
+      <button data-act="quit">Выйти</button>
+    </div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
