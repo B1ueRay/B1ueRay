@@ -1,7 +1,7 @@
 /* global buddy */
 const $ = (id) => document.getElementById(id);
 const FIELDS = ['model', 'effort', 'userName', 'language', 'voiceName', 'voicePitch', 'voiceRate', 'sttBaseUrl', 'sttModel', 'sleepAfterMin', 'size'];
-const CHECKS = ['muted', 'allowScreen', 'peekWhileHidden', 'launchAtLogin'];
+const CHECKS = ['muted', 'allowScreen', 'peekWhileHidden', 'freeWill', 'launchAtLogin'];
 
 function fillVoices(selected) {
   const sel = $('voiceName');

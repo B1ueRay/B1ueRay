@@ -5,7 +5,7 @@ export function createMock() {
   const emit = (k, v) => listeners[k].forEach((cb) => cb(v));
   const cfg = {
     has_apiKey: true, has_sttApiKey: false, sttReady: false, muted: true, model: 'claude-opus-5-5', effort: 'low',
-    language: 'ru', voicePitch: 1.3, voiceRate: 1.08, voiceVolume: 1, allowScreen: true, peekWhileHidden: true,
+    language: 'ru', voicePitch: 1.3, voiceRate: 1.08, voiceVolume: 1, allowScreen: true, peekWhileHidden: true, freeWill: true,
     sleepAfterMin: 5, size: 1, userName: '', hotkeys: {},
   };
   const replies = [

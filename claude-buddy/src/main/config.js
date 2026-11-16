@@ -24,6 +24,7 @@ const DEFAULTS = {
   // поведение
   allowScreen: true,
   peekWhileHidden: true,
+  freeWill: true, // самодеятельность: сам иногда летает, танцует, потягивается
   sleepAfterMin: 5,
   size: 1,
   launchAtLogin: false,

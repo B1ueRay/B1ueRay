@@ -269,6 +269,73 @@ setInterval(() => {
   }
 }, 5000);
 
+// ---------------- трюки и самодеятельность ----------------
+function notes() {
+  for (let i = 0; i < 3; i += 1) {
+    setTimeout(() => {
+      const p = scene.headScreen();
+      const el = document.createElement('div');
+      el.className = 'note';
+      el.textContent = pick(['♪', '♫', '♬']);
+      el.style.left = `${p.x + (Math.random() - 0.5) * 120}px`;
+      el.style.top = `${p.y + 30}px`;
+      els.fx.appendChild(el);
+      setTimeout(() => el.remove(), 2200);
+    }, i * 450);
+  }
+}
+
+async function doTrick(name) {
+  if (!state.visible || state.seq) return;
+  if (name === 'wave') {
+    scene.waveHello(2);
+    return;
+  }
+  if (!scene.canTrick) return;
+  wake();
+  state.seq = true;
+  try {
+    if (name === 'jetpack') {
+      setTimeout(() => pop('ВЖУХ!', 'small'), 900);
+      await scene.jetpackFlight();
+      pop('БАМ!');
+    } else if (name === 'backflip') {
+      await scene.backflip();
+      pop('та-дам!', 'small');
+    } else if (name === 'dance') {
+      const t = setInterval(notes, 1400);
+      notes();
+      try {
+        await scene.dance(4.5);
+      } finally {
+        clearInterval(t);
+      }
+    } else if (name === 'stretch') {
+      await scene.stretch();
+    }
+  } finally {
+    state.seq = false;
+  }
+}
+
+const FREE_WILL = [
+  ['jetpack', ['Пойду проветрюсь!', 'Тест-драйв джетпака, не пугайся!', 'Уиии, я лечу-у-у!'], 'laugh'],
+  ['dance', ['Ла-ла-ла, никто не смотрит — танцую!', 'Музыка в голове заиграла.'], 'happy'],
+  ['backflip', ['Смотри, что умею!', 'Сальто для разминки!'], 'smug'],
+  ['stretch', ['Ааах… засиделся я тут.', 'Потянусь-ка.'], 'sleepy'],
+];
+state.nextFreeWill = performance.now() + 90000;
+setInterval(() => {
+  if (!cfg.freeWill || !state.visible || state.seq || state.sleeping || state.chatOpen) return;
+  if (voice.active || scene.activity.thinking || scene.activity.listening || mic.recording) return;
+  const now = performance.now();
+  if (now - state.lastInteraction < 45000 || now < state.nextFreeWill) return;
+  state.nextFreeWill = now + (2 + Math.random() * 4) * 60000;
+  const [name, lines, emo] = pick(FREE_WILL);
+  say(pick(lines), emo);
+  doTrick(name);
+}, 5000);
+
 // ---------------- чат с Claude ----------------
 let reqId = 0;
 let reply = null;
@@ -386,6 +453,8 @@ api.onChatEvent((ev) => {
         }
       } else if (ev.name === 'hide_myself') {
         state.pendingHide = true;
+      } else if (ev.name === 'do_trick' && ev.type === 'tool') {
+        doTrick(ev.input?.trick);
       }
       break;
     case 'text': {
@@ -567,6 +636,11 @@ window.addEventListener('mousemove', (e) => {
   }
   const hit = overUi(e.target) ? 'ui' : scene.hitTest(e.clientX, e.clientY);
   setIgnore(!hit);
+  if (hit === 'buddy' && state.visible && !state.seq && !state.sleeping && performance.now() - (state.lastHover || 0) > 30000) {
+    scene.waveHello(1.2); // навёл курсор — машет
+    scene.setEmotion('happy', 1.5);
+  }
+  if (hit === 'buddy') state.lastHover = performance.now();
   document.body.dataset.hover = hit || '';
 });
 window.addEventListener('mouseleave', () => {
@@ -630,6 +704,8 @@ els.menu.addEventListener('click', async (e) => {
   if (act === 'talk') openChat();
   if (act === 'look') send('Посмотри на мой экран и прокомментируй, что видишь.', true);
   if (act === 'hide') hide();
+  if (act === 'jetpack') doTrick('jetpack');
+  if (act === 'dance') doTrick('dance');
   if (act === 'reset') resetChat();
   if (act === 'mute') cfg = await api.setConfig({ muted: !cfg.muted });
   if (act === 'settings') api.openSettings();
@@ -696,4 +772,4 @@ requestAnimationFrame(loop);
 setTimeout(() => appear({ kuku: true }), 600);
 
 // для отладки и превью
-window.__buddy = { scene, voice, say, send, hide, appear, peek, toggle, state };
+window.__buddy = { scene, voice, say, send, hide, appear, peek, toggle, state, doTrick };

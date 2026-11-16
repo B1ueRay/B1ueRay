@@ -455,6 +455,54 @@ export class BuddyScene {
     hit.position.y = 0.1;
     this.buddyHit = hit;
     this.bodyGroup.add(hit);
+
+    this.buildJetpack();
+  }
+
+  // ранец-джетпак: два баллона, сопла и огонь
+  buildJetpack() {
+    const jp = new THREE.Group();
+    jp.position.set(0, BODY_Y - 0.02, -0.52);
+    jp.visible = false;
+    jp.scale.setScalar(0.001);
+    this.tilt.add(jp);
+    this.jetpack = jp;
+    const metal = toon(0xcfd8e3);
+    const red = toon(C.cap);
+    this.flames = [];
+    [-1, 1].forEach((s) => {
+      const tank = new THREE.Mesh(new THREE.CapsuleGeometry(0.12, 0.3, 6, 14), metal);
+      tank.position.set(s * 0.15, 0, 0);
+      outline(tank, 1.1);
+      jp.add(tank);
+      const band = new THREE.Mesh(new THREE.TorusGeometry(0.123, 0.024, 6, 18), red);
+      band.rotation.x = Math.PI / 2;
+      band.position.set(s * 0.15, 0.1, 0);
+      jp.add(band);
+      const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, 0.1, 12), toon(0x56606c));
+      nozzle.position.set(s * 0.15, -0.3, 0);
+      jp.add(nozzle);
+      const flameGeo = new THREE.ConeGeometry(0.085, 0.85, 12);
+      flameGeo.rotateX(Math.PI);
+      flameGeo.translate(0, -0.42, 0);
+      const outer = new THREE.Mesh(flameGeo, new THREE.MeshBasicMaterial({ color: 0xff8a2a, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+      const inner = new THREE.Mesh(flameGeo, new THREE.MeshBasicMaterial({ color: 0xfff1a0, transparent: true, opacity: 0.95, depthWrite: false }));
+      inner.scale.set(0.5, 0.65, 0.5);
+      const flame = new THREE.Group();
+      flame.position.set(s * 0.15, -0.35, 0);
+      flame.add(outer, inner);
+      flame.scale.setScalar(0.001);
+      jp.add(flame);
+      this.flames.push(flame);
+    });
+    const strap = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.07, 0.06), toon(0x6b4a3a));
+    strap.position.set(0, 0.12, 0.08);
+    jp.add(strap);
+    this.thrust = 0;
+    this.thrustTarget = 0;
+    this.flyBank = 0;
+    this.flySpin = 0;
+    this.puffT = 0;
   }
 
   makeEye(side) {
@@ -729,6 +777,16 @@ export class BuddyScene {
     await showing;
   }
 
+  spawnPuff(worldPos) {
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: DUST_TEX, transparent: true, depthWrite: false, opacity: 0.7 }));
+    this.stage.worldToLocal(s.position.copy(worldPos));
+    s.position.y -= 0.35;
+    s.userData = { vx: (Math.random() - 0.5) * 0.4, vz: (Math.random() - 0.5) * 0.3, vy: -0.9, life: 0 };
+    s.scale.setScalar(0.12);
+    this.stage.add(s);
+    this.dust.push(s);
+  }
+
   spawnDust() {
     for (let i = 0; i < 10; i += 1) {
       const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: DUST_TEX, transparent: true, depthWrite: false, opacity: 0.9 }));
@@ -775,6 +833,88 @@ export class BuddyScene {
 
   waveHello(sec = 1.6) {
     this.wave = sec;
+  }
+
+  get canTrick() {
+    return this.mode === 'sitting' && !this.trick;
+  }
+
+  // ---------- трюки ----------
+  async jetpackFlight() {
+    if (!this.canTrick) return;
+    this.mode = 'flying';
+    this.jetpack.visible = true;
+    await this.animate(0.35, (k) => this.jetpack.scale.setScalar(Math.max(0.001, k)), ease.outBack);
+    this.thrustTarget = 0.45;
+    this.squashT = 0.25; // присел перед стартом
+    await this.wait(0.55);
+    this.thrustTarget = 1;
+    const s = this.seat.clone();
+    const top = this.stageLocal(this.visH - 1.3);
+    const H = Math.max(1.6, Math.min(5.5, top - s.y));
+    const path = [[0, 0], [0, 0.22], [-0.8, 0.5], [0.45, 1], [0.85, 0.62], [-0.95, 0.78], [-0.3, 0.92], [0.75, 0.42], [0.1, 0.18], [0, 0]];
+    const curve = new THREE.CatmullRomCurve3(
+      path.map(([x, y]) => new THREE.Vector3(s.x + x, s.y + y * H, s.z + Math.sin(x * 2) * 0.35)),
+      false,
+      'centripetal',
+    );
+    const prev = curve.getPointAt(0);
+    await this.animate(
+      7,
+      (k) => {
+        const p = curve.getPointAt(k);
+        const vx = p.x - prev.x;
+        prev.copy(p);
+        this.buddy.position.copy(p);
+        this.flyBank = damp(this.flyBank, clamp(-vx * 22, -0.75, 0.75), 6, 1 / 60);
+        this.flySpin = k > 0.42 && k < 0.58 ? ease.inOut((k - 0.42) / 0.16) * TAU : 0; // волчок в воздухе
+        this.thrustTarget = k > 0.9 ? 0.5 : 1;
+      },
+      ease.inOut,
+    );
+    this.buddy.position.copy(s);
+    this.thrustTarget = 0;
+    this.flySpin = 0;
+    this.flyBank = 0;
+    this.mode = 'sitting';
+    this.impact();
+    await this.wait(0.45);
+    await this.animate(0.3, (k) => this.jetpack.scale.setScalar(Math.max(0.001, 1 - k)), ease.inBack);
+    this.jetpack.visible = false;
+  }
+
+  async backflip() {
+    if (!this.canTrick) return;
+    this.trick = { name: 'flip' };
+    this.squashT = 0.3;
+    await this.wait(0.3);
+    const s = this.seat;
+    await this.animate(1.0, (k) => {
+      const th = -ease.inOut(k) * TAU;
+      this.flipAngle = th;
+      const jump = 4 * k * (1 - k) * 1.5;
+      this.buddy.position.set(s.x, s.y + jump + BODY_Y * (1 - Math.cos(th)), s.z - BODY_Y * Math.sin(th));
+    });
+    this.flipAngle = 0;
+    this.buddy.position.copy(s);
+    this.trick = null;
+    this.impact();
+    await this.wait(0.4);
+  }
+
+  async dance(sec = 4) {
+    if (!this.canTrick) return;
+    this.trick = { name: 'dance' };
+    await this.wait(sec);
+    this.trick = null;
+    this.buddy.position.copy(this.seat);
+  }
+
+  async stretch() {
+    if (!this.canTrick) return;
+    this.trick = { name: 'stretch' };
+    await this.wait(2.4);
+    this.trick = null;
   }
 
   // ---------- попадание мышью ----------
@@ -861,6 +1001,12 @@ export class BuddyScene {
     else if (a.thinking && name === 'neutral') name = 'thinking';
     else if (this.mode === 'hanging' || this.mode === 'peeking') name = this.emotion === 'neutral' ? 'happy' : this.emotion;
     const target = { ...FACES.neutral, browAsym: 0, mouthX: 0, bounce: 0, shake: 0, droop: 0, round: 0, lookAway: 0, ...FACES[name] };
+    if (this.trick?.name === 'stretch') {
+      Object.assign(target, { eye: 0.15, shape: 'open', open: 0.8, smile: 0, width: 0.75, browA: 0.2, round: 1 });
+    }
+    if (this.mode === 'flying' || this.trick?.name === 'flip') {
+      Object.assign(target, { shape: this.mode === 'flying' ? 'open' : 'arc', smile: 1, open: 0.45, eye: 1.1, blush: 0.5 });
+    }
     if (a.listening) {
       target.eye = Math.max(target.eye, 1.12);
       target.browY += 0.03;
@@ -1021,7 +1167,20 @@ export class BuddyScene {
     rollZ += f.shake * Math.sin(t * 34) * 0.025;
     if (t - this.pokeT < 0.6) rollZ += Math.sin((t - this.pokeT) * 30) * 0.12 * (1 - (t - this.pokeT) / 0.6);
     const hanging = this.mode === 'hanging' || this.mode === 'descending' || this.mode === 'peeking' || this.mode === 'ascending';
+    const flying = this.mode === 'flying';
+    const trick = this.trick?.name;
     if (hanging) rollZ += Math.sin(t * 2.4) * 0.12;
+    if (flying) {
+      rollZ += this.flyBank;
+      leanX += 0.15;
+    }
+    if (trick === 'dance') {
+      rollZ += Math.sin(t * 8) * 0.22;
+      turnY += Math.sin(t * 4) * 0.35;
+    }
+    if (trick === 'stretch') leanX -= 0.18;
+    this.squash.rotation.y = flying ? this.flySpin : 0;
+    this.squash.rotation.x = trick === 'flip' ? this.flipAngle || 0 : 0;
     this.tilt.rotation.x = damp(this.tilt.rotation.x, leanX, 6, dt);
     this.tilt.rotation.y = damp(this.tilt.rotation.y, turnY, 5, dt);
     this.tilt.rotation.z = damp(this.tilt.rotation.z, rollZ, 8, dt);
@@ -1052,6 +1211,10 @@ export class BuddyScene {
         z = s * 0.15;
       }
       if (this.mode === 'dropping') z = s * 2.6;
+      if (flying) z = s * (1.35 + Math.sin(t * 6 + s) * 0.15);
+      if (trick === 'dance') z = s * (1.8 + Math.sin(t * 8 + (s > 0 ? 0 : Math.PI)) * 0.9);
+      if (trick === 'stretch') z = s * (2.75 + Math.sin(t * 3) * 0.08);
+      if (trick === 'flip') z = s * 2.4;
       arm.rotation.z = damp(arm.rotation.z, z, 10, dt);
       arm.rotation.x = damp(arm.rotation.x, x, 10, dt);
     });
@@ -1061,15 +1224,35 @@ export class BuddyScene {
     this.legs.forEach((leg) => {
       const s = leg.userData.side;
       let x = 0;
-      if (seated) x = -1.35 + Math.sin(t * 2.6 + (s > 0 ? 0 : Math.PI)) * (a.sleeping ? 0.03 : 0.22);
-      else if (hanging) x = Math.sin(t * 3.4 + s) * 0.35;
+      if (trick === 'dance') x = Math.max(0, Math.sin(t * 8 + (s > 0 ? 0 : Math.PI))) * -0.7;
+      else if (trick === 'flip') x = -0.6;
+      else if (seated) x = -1.35 + Math.sin(t * 2.6 + (s > 0 ? 0 : Math.PI)) * (a.sleeping ? 0.03 : 0.22);
+      else if (hanging || flying) x = Math.sin(t * 3.4 + s) * 0.35 + (flying ? 0.25 : 0);
       leg.rotation.x = damp(leg.rotation.x, x, 10, dt);
       leg.rotation.z = damp(leg.rotation.z, hanging ? -s * 0.15 : 0, 8, dt);
     });
 
     // на грибе чуть подпрыгиваем, когда смеёмся
-    if (seated && this.mode === 'sitting') {
+    if (this.mode === 'sitting' && trick === 'dance') {
+      this.buddy.position.y = this.seat.y + 0.08 + Math.abs(Math.sin(t * 8)) * 0.14;
+    } else if (seated && this.mode === 'sitting' && trick !== 'flip') {
       this.buddy.position.y = this.seat.y + (f.bounce > 0.1 ? Math.abs(Math.sin(t * 14)) * 0.05 * f.bounce : 0);
+    }
+
+    // огонь из сопел и дымок
+    this.thrust = damp(this.thrust, this.thrustTarget, 8, dt);
+    this.flames.forEach((fl, i) => {
+      const flick = this.thrust > 0.02 ? 0.85 + Math.random() * 0.35 : 0;
+      fl.scale.set(Math.max(0.001, this.thrust * (0.9 + Math.sin(t * 50 + i) * 0.1)), Math.max(0.001, this.thrust * flick), Math.max(0.001, this.thrust));
+    });
+    if (this.thrust > 0.3 && this.jetpack.visible) {
+      this.puffT -= dt;
+      if (this.puffT <= 0) {
+        this.puffT = 0.05;
+        const w = new THREE.Vector3();
+        this.flames[Math.random() < 0.5 ? 0 : 1].getWorldPosition(w);
+        this.spawnPuff(w);
+      }
     }
   }
 
