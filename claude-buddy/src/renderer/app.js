@@ -175,6 +175,7 @@ async function hide() {
     await scene.ascend();
     await scene.hideIsland();
     state.visible = false;
+    setIgnore(true); // курсор мог остаться над пустым местом — отпускаем мышь
     schedulePeek();
   } finally {
     state.seq = false;
