@@ -144,7 +144,7 @@ const FACES = {
   thinking: { eye: 0.85, shape: 'open', pupil: 1, browY: 0.02, browA: 0.15, browAsym: 0.06, smile: -0.05, open: 0.02, width: 0.7, blush: 0.1, mouthX: 0.06 },
   love: { eye: 1, shape: 'heart', pupil: 1, browY: 0.03, browA: 0.1, smile: 0.8, open: 0.1, width: 1, blush: 0.9 },
   smug: { eye: 0.52, shape: 'open', pupil: 1, browY: 0.01, browA: -0.05, browAsym: 0.07, smile: 0.6, open: 0, width: 1.05, blush: 0.25, mouthX: 0.05 },
-  sleepy: { eye: 0.22, shape: 'open', pupil: 1, browY: -0.01, browA: 0.15, smile: 0, open: 0.1, width: 0.6, blush: 0.2, droop: 0.6 },
+  sleepy: { eye: 0.4, shape: 'open', pupil: 1, browY: -0.01, browA: 0.15, smile: 0, open: 0.1, width: 0.6, blush: 0.2, droop: 0.6 },
   sleep: { eye: 0, shape: 'closed', pupil: 1, browY: -0.01, browA: 0.05, smile: 0.1, open: 0.08, width: 0.5, blush: 0.3, droop: 0.4 },
   scared: { eye: 1.22, shape: 'open', pupil: 0.45, browY: 0.06, browA: 0.55, smile: -0.8, open: 0.35, width: 0.7, blush: 0, shake: 1 },
   embarrassed: { eye: 0.85, shape: 'open', pupil: 1, browY: 0.02, browA: 0.3, smile: 0.35, open: 0.05, width: 0.8, blush: 1.1, lookAway: 1 },
@@ -1101,7 +1101,7 @@ export class BuddyScene {
       e.lidAngle = lidTarget; // моргание уже сглажено синусом
       e.lid.rotation.x = e.lidAngle;
       // почти закрытый глаз: контур белка торчал бы "кольцом" из-под века
-      e.whiteEdge.visible = open > 0.45;
+      e.whiteEdge.visible = open > 0.3;
       const useArc = f.shape === 'arc' || f.shape === 'closed' || (f.shape === 'wink' && e.side === 1);
       e.arc.visible = useArc;
       e.white.visible = !useArc;
