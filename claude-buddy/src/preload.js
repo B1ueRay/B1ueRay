@@ -25,10 +25,13 @@ contextBridge.exposeInMainWorld('buddy', {
   openSettings: () => ipcRenderer.send('settings:open'),
   quit: () => ipcRenderer.send('app:quit'),
 
-  chat: (id, text, withScreen) => ipcRenderer.send('chat:send', { id, text, withScreen: Boolean(withScreen) }),
+  chat: (id, text, withScreen, notes) =>
+    ipcRenderer.send('chat:send', { id, text, withScreen: Boolean(withScreen), notes: typeof notes === 'string' ? notes : '' }),
   abortChat: () => ipcRenderer.send('chat:abort'),
   resetChat: () => ipcRenderer.send('chat:reset'),
   memoryStats: () => ipcRenderer.invoke('memory:stats'),
   clearMemory: () => ipcRenderer.invoke('memory:clear'),
+  listMemory: () => ipcRenderer.invoke('memory:list'),
+  removeMemory: (kind, index) => ipcRenderer.invoke('memory:remove', kind, index),
   transcribe: (arrayBuffer, mime) => ipcRenderer.invoke('stt:transcribe', arrayBuffer, mime),
 });

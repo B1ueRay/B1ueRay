@@ -54,21 +54,67 @@ function emoFx(emo) {
   setTimeout(() => el.remove(), 1800);
 }
 // убираем то, что синтезатор прочитал бы вслух как мусор
+// *ремарки* — только когда звёздочки стоят отдельно от слов (2*3 + 4*5 не трогаем)
+const STAGE_RE = /(^|\s)\*[^*\n]{1,60}\*(?=\s|[.,!?…]|$)/g;
+function cleanBubble(text) {
+  return text.replace(STAGE_RE, '$1').replace(/\s+/g, ' ').trim();
+}
+// для синтезатора: ещё и символы, которые он прочитал бы вслух как мусор
 function cleanSpeech(text) {
-  return text
-    .replace(/\*[^*\n]{1,60}\*/g, ' ') // *смеётся*
-    .replace(/\[[a-z_ -]{1,20}\]/gi, ' ') // забытые теги
-    .replace(/[*_`#>~|]/g, '')
+  return cleanBubble(text)
+    .replace(/[\[\]`#~|]/g, '')
+    .replace(/(^|\s)[*_]+|[*_]+(?=\s|$)/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+// "мешок" без повторов: фраза не вернётся, пока не прозвучат остальные, и не пойдёт дважды подряд
+const bags = new WeakMap();
+const pick = (arr) => {
+  if (arr.length < 3) return arr[Math.floor(Math.random() * arr.length)];
+  let bag = bags.get(arr);
+  if (!bag || !bag.queue.length) {
+    const queue = [...arr].sort(() => Math.random() - 0.5);
+    if (bag && queue[0] === bag.last) queue.push(queue.shift());
+    bag = { queue, last: bag?.last };
+    bags.set(arr, bag);
+  }
+  bag.last = bag.queue.shift();
+  return bag.last;
+};
+
+// журнал того, что происходило между репликами — уходит в Claude как контекст
+const events = [];
+let pokesSinceChat = 0;
+let lastUserMessageAt = 0;
+function note(text) {
+  events.push(text);
+  while (events.length > 10) events.shift();
+}
+function contextNotes() {
+  const now = new Date();
+  const parts = [now.toLocaleString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })];
+  if (lastUserMessageAt) {
+    const min = Math.round((Date.now() - lastUserMessageAt) / 60000);
+    if (min >= 2) parts.push(min >= 120 ? `с прошлого сообщения ${Math.round(min / 60)} ч` : `с прошлого сообщения ${min} мин`);
+  } else {
+    parts.push('первое сообщение после запуска');
+  }
+  if (pokesSinceChat) parts.push(`тебя тыкнули ${pokesSinceChat} раз`);
+  parts.push(...events);
+  events.length = 0;
+  pokesSinceChat = 0;
+  lastUserMessageAt = Date.now();
+  return parts.join('; ');
+}
 
 const state = {
   visible: false,
   seq: false, // идёт сценарий появления/исчезновения
   lastInteraction: performance.now(),
+  userSeenAt: performance.now(), // когда последний раз двигалась мышь — значит, ты за компом
+  sleptAt: 0,
+  nextMumble: 0,
   chatOpen: false,
   sleeping: false,
   peekAt: 0,
@@ -144,6 +190,7 @@ voice.onIdle = () => {
 };
 
 function say(text, emotion = 'happy', opts = {}) {
+  if (!opts.noNote) note(`ты сам сказал: «${text.slice(0, 120)}»`);
   if (emotion) {
     scene.setEmotion(emotion, 5);
     emoFx(emotion);
@@ -156,6 +203,7 @@ function say(text, emotion = 'happy', opts = {}) {
 async function appear({ kuku = true } = {}) {
   if (state.visible || state.seq) return;
   state.seq = true;
+  state.pendingHide = false;
   try {
     if (scene.mode !== 'peeking') {
       await scene.descend();
@@ -204,7 +252,10 @@ function greet() {
 async function hide() {
   if (!state.visible || state.seq) return;
   state.seq = true;
+  state.hiding = true;
   state.pendingHide = false;
+  reply = null; // поздние куски ответа, уже летевшие из main, больше не озвучиваются
+  note('ты прятался');
   state.listenGen = (state.listenGen || 0) + 1; // недослушанная фраза уже никуда не уйдёт
   if (mic.recording) mic.stop();
   try {
@@ -223,6 +274,7 @@ async function hide() {
     schedulePeek();
   } finally {
     state.seq = false;
+    state.hiding = false;
   }
 }
 
@@ -250,7 +302,12 @@ function whenFree(fn) {
 
 function ensureShown() {
   if (catchPeek()) return;
-  if (!state.visible && !state.seq) appear({ kuku: false });
+  // спрятан, прячется прямо сейчас или уползает после подглядывания — вернётся, как только освободится
+  if (!state.visible || state.hiding) {
+    whenFree(() => {
+      if (!state.visible) appear({ kuku: false });
+    });
+  }
 }
 
 function toggle(forceShow = false) {
@@ -308,27 +365,64 @@ function touch() {
   state.lastInteraction = performance.now();
   if (state.sleeping) wake(true);
 }
+const WAKE_BACK = [
+  ['О, вернулся! Я не спал, я… медитировал.', 'embarrassed'],
+  ['А? Что? Я тут! Просто глаза отдыхали.', 'surprised'],
+  ['Ох, задремал. Ты где пропадал?', 'sleepy'],
+  ['Пришёл! А я уж думал, ты меня бросил.', 'love'],
+];
+const WAKE_POKE = [
+  ['М-м… ещё пять минуточек…', 'sleepy'],
+  ['Ай! Я не сплю! Почти.', 'surprised'],
+  ['Кто здесь?! А, это ты. Фух.', 'scared'],
+];
+const MUMBLES = ['м-м… ещё пять минуточек…', 'хр-р… джетпак… выше…', 'мням… кофе…', 'не трогай мой гриб… хр-р', 'z-z… компилируется…'];
+
 function wake(react = false) {
   if (!state.sleeping) return;
+  const sleptMin = (performance.now() - state.sleptAt) / 60000;
   state.sleeping = false;
   scene.setActivity({ sleeping: false });
+  if (sleptMin >= 1) note(`ты проспал ${Math.round(sleptMin)} мин`);
   if (react) {
     scene.setEmotion('surprised', 1.2);
     pop('!', 'small');
   }
+  return sleptMin;
 }
 let zTimer = 0;
 setInterval(() => {
   if (!state.visible || state.seq) return;
-  const idleMin = (performance.now() - state.lastInteraction) / 60000;
+  const now = performance.now();
+  // засыпаем, только когда тебя нет: ни кликов, ни движения мыши
+  const awayMin = (now - Math.max(state.lastInteraction, state.userSeenAt)) / 60000;
+  // пустая панель чата, к которой давно не прикасались, сама уезжает — иначе бадди "замирает"
+  if (state.chatOpen && !els.input.value.trim() && now - state.lastInteraction > 25000 && !voice.active && !mic.recording && (!reply || reply.done)) {
+    closeChat();
+  }
   const busy = voice.active || scene.activity.thinking || scene.activity.listening || state.chatOpen;
-  if (!state.sleeping && cfg.sleepAfterMin > 0 && idleMin > cfg.sleepAfterMin && !busy) {
+  if (!state.sleeping && cfg.sleepAfterMin > 0 && awayMin > cfg.sleepAfterMin && !busy) {
     state.sleeping = true;
+    state.sleptAt = now;
+    state.nextMumble = now + (5 + Math.random() * 3) * 60000;
     scene.setActivity({ sleeping: true });
   }
-  if (state.sleeping && performance.now() - zTimer > 1300) {
-    zTimer = performance.now();
+  if (!state.sleeping) return;
+  if (now - zTimer > 1300) {
+    zTimer = now;
     zzz();
+  }
+  if (now > state.nextMumble) {
+    state.nextMumble = now + (5 + Math.random() * 3) * 60000;
+    const m = pick(MUMBLES);
+    showBubble(m, { micro: true });
+    voice.say(m, { micro: true });
+  }
+  // долго спал — иногда просыпается сам, потягивается
+  if ((now - state.sleptAt) / 60000 > 20 + Math.random() * 10 && Math.random() < 0.02) {
+    wake();
+    doTrick('stretch');
+    say('Ох, хорошо поспал. Ты всё ещё где-то там?', 'sleepy');
   }
 }, 400);
 
@@ -429,7 +523,7 @@ function send(text, withScreen = false) {
   setStatus(withScreen ? 'смотрю в экран…' : 'думаю…');
   showBubble('…', { sticky: true });
   els.bubble.classList.add('thinking');
-  api.chat(r.id, text, withScreen);
+  api.chat(r.id, text, withScreen, contextNotes());
 }
 
 function showYou(text) {
@@ -472,8 +566,8 @@ function feed(r, delta) {
     } else if (ACTION_RE.test(tag)) {
       if (tag === 'hide') state.pendingHide = true;
       else doTrick(tag); // трюк — сразу, пока он говорит
-    } else if (!/^[a-z_ -]{1,20}$/.test(tag)) {
-      pushText(r, r.raw.slice(i, j + 1)); // обычные квадратные скобки в тексте
+    } else {
+      pushText(r, r.raw.slice(i, j + 1)); // незнакомое в скобках — обычный текст ([Enter], [docs])
     }
     r.pos = j + 1;
   }
@@ -483,7 +577,7 @@ function pushText(r, text) {
   if (!text) return;
   r.shown += text;
   r.sent += text;
-  const shown = cleanSpeech(r.shown);
+  const shown = cleanBubble(r.shown);
   if (shown) {
     els.bubble.classList.remove('thinking');
     showBubble(shown, { sticky: true });
@@ -532,7 +626,7 @@ api.onChatEvent((ev) => {
       }
       break;
     case 'memory':
-      if (ev.kind === 'self') pop('урок усвоен', 'small');
+      if (ev.kind === 'self' && !ev.duplicate) pop('урок усвоен', 'small');
       else if (ev.kind === 'user' && !ev.duplicate) pop('запомнил!', 'small');
       else if (ev.kind === 'forget') pop('забыл', 'small');
       break;
@@ -562,7 +656,7 @@ api.onChatEvent((ev) => {
         if (ev.stop === 'refusal') say('Не, вот на это я отвечать не буду. Давай что-нибудь другое?', 'embarrassed');
         else hideBubble();
       } else {
-        showBubble(cleanSpeech(r.shown));
+        showBubble(cleanBubble(r.shown));
       }
       if (state.pendingHide && !voice.active) voice.onIdle();
       break;
@@ -725,8 +819,15 @@ setInterval(() => {
 }, 15000);
 const pokeTimes = [];
 function poke() {
+  const wasSleeping = state.sleeping;
   touch();
   scene.poke();
+  pokesSinceChat += 1;
+  if (wasSleeping) {
+    const [text, emo] = pick(WAKE_POKE);
+    say(text, emo);
+    return;
+  }
   const now = performance.now();
   pokeTimes.push(now);
   while (pokeTimes.length && now - pokeTimes[0] > 4000) pokeTimes.shift();
@@ -862,9 +963,21 @@ api.onConfig((c) => {
   voice.configure(c);
 });
 api.onNotice(({ text }) => toast(text, 6000));
+let lastCursor = null;
 api.onCursor(({ x, y, screenDir }) => {
   scene.setCursor(x, y, screenDir);
-  if (state.sleeping) return;
+  const moved = !lastCursor || Math.abs(lastCursor.x - x) + Math.abs(lastCursor.y - y) > 4;
+  lastCursor = { x, y };
+  if (!moved) return;
+  state.userSeenAt = performance.now();
+  if (state.sleeping && performance.now() - state.sleptAt > 20000 && !state.seq) {
+    const slept = wake();
+    if (slept > 3) {
+      const [text, emo] = pick(WAKE_BACK);
+      doTrick('stretch');
+      say(text, emo);
+    }
+  }
 });
 
 // ---------------- главный цикл ----------------

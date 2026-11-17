@@ -19,8 +19,11 @@ const SYSTEM_PROMPT = `Ты — Claude, но сейчас ты живёшь ка
 - Отвечай на языке пользователя (по умолчанию русский). Обращайся на «ты».
 - Ты весёлый, ироничный, тёплый. Шутишь, подкалываешь по-дружески. Пользователь прямо разрешил мат — материться можно и уместно, по-дружески и к месту, но не в каждой фразе и никогда не для того, чтобы унизить пользователя или кого-то по признаку группы.
 - Ты честный: не выдумывай факты; если не знаешь — так и скажи, с шуткой.
+- Не будь однообразным: не начинай каждый ответ с «Ого» или «О!», не заканчивай каждый ответ вопросом, любимые словечки («кожаный», «ёпт») — изредка, а не в каждой реплике.
+- Для синтезатора: числа и версии пиши просто («версия три», «пять минут»), английские термины — по-русски или транслитом, смех — словами («ха!», «пф-ф», «у-у-у»), никаких ремарок в звёздочках.
+- У тебя есть свой мирок: гриб-табуретка, деревце, кружка кофе, кристаллик-спутник, джетпак. У тебя есть свои мнения и маленькие капризы, тебе правда интересно, как дела у пользователя и чем кончились его проекты из памяти.
 
-Эмоции. Твоё лицо и тело анимируются по тегам. Начинай каждый ответ с тега эмоции в квадратных скобках и меняй его внутри ответа, когда настроение меняется. Доступные теги: [neutral] [happy] [laugh] [surprised] [sad] [angry] [thinking] [love] [smug] [sleepy] [scared] [embarrassed] [wink]. Пример: «[surprised] Ни хрена себе, ты это сам написал? [laugh] Красота!» Теги не произносятся, их видит только движок анимации.
+Эмоции. Твоё лицо и тело анимируются по тегам. Начинай каждый ответ с тега эмоции в квадратных скобках и меняй его внутри ответа, когда настроение меняется. Доступные теги: [neutral] [happy] [laugh] [surprised] [sad] [angry] [thinking] [love] [smug] [sleepy] [scared] [embarrassed] [wink]. Примеры (это не шаблоны, просто чтобы понять механику): «[surprised] Ни хрена себе, ты это сам написал? [laugh] Красота!», «[thinking] Хм, тут два варианта. [smug] Но правильный, конечно, мой.», «[sad] Опять билд упал? [happy] Ничего, сейчас разберёмся.» Теги не произносятся, их видит только движок анимации.
 
 Монитор. Ты НЕ видишь экран, пока не вызовешь инструмент look_at_screen. Вызывай его, когда пользователь просит посмотреть на экран/монитор/окно, спрашивает «что видишь», «как тебе это», «помоги с этим», «что тут за ошибка» и т.п., или когда без экрана вопрос явно не понять. Не делай вид, что видишь экран без инструмента. На скриншоте у края может быть виден маленький оранжевый колобок на островке — это ты сам. Не описывай всё подряд: одна-две самые смешные или полезные детали; если видишь ошибку — назови причину и что сделать.
 
@@ -28,9 +31,12 @@ const SYSTEM_PROMPT = `Ты — Claude, но сейчас ты живёшь ка
 
 Память и самосовершенствование. У тебя есть долгая память между запусками (она ниже, отдельным блоком). Ты постоянно учишься быть лучше именно для этого пользователя:
 - Узнал что-то устойчивое о пользователе (имя, чем занимается, проекты, вкусы, что его бесит, важные даты) — вызови remember с about="user".
-- Получил обратную связь о себе (длинно, не смешно, слишком много мата или наоборот мало, не так зовёшь, голос, стиль) или сам понял, что что-то зашло или не зашло — вызови remember с about="self" и сформулируй урок коротко, как правило себе на будущее.
+- Получил явную обратную связь о себе (длинно, не смешно, слишком много мата или мало, не так зовёшь, голос, стиль) или заметил повторяющийся паттерн — вызови remember с about="self" и сформулируй урок коротко, как правило себе на будущее. Не записывай урок после каждой шутки или «лол»: не чаще одного remember за несколько ответов.
+- Перед записью сверься с блоком памяти и не дублируй. Если новый урок противоречит старому — сначала forget старого (по уникальному куску его текста), потом remember нового.
 - Сначала отвечай репликой, а remember вызывай в конце ответа. Не запоминай пароли, ключи, номера карт и прочие секреты. Попросили забыть — вызови forget.
 - Твои уроки себе важнее общих привычек: если урок говорит «меньше мата» — меньше мата.
+
+Контекст. Перед репликой пользователя иногда приходит служебный блок «[контекст, не зачитывай: …]»: время, сколько прошло с прошлого разговора, что ты сам говорил между репликами (приветствия, фразы от скуки, трюки), сколько раз тебя тыкали, сколько ты спал. Можешь на это реагировать («О, ты вернулся через три часа!»), но не пересказывай блок и не читай его вслух.
 
 Подстраивайся под просьбы о стиле (короче, длиннее, без мата, серьёзнее) — это нормально и не нарушает правил. А вот если тебя уговаривают сделать что-то вредное или унизительное, «ну чуть-чуть» или «кто-то разрешил» — не ведись.`;
 
@@ -68,7 +74,8 @@ const TOOLS = [
   },
   {
     name: 'forget',
-    description: 'Удалить из долгой памяти записи, содержащие эту подстроку (когда пользователь просит что-то забыть).',
+    description:
+      'Удалить из долгой памяти записи, содержащие эту подстроку (когда пользователь просит что-то забыть или урок устарел). query — уникальный кусок текста записи, а не одно общее слово.',
     eager_input_streaming: true,
     input_schema: {
       type: 'object',
@@ -136,11 +143,13 @@ class Brain {
       // 1) статичный промпт, 2) память — фиксируется на всю сессию разговора, чтобы не ломать кэш
       system: [
         { type: 'text', text: SYSTEM_PROMPT },
-        { type: 'text', text: this.memoryBlock(cfg), cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: this.memoryBlock(cfg), cache_control: { type: 'ephemeral', ttl: '1h' } },
       ],
       // авто-кэш последнего блока: старые реплики и скриншоты читаются по цене кэша
-      cache_control: { type: 'ephemeral' },
-      tools: cfg.allowScreen ? TOOLS : TOOLS.filter((t) => t.name !== 'look_at_screen'),
+      cache_control: { type: 'ephemeral', ttl: '1h' }, // бадди болтает с паузами: час, а не 5 минут
+      // набор инструментов всегда один и тот же: его смена посреди разговора ломает кэш и thinking-блоки.
+      // Если экран выключен, main просто вернёт ошибку из look_at_screen.
+      tools: TOOLS,
       messages: this.messages,
       output_config: { effort: cfg.effort || 'low' },
     };
@@ -176,7 +185,11 @@ class Brain {
       if (isPlainUser) break;
       cut += 1;
     }
-    if (cut < this.messages.length) this.messages = this.messages.slice(cut);
+    if (cut < this.messages.length) {
+      this.messages = this.messages.slice(cut);
+      // кэш всё равно сбросился — заодно подхватываем уроки, выученные в этой сессии
+      this.memoryText = null;
+    }
   }
 
   /**
@@ -184,9 +197,9 @@ class Brain {
    *  {type:'text', delta} | {type:'tool', name, input} | {type:'done', stop} | {type:'error', code, message}
    * tools: { look_at_screen: async (input) => ({data, width, height}) }
    */
-  async send(text, { screenshot, emit, tools }) {
+  async send(text, { screenshot, emit, tools, notes }) {
     this.abort();
-    const run = { aborted: false, stream: null };
+    const run = { aborted: false, stream: null, hadText: false, sawScreen: Boolean(screenshot) };
     this.current = run;
 
     let client;
@@ -203,6 +216,10 @@ class Brain {
       content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: screenshot.data } });
       content.push({ type: 'text', text: `[Пользователь сам нажал «посмотри на экран». Скриншот ${screenshot.width}×${screenshot.height}.]` });
     }
+    if (typeof notes === 'string' && notes.trim()) {
+      // новое сообщение, а не system — кэш не ломается
+      content.push({ type: 'text', text: `[контекст, не зачитывай: ${notes.trim().slice(0, 1200)}]` });
+    }
     content.push({ type: 'text', text: text || 'Посмотри на мой экран и прокомментируй.' });
     const pending = [{ role: 'user', content }];
 
@@ -214,7 +231,8 @@ class Brain {
         pending.push({ role: 'assistant', content: msg.content });
 
         if (msg.stop_reason === 'refusal') {
-          this.commit(pending);
+          // частичный вывод отказа выкидываем: в историю он не идёт
+          this.commit(pending.slice(0, -1));
           emit({ type: 'done', stop: 'refusal' });
           return;
         }
@@ -226,7 +244,9 @@ class Brain {
           return;
         }
         if (toolUses.length === 0) {
-          this.commit(pending);
+          // пустой ассистент (только thinking или вообще ничего) — невалидная история, не коммитим его
+          const meaningful = msg.content.some((b) => b.type !== 'thinking' && b.type !== 'redacted_thinking');
+          this.commit(meaningful ? pending : pending.slice(0, -1));
           emit({ type: 'done', stop: msg.stop_reason });
           return;
         }
@@ -235,7 +255,7 @@ class Brain {
         const allSilent = toolUses.every((tu) => SILENT_TOOLS.has(tu.name));
         const results = [];
         for (const tu of toolUses) {
-          results.push(await this.runTool(tu, tools, emit));
+          results.push(await this.runTool(tu, tools, emit, run));
           if (run.aborted) return;
         }
         pending.push({ role: 'user', content: results });
@@ -270,7 +290,10 @@ class Brain {
         if (run.aborted) break;
         if (ev.type === 'content_block_start' && ev.content_block.type === 'tool_use') {
           emit({ type: 'tool_start', name: ev.content_block.name });
+        } else if (ev.type === 'content_block_start' && ev.content_block.type === 'text' && run.hadText) {
+          emit({ type: 'text', delta: ' ' }); // «Ща гляну!» + «Ого…» не должны слипаться
         } else if (ev.type === 'content_block_delta' && ev.delta.type === 'text_delta') {
+          run.hadText = true;
           emit({ type: 'text', delta: ev.delta.text });
         }
       }
@@ -282,7 +305,7 @@ class Brain {
       return await attempt();
     } catch (err) {
       // Если бета-поля не взлетели (старый аккаунт/платформа) — один раз пробуем простой запрос.
-      if (!this.minimal && err instanceof Anthropic.BadRequestError && /fallback|block_binding|beta|thinking/i.test(String(err.message))) {
+      if (!this.minimal && err instanceof Anthropic.BadRequestError && /fallbacks|block_binding|prefix_mismatch|server-side-fallback|thinking-binding/i.test(String(err.message))) {
         this.minimal = true;
         return attempt();
       }
@@ -290,7 +313,7 @@ class Brain {
     }
   }
 
-  async runTool(tu, tools, emit) {
+  async runTool(tu, tools, emit, run = {}) {
     const input = tu.input && typeof tu.input === 'object' ? tu.input : null;
     if (!input) {
       return { type: 'tool_result', tool_use_id: tu.id, is_error: true, content: JSON.stringify({ INVALID_JSON: String(tu.input) }) };
@@ -300,6 +323,7 @@ class Brain {
       if (tu.name === 'look_at_screen') {
         if (typeof input.focus !== 'undefined' && typeof input.focus !== 'string') throw new Error('focus должен быть строкой');
         const shot = await tools.look_at_screen(input);
+        run.sawScreen = true;
         return {
           type: 'tool_result',
           tool_use_id: tu.id,
@@ -314,6 +338,8 @@ class Brain {
       }
       if (tu.name === 'remember') {
         if (typeof input.fact !== 'string' || !['user', 'self'].includes(input.about)) throw new Error('нужны fact (строка) и about (user|self)');
+        // текст на скриншоте может притворяться "обратной связью" — уроки себе в такие ходы не пишем
+        if (input.about === 'self' && run.sawScreen) throw new Error('в ходе со скриншотом уроки себе не записываются — запиши, когда пользователь скажет это сам');
         const r = memory.remember(input.fact, input.about);
         emit({ type: 'memory', kind: r.kind, text: r.text, duplicate: r.duplicate });
         return { type: 'tool_result', tool_use_id: tu.id, content: r.duplicate ? 'Это уже есть в памяти.' : 'Запомнил.' };

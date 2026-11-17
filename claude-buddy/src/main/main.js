@@ -1,6 +1,7 @@
 'use strict';
 // Claude Buddy — прозрачное окно поверх всех окон, в котором живёт 3D-Клод на островке.
 const path = require('path');
+const { fileURLToPath } = require('url');
 const {
   app, BrowserWindow, Tray, Menu, nativeImage, screen, globalShortcut,
   ipcMain, desktopCapturer, session, shell, systemPreferences,
@@ -44,7 +45,8 @@ function trusted(e, page) {
     const url = new URL(e.senderFrame.url);
     if (url.protocol !== 'file:') return false;
     const ci = (x) => (process.platform === 'win32' ? x.toLowerCase() : x);
-    const file = ci(path.normalize(decodeURIComponent(url.pathname).replace(/^\/([a-zA-Z]:)/, '$1')));
+    // fileURLToPath корректно разбирает и диски, и сетевые пути \\server\share
+    const file = ci(path.normalize(fileURLToPath(url)));
     const dir = ci(RENDERER_DIR);
     return page ? file === ci(path.join(RENDERER_DIR, page)) : file.startsWith(dir);
   } catch {
@@ -330,6 +332,13 @@ function setupIpc() {
     brain.reset();
   });
   ipcMain.handle('memory:stats', () => require('./memory').stats());
+  ipcMain.handle('memory:list', (e) => (trusted(e, 'settings.html') ? require('./memory').load() : { user: [], self: [] }));
+  ipcMain.handle('memory:remove', (e, kind, index) => {
+    if (!trusted(e, 'settings.html')) return false;
+    const ok = require('./memory').removeAt(kind, Number(index));
+    if (ok) brain.reset(); // новая сессия подхватит память без удалённой записи
+    return ok;
+  });
   ipcMain.handle('memory:clear', (e) => {
     if (!trusted(e, 'settings.html')) return false;
     require('./memory').clear();
@@ -337,7 +346,7 @@ function setupIpc() {
     return true;
   });
 
-  ipcMain.on('chat:send', async (e, { id, text, withScreen }) => {
+  ipcMain.on('chat:send', async (e, { id, text, withScreen, notes }) => {
     if (!trusted(e, 'index.html')) return;
     latestChatId = id;
     const emit = (ev) => send('chat:event', { id, ...ev });
@@ -360,6 +369,7 @@ function setupIpc() {
     await brain.send(text, {
       screenshot,
       emit,
+      notes,
       tools: {
         look_at_screen: async () => {
           if (!cfg.allowScreen) throw new Error('пользователь выключил доступ к экрану');

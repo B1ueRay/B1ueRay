@@ -35,6 +35,8 @@ export function createMock() {
     resetChat: () => {},
     memoryStats: async () => ({ user: 0, self: 0 }),
     clearMemory: async () => true,
+    listMemory: async () => ({ user: [], self: [] }),
+    removeMemory: async () => true,
     transcribe: async () => ({ ok: false, code: 'stt_not_configured', message: 'превью' }),
     chat: (id, _text, withScreen) => {
       const text = withScreen ? '[surprised] Ого, сколько окон! [laugh] Вкладок больше, чем у меня мыслей.' : replies[n++ % replies.length];

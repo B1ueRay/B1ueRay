@@ -212,12 +212,22 @@ export class Mic {
   async start({ onLevel, maxSec = 25, silenceMs = 1300 } = {}) {
     if (this.recording) return null;
     this.recording = true;
+    // stop() до того, как микрофон открылся, тоже должен сработать
+    let cancelled = false;
+    this.stop = () => {
+      cancelled = true;
+    };
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
     } catch (err) {
       this.recording = false;
       throw err;
+    }
+    if (cancelled) {
+      stream.getTracks().forEach((tr) => tr.stop());
+      this.recording = false;
+      return null;
     }
     const ctx = new AudioContext();
     const src = ctx.createMediaStreamSource(stream);

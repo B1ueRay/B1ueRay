@@ -68,6 +68,27 @@ async function save() {
 async function memStats() {
   const m = await buddy.memoryStats();
   $('memStats').textContent = `Фактов о тебе: ${m.user}, уроков себе: ${m.self}`;
+  const mem = await buddy.listMemory();
+  const ul = $('memList');
+  ul.textContent = '';
+  for (const kind of ['user', 'self']) {
+    mem[kind].forEach((item, index) => {
+      const li = document.createElement('li');
+      const tag = document.createElement('em');
+      tag.textContent = kind === 'user' ? 'о тебе' : 'урок';
+      const text = document.createElement('span');
+      text.textContent = item.text; // textContent: запись из памяти — данные, не HTML
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.textContent = 'удалить';
+      del.addEventListener('click', async () => {
+        await buddy.removeMemory(kind, index);
+        memStats();
+      });
+      li.append(tag, text, del);
+      ul.appendChild(li);
+    });
+  }
 }
 $('clearMem').addEventListener('click', async () => {
   if (!confirm('Стереть всю долгую память бадди? Это не отменить.')) return;
