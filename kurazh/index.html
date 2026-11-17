@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#0a0c0a" />
+<meta name="theme-color" content="#10110f" />
 <meta name="description" content="Kurazh. Call it or do it. Live streams where Callers write dares and back them with card holds, and Takers go live and take them on." />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -22,10 +22,14 @@
 <style>
   /* Layout: full-bleed vertical live feed under a frosted category rail; matte surfaces; gold only for money and the primary action. */
   :root {
-    --bg: #0a0c0a; --s1: #111512; --s2: #161c18; --s3: #1f2822; --glass: rgba(11,15,12,.72);
-    --line: rgba(236,226,207,.09); --line2: rgba(184,151,90,.34);
-    --green: #1e3a2c; --green2: #284a39; --gold: #b8975a; --gold2: #cdb27c; --cash: #c8b69a; --van: #ece2cf;
-    --muted: #8f8b7e; --ok: #93b49c; --bad: #c07466; --live: #7e2b25; --ink: #121410;
+    --bg: #111310; --s1: #181b17; --s2: #1e221d; --s3: #272c26; --glass: rgba(19,22,18,.76);
+    --line: rgba(228,218,200,.075); --line2: rgba(166,140,96,.30);
+    --green: #2a3d31; --green2: #344a3c; --gold: #a08861; --gold2: #b9a27c; --cash: #c2b39c; --van: #e2d8c5;
+    --muted: #8b867b; --ok: #8fab95; --bad: #b77467; --live: #7a2f29; --ink: #151613;
+    /* suede: fine fibre speckle, light on dark surfaces and dark on light ones */
+    --nap: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .97 0 0 0 0 .9 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.1'/%3E%3C/svg%3E");
+    --nap-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+    --felt: inset 0 -1px 0 rgba(0,0,0,.22), inset 0 0 0 1px rgba(255,255,255,.025);
     --serif: "Cormorant Garamond", "Cormorant", Georgia, "Times New Roman", serif;
     --sans: Manrope, Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     --nav: 64px; --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px);
@@ -47,7 +51,7 @@
   .num { font-variant-numeric: lining-nums tabular-nums; }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
 
-  #app { position: relative; height: 100dvh; max-width: 480px; margin: 0 auto; overflow: hidden; background: var(--bg); }
+  #app { position: relative; height: 100dvh; max-width: 480px; margin: 0 auto; overflow: hidden; background: var(--bg) var(--nap); }
   .screens { position: absolute; inset: 0 0 calc(var(--nav) + var(--sb)) 0; }
   body.is-live .screens, body.is-watch .screens { bottom: 0; }
   body.is-live .tabbar, body.is-watch .tabbar { display: none; }
@@ -62,10 +66,10 @@
 
   /* buttons & chips */
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 50px; padding: 0 20px;
-    border-radius: 14px; background: var(--s3); font-weight: 700; letter-spacing: .01em; transition: transform .12s, background .2s; }
+    border-radius: 14px; background-color: var(--s3); font-weight: 700; letter-spacing: .01em; transition: transform .12s, background-color .2s; }
   .btn:active { transform: scale(.98); }
-  .btn.gold { background: var(--gold); color: var(--ink); }
-  .btn.green { background: var(--green); color: var(--van); }
+  .btn.gold { background-color: var(--gold); color: var(--ink); text-shadow: 0 1px 0 rgba(255,255,255,.12); }
+  .btn.green { background-color: var(--green); color: var(--van); }
   .btn.bad { background: rgba(192,116,102,.14); color: var(--bad); }
   .btn.ghost { background: transparent; border: 1px solid var(--line); }
   .btn.sm { height: 34px; padding: 0 13px; border-radius: 10px; font-size: 13px; }
@@ -73,8 +77,8 @@
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; background: var(--s2);
     border: 1px solid var(--line); font-size: 14px; font-weight: 600; color: var(--cash); white-space: nowrap; }
-  .chip.on { background: var(--van); color: var(--ink); border-color: var(--van); }
-  .chip.money.on { background: var(--gold); border-color: var(--gold); }
+  .chip.on { background-color: var(--cash); color: var(--ink); border-color: var(--cash); }
+  .chip.money.on { background-color: var(--gold); border-color: var(--gold); }
   .pill { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px; border-radius: 999px; white-space: nowrap;
     background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line);
     font-size: 13px; font-weight: 600; }
@@ -105,7 +109,7 @@
   .cats { flex: 1; min-width: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); padding-right: 20px; }
   .cats::-webkit-scrollbar { display: none; }
   .cats .chip { height: 32px; padding: 0 12px; font-size: 13px; background: var(--glass); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-  .cats .chip.on { background: var(--van); }
+  .cats .chip.on { background-color: var(--cash); }
   .cats .chip.x18 { color: var(--gold2); border-color: var(--line2); }
   .cats .chip.x18.on { background: var(--gold); color: var(--ink); border-color: var(--gold); }
   .balance { flex: none; height: 32px; font-size: 13px; }
@@ -206,7 +210,7 @@
   .seg button { flex: 1; height: 38px; border-radius: 10px; font-weight: 700; font-size: 14px; color: var(--muted); }
   .seg button.on { background: var(--s3); color: var(--van); }
   .list { display: grid; gap: 8px; }
-  .row { display: flex; gap: 12px; align-items: center; padding: 13px 14px; border-radius: 16px; background: var(--s1); border: 1px solid var(--line); text-align: left; width: 100%; }
+  .row { display: flex; gap: 12px; align-items: center; padding: 13px 14px; border-radius: 16px; background-color: var(--s1); border: 1px solid var(--line); text-align: left; width: 100%; }
   .row .grow { flex: 1; min-width: 0; }
   .row .t { font-weight: 600; line-height: 1.3; }
   .row .m { font-size: 12px; color: var(--muted); margin-top: 4px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
@@ -222,7 +226,7 @@
   .empty .ring { width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--line2); display: grid; place-items: center; color: var(--gold2); }
 
   /* wallet / profile */
-  .acct { margin-top: 18px; padding: 20px; border-radius: 22px; background: var(--green); border: 1px solid var(--line2); position: relative; overflow: hidden; }
+  .acct { margin-top: 18px; padding: 20px; border-radius: 22px; background-color: var(--green); border: 1px solid var(--line2); position: relative; overflow: hidden; }
   .acct::after { content: ""; position: absolute; right: -40px; top: -40px; width: 160px; height: 160px; border-radius: 50%; border: 1px solid rgba(205,178,124,.18); }
   .acct.dark { background: var(--s1); border-color: var(--line); }
   .acct .lbl { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--cash); font-weight: 700; }
@@ -236,7 +240,7 @@
   .facts svg { color: var(--gold2); margin-top: 1px; }
   .facts b { color: var(--van); font-weight: 700; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .stat { padding: 14px; border-radius: 16px; background: var(--s1); border: 1px solid var(--line); }
+  .stat { padding: 14px; border-radius: 16px; background-color: var(--s1); border: 1px solid var(--line); }
   .stat b { display: block; font: 600 28px/1 var(--serif); font-variant-numeric: lining-nums; margin-bottom: 6px; }
   .stat span { font-size: 12px; color: var(--muted); }
   .me-head { display: flex; gap: 14px; align-items: center; margin-top: 18px; }
@@ -340,8 +344,8 @@
 
   /* toasts / fx / onboarding */
   #toasts { position: absolute; top: calc(var(--st) + 6px); left: 16px; right: 16px; z-index: 80; display: grid; gap: 6px; pointer-events: none; }
-  .toast { justify-self: center; max-width: min(100%, 340px); padding: 8px 14px; border-radius: 12px; background: #1a211c; border: 1px solid var(--line);
-    font-size: 13px; line-height: 1.35; font-weight: 600; color: var(--van); box-shadow: 0 12px 30px rgba(0,0,0,.45); animation: drop .3s ease;
+  .toast { justify-self: center; max-width: min(100%, 340px); padding: 8px 14px; border-radius: 12px; background-color: #1d221e; border: 1px solid var(--line);
+    font-size: 13px; line-height: 1.35; font-weight: 600; color: var(--van); box-shadow: 0 8px 22px rgba(0,0,0,.3); animation: drop .3s ease;
     pointer-events: auto; cursor: pointer; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-align: center; }
   .toast.out { opacity: 0; transform: translateY(-8px); transition: .3s; }
   .toast.ok { border-color: rgba(147,180,156,.45); }
@@ -498,8 +502,8 @@
   .role-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 18px 0 6px; }
   .rolecards { display: grid; gap: 12px; margin-top: 22px; }
   .rolecard { position: relative; display: flex; gap: 16px; align-items: center; padding: 22px 18px; border-radius: 22px; text-align: left; overflow: hidden;
-    background: linear-gradient(160deg, var(--green) 0%, #122119 100%); border: 1px solid var(--line2); transition: transform .12s, box-shadow .2s; }
-  .rolecard.alt { background: linear-gradient(160deg, #1b1812 0%, #0e0d0a 100%); }
+    background: var(--green) var(--nap); border: 1px solid var(--line2); transition: transform .12s, box-shadow .2s; }
+  .rolecard.alt { background: #1c1a16 var(--nap); }
   .rolecard::after { content: ""; position: absolute; right: -46px; top: -46px; width: 150px; height: 150px; border-radius: 50%; border: 1px solid rgba(205,178,124,.16); pointer-events: none; }
   .rolecard:active { transform: scale(.985); }
   .rolecard.on { box-shadow: inset 0 0 0 1.5px var(--gold); }
@@ -580,6 +584,10 @@
   .amt small { display: block; font: 500 11px var(--sans); color: var(--muted); margin-top: 3px; }
   .dev .inp { font-size: 16px; }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; overflow-wrap: anywhere; }
+  /* velour finish: every surface carries the same soft nap, nothing reflects (kept last so it layers over the shorthands above) */
+  .sheet, .tabbar, .row, .stat, .acct, .rolecard, .btn, .chip, .toast, .icard, .bn, .say input, .say .mic, .inp, .x, .backb, .iconb, .pill { background-image: var(--nap); }
+  .btn.gold, .chip.on, .chip.money.on, .rbtn.main > span, .tab-go span { background-image: var(--nap-dark); }
+  .btn:not(.ghost), .chip, .row, .stat { box-shadow: var(--felt); }
 </style>
 </head>
 <body>
@@ -1343,7 +1351,7 @@ function applyBack(st, d, amount, card, pay = { credit: 0, onCard: amount, lots:
 
 /* ═════════ streams simulation ═════════ */
 function makeBokeh(glow) {
-  return Array.from({ length: 12 }, () => ({ x: Math.random(), y: rnd(0, 0.72), r: rnd(0.04, 0.13), c: pick(glow), a: rnd(0.07, 0.22), s: rnd(0.12, 0.45), p: rnd(0, 6.3) }));
+  return Array.from({ length: 12 }, () => ({ x: Math.random(), y: rnd(0, 0.72), r: rnd(0.05, 0.15), c: pick(glow), a: rnd(0.05, 0.14), s: rnd(0.12, 0.45), p: rnd(0, 6.3) }));
 }
 const U = CUR.unit;
 function bankFor(cat, themes = []) {
