@@ -102,10 +102,17 @@ function contextNotes() {
   }
   if (pokesSinceChat) parts.push(`тебя тыкнули ${pokesSinceChat} раз`);
   parts.push(...events);
-  events.length = 0;
+  // забираем журнал, но если запрос не дойдёт (нет сети, нет ключа) — вернём его обратно
+  const consumed = { events: events.splice(0), pokes: pokesSinceChat };
   pokesSinceChat = 0;
   lastUserMessageAt = Date.now();
-  return parts.join('; ');
+  return { text: parts.join('; '), consumed };
+}
+function restoreNotes(ctx) {
+  if (!ctx) return;
+  events.unshift(...ctx.events);
+  while (events.length > 10) events.shift();
+  pokesSinceChat += ctx.pokes;
 }
 
 const state = {
@@ -232,21 +239,25 @@ async function appear({ kuku = true } = {}) {
   }
 }
 
+const GREETINGS = [
+  'Я тут{name}! Чем займёмся?',
+  'Вот и я{name}! Скучал?',
+  'Тадам! Снова на посту{name}.',
+  'Опа, я тут{name}. Что у нас на экране интересного?',
+  'Привет{name}! Гриб нагрет, кофе остыл, я готов.',
+  'О, снова ты{name}! Ну рассказывай.',
+];
+const GREET_EMOS = ['happy', 'wink', 'love'];
+const FOUND_LINES = ['Нашёл меня! Ну ладно, остаюсь.', 'О, заметил! Я тут посижу, ладно?', 'Попался! В смысле, я попался.'];
+const DBL_LINES = ['Двойной тык — двойная радость!', 'Ну всё, ты меня разбудил окончательно.', 'Тык-тык! Я так тоже умею.'];
+
 function greet() {
   if (!cfg.has_apiKey) {
     say('Привет! Я Клод. Дай мне ключ API в настройках — и я оживу по-настоящему.', 'happy');
     return;
   }
   const name = cfg.userName ? `, ${cfg.userName}` : '';
-  say(
-    pick([
-      `Я тут${name}! Чем займёмся?`,
-      `Вот и я${name}! Скучал?`,
-      `Тадам! Снова на посту${name}.`,
-      `Опа, я тут${name}. Что у нас на экране интересного?`,
-    ]),
-    pick(['happy', 'wink', 'love']),
-  );
+  say(pick(GREETINGS).replace('{name}', name), pick(GREET_EMOS));
 }
 
 async function hide() {
@@ -344,7 +355,7 @@ async function peek() {
       await isl;
       state.visible = true;
       scene.waveHello(1.5);
-      if (!reply || reply.done) say(pick(['Нашёл меня! Ну ладно, остаюсь.', 'О, заметил! Я тут посижу, ладно?']), 'laugh');
+      if (!reply || reply.done) say(pick(FOUND_LINES), 'laugh');
     } else {
       showBubble('ну и ладно…', { micro: true });
       voice.say('ну и ладно', { micro: true });
@@ -404,6 +415,7 @@ setInterval(() => {
   if (!state.sleeping && cfg.sleepAfterMin > 0 && awayMin > cfg.sleepAfterMin && !busy) {
     state.sleeping = true;
     state.sleptAt = now;
+    state.mumbles = 0;
     state.nextMumble = now + (5 + Math.random() * 3) * 60000;
     scene.setActivity({ sleeping: true });
   }
@@ -416,13 +428,18 @@ setInterval(() => {
     state.nextMumble = now + (5 + Math.random() * 3) * 60000;
     const m = pick(MUMBLES);
     showBubble(m, { micro: true });
-    voice.say(m, { micro: true });
+    // вслух — только первые пару раз за сон, дальше молча в облачке (ночью никого не будим)
+    state.mumbles = (state.mumbles || 0) + 1;
+    if (state.mumbles <= 2) voice.say(m, { micro: true });
   }
-  // долго спал — иногда просыпается сам, потягивается
-  if ((now - state.sleptAt) / 60000 > 20 + Math.random() * 10 && Math.random() < 0.02) {
+  // долго спал — один раз за твоё отсутствие сам просыпается и потягивается (тихо)
+  if (!state.selfWoke && (now - state.sleptAt) / 60000 > 20 && Math.random() < 0.0005) {
+    state.selfWoke = true;
     wake();
     doTrick('stretch');
-    say('Ох, хорошо поспал. Ты всё ещё где-то там?', 'sleepy');
+    const line = 'Ох, хорошо поспал… Ты всё ещё где-то там?';
+    showBubble(line, { micro: true });
+    voice.say(line, { micro: true });
   }
 }, 400);
 
@@ -523,7 +540,8 @@ function send(text, withScreen = false) {
   setStatus(withScreen ? 'смотрю в экран…' : 'думаю…');
   showBubble('…', { sticky: true });
   els.bubble.classList.add('thinking');
-  api.chat(r.id, text, withScreen, contextNotes());
+  r.ctx = contextNotes();
+  api.chat(r.id, text, withScreen, r.ctx.text);
 }
 
 function showYou(text) {
@@ -646,6 +664,7 @@ api.onChatEvent((ev) => {
     }
     case 'done':
       r.done = true;
+      if (ev.stop === 'aborted') break; // сами отменили — облачко не трогаем
       feed(r, '');
       if (r.pos < r.raw.length) pushText(r, r.raw.slice(r.pos));
       flushSentence(r);
@@ -661,6 +680,8 @@ api.onChatEvent((ev) => {
       if (state.pendingHide && !voice.active) voice.onIdle();
       break;
     case 'error':
+      r.done = true;
+      restoreNotes(r.ctx);
       scene.setActivity({ thinking: false, looking: false });
       setStatus('');
       els.bubble.classList.remove('thinking');
@@ -683,7 +704,7 @@ function handleError(ev) {
     screen_off: ['Ты выключил мне доступ к экрану в настройках. Я бы и рад, но глаза завязаны.', 'smug'],
   };
   const [text, emo] = lines[ev.code] || [`Что-то сломалось: ${ev.message || 'непонятно что'}`, 'scared'];
-  say(text, emo);
+  say(text, emo, { noNote: true }); // сообщения об ошибках — не "твои реплики" для контекста
   if (['no_key', 'auth', 'permission', 'not_found'].includes(ev.code)) setTimeout(() => api.openSettings(), 1500);
 }
 
@@ -701,6 +722,9 @@ async function listen() {
   }
   voice.stop();
   api.abortChat();
+  if (reply) reply.done = true; // старый ответ отменён — не висим в "думаю…"
+  scene.setActivity({ thinking: false, looking: false });
+  els.bubble.classList.remove('thinking');
   const gen = (state.listenGen = (state.listenGen || 0) + 1);
   scene.setActivity({ listening: true, thinking: false });
   setStatus('слушаю…');
@@ -713,7 +737,7 @@ async function listen() {
     els.mic.classList.remove('rec');
     scene.setActivity({ listening: false });
     setStatus('');
-    say(`Не могу включить микрофон: ${err.message}`, 'sad');
+    say(`Не могу включить микрофон: ${err.message}`, 'sad', { noNote: true });
     return;
   }
   els.mic.classList.remove('rec');
@@ -733,7 +757,7 @@ async function listen() {
   setStatus('');
   if (gen !== state.listenGen || !state.visible) return;
   if (!res.ok) {
-    say(res.code === 'stt_auth' ? 'Ключ распознавания речи не подходит.' : `Распознавание сломалось: ${res.message}`, 'sad');
+    say(res.code === 'stt_auth' ? 'Ключ распознавания речи не подходит.' : `Распознавание сломалось: ${res.message}`, 'sad', { noNote: true });
     return;
   }
   if (!res.text) {
@@ -905,7 +929,7 @@ window.addEventListener('mouseup', (e) => {
 });
 window.addEventListener('dblclick', (e) => {
   if (scene.hitTest(e.clientX, e.clientY) === 'buddy' && state.visible) {
-    say(pick(['Двойной тык — двойная радость!', 'Ну всё, ты меня разбудил окончательно.']), 'laugh');
+    say(pick(DBL_LINES), 'laugh');
   }
 });
 
@@ -970,6 +994,7 @@ api.onCursor(({ x, y, screenDir }) => {
   lastCursor = { x, y };
   if (!moved) return;
   state.userSeenAt = performance.now();
+  state.selfWoke = false; // ты вернулся — в следующий раз снова может проснуться сам
   if (state.sleeping && performance.now() - state.sleptAt > 20000 && !state.seq) {
     const slept = wake();
     if (slept > 3) {

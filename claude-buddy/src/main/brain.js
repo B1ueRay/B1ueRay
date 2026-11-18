@@ -108,6 +108,18 @@ class Brain {
     this.memoryText = null;
   }
 
+  // Память поменялась (удалили запись в настройках) — разговор не стираем.
+  // Блок памяти в system пересоберётся, а thinking-блоки, привязанные к старому system,
+  // убираем целиком: без них история остаётся валидной.
+  invalidateMemory() {
+    this.memoryText = null;
+    this.messages = this.messages.map((m) => {
+      if (m.role !== 'assistant' || !Array.isArray(m.content)) return m;
+      const content = m.content.filter((b) => b.type !== 'thinking' && b.type !== 'redacted_thinking');
+      return { ...m, content: content.length ? content : [{ type: 'text', text: '…' }] };
+    });
+  }
+
   abort() {
     if (this.current) {
       this.current.aborted = true;
@@ -200,6 +212,8 @@ class Brain {
   async send(text, { screenshot, emit, tools, notes }) {
     this.abort();
     const run = { aborted: false, stream: null, hadText: false, sawScreen: Boolean(screenshot) };
+    // прерванный ответ тоже должен закончиться событием — иначе окно висит в "думаю…"
+    const aborted = () => emit({ type: 'done', stop: 'aborted' });
     this.current = run;
 
     let client;
@@ -226,8 +240,7 @@ class Brain {
     try {
       for (let step = 0; step < 6; step += 1) {
         const msg = await this.streamOnce(client, pending, run, emit);
-        if (run.aborted) return;
-        if (!msg) return;
+        if (run.aborted || !msg) return aborted();
         pending.push({ role: 'assistant', content: msg.content });
 
         if (msg.stop_reason === 'refusal') {
@@ -256,7 +269,7 @@ class Brain {
         const results = [];
         for (const tu of toolUses) {
           results.push(await this.runTool(tu, tools, emit, run));
-          if (run.aborted) return;
+          if (run.aborted) return aborted();
         }
         pending.push({ role: 'user', content: results });
         if (allSilent && hasText) {
@@ -269,7 +282,7 @@ class Brain {
       this.commit(pending);
       emit({ type: 'done', stop: 'too_many_steps' });
     } catch (err) {
-      if (run.aborted) return;
+      if (run.aborted) return aborted();
       emit({ type: 'error', ...describeError(err) });
     } finally {
       if (this.current === run) this.current = null;

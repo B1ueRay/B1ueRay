@@ -333,16 +333,16 @@ function setupIpc() {
   });
   ipcMain.handle('memory:stats', () => require('./memory').stats());
   ipcMain.handle('memory:list', (e) => (trusted(e, 'settings.html') ? require('./memory').load() : { user: [], self: [] }));
-  ipcMain.handle('memory:remove', (e, kind, index) => {
+  ipcMain.handle('memory:remove', (e, kind, index, text) => {
     if (!trusted(e, 'settings.html')) return false;
-    const ok = require('./memory').removeAt(kind, Number(index));
-    if (ok) brain.reset(); // новая сессия подхватит память без удалённой записи
+    const ok = require('./memory').removeAt(kind, Number(index), text);
+    if (ok) brain.invalidateMemory(); // разговор не трогаем, просто память без этой записи
     return ok;
   });
   ipcMain.handle('memory:clear', (e) => {
     if (!trusted(e, 'settings.html')) return false;
     require('./memory').clear();
-    brain.reset();
+    brain.invalidateMemory();
     return true;
   });
 

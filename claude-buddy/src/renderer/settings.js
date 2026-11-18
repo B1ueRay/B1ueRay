@@ -67,7 +67,9 @@ async function save() {
 
 async function memStats() {
   const m = await buddy.memoryStats();
-  $('memStats').textContent = `Фактов о тебе: ${m.user}, уроков себе: ${m.self}`;
+  $('memStats').textContent = m.corrupt
+    ? 'Файл памяти повреждён или занят другой программой — бадди его не трогает. Копия лежит рядом с memory.json. «Стереть память» начнёт с нуля.'
+    : `Фактов о тебе: ${m.user}, уроков себе: ${m.self}`;
   const mem = await buddy.listMemory();
   const ul = $('memList');
   ul.textContent = '';
@@ -82,7 +84,9 @@ async function memStats() {
       del.type = 'button';
       del.textContent = 'удалить';
       del.addEventListener('click', async () => {
-        await buddy.removeMemory(kind, index);
+        del.disabled = true; // двойной клик не должен снести соседнюю запись
+        li.style.opacity = '0.4';
+        await buddy.removeMemory(kind, index, item.text);
         memStats();
       });
       li.append(tag, text, del);

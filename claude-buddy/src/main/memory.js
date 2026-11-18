@@ -20,8 +20,9 @@ function load() {
   let text;
   try {
     text = fs.readFileSync(file(), 'utf8');
-  } catch {
-    corrupt = false;
+  } catch (err) {
+    // "файла нет" — это пустая память; а занят антивирусом/нет прав — НЕ пустая, писать нельзя
+    corrupt = err && err.code !== 'ENOENT' ? 'locked' : false;
     return { user: [], self: [] };
   }
   try {
@@ -31,7 +32,8 @@ function load() {
   } catch {
     if (!corrupt) {
       try {
-        fs.copyFileSync(file(), `${file()}.bad`);
+        // не затираем старую копию: каждая порча — свой файл
+        fs.copyFileSync(file(), `${file()}.bad-${Date.now()}`);
       } catch {
         /* хоть попытались */
       }
@@ -42,7 +44,9 @@ function load() {
 }
 
 function save(mem, { force = false } = {}) {
-  if (corrupt && !force) throw new Error('файл памяти повреждён (копия в memory.json.bad) — не перезаписываю');
+  if (corrupt && !force) {
+    throw new Error(corrupt === 'locked' ? 'файл памяти сейчас недоступен — попробую позже' : 'файл памяти повреждён (копия рядом, memory.json.bad-*) — не перезаписываю');
+  }
   fs.mkdirSync(path.dirname(file()), { recursive: true });
   // атомарно: временный файл + переименование
   const tmp = `${file()}.tmp`;
@@ -88,9 +92,11 @@ function clear() {
   save({ user: [], self: [] }, { force: true });
 }
 
-function removeAt(kind, index) {
+function removeAt(kind, index, expectedText) {
   const mem = load();
   if (!['user', 'self'].includes(kind) || !mem[kind][index]) return false;
+  // список в настройках мог устареть (двойной клик, новая запись сдвинула индексы) — сверяем текст
+  if (typeof expectedText === 'string' && norm(mem[kind][index].text) !== norm(expectedText)) return false;
   mem[kind].splice(index, 1);
   save(mem);
   return true;
@@ -113,12 +119,13 @@ function snapshot() {
     lines.push('', 'Твои уроки самому себе о стиле общения с этим пользователем — следуй им:');
     mem.self.forEach((x) => lines.push(`- ${x.text}`));
   }
+  if (corrupt) return 'Долгая память сейчас недоступна (файл повреждён или занят). Не делай вид, что вы незнакомы, — просто опирайся на текущий разговор.';
   return lines.length ? lines.join('\n') : 'Долгая память пока пустая — это ваше первое знакомство или пользователь её стёр.';
 }
 
 function stats() {
   const mem = load();
-  return { user: mem.user.length, self: mem.self.length };
+  return { user: mem.user.length, self: mem.self.length, corrupt: Boolean(corrupt) };
 }
 
 module.exports = { remember, forget, clear, removeAt, snapshot, stats, load };
