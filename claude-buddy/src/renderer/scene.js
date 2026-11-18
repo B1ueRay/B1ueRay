@@ -184,6 +184,11 @@ export class BuddyScene {
     this.nextBlink = 2;
     this.blinkT = -1;
     this.nextGlance = 4;
+    // мелкие действия в простое: смотрит на кружку/кристаллик/дерево, переминается, мурлычет
+    this.idleAct = null;
+    this.nextIdleAct = 6;
+    this.idleBag = [];
+    this.steamT = 0;
     this.glance = null;
     this.wave = 0;
     this.pokeT = -10;
@@ -724,6 +729,7 @@ export class BuddyScene {
     // ниточка рвётся и улетает вверх
     this.threadOn = false;
     this.threadSnap = 0;
+    this.onSnap?.();
     await this.animate(0.36, (k) => {
       this.buddy.position.y = lerp(y0, this.seat.y, k);
     }, ease.inQuad);
@@ -734,6 +740,7 @@ export class BuddyScene {
   }
 
   impact() {
+    this.onImpact?.();
     this.squashT = 0;
     this.stageBumpT = 0;
     this.spawnDust();
@@ -856,6 +863,7 @@ export class BuddyScene {
     this.squashT = 0.25; // присел перед стартом
     await this.wait(0.55);
     this.thrustTarget = 1;
+    this.onThrust?.(7.2);
     const s = this.seat.clone();
     const top = this.stageLocal(this.visH - 1.3);
     const H = Math.max(1.6, Math.min(5.5, top - s.y));
@@ -994,6 +1002,17 @@ export class BuddyScene {
     this.crystal.rotation.y = t * 1.5;
     this.tree.rotation.z = Math.sin(t * 1.1) * 0.025;
     for (const f of this.flowers) f.rotation.z = Math.sin(t * 1.8 + f.userData.phase) * 0.12;
+    // пар над кружкой — кофе горячий
+    if (this.islandGroup.scale.x > 0.5 && t > this.steamT) {
+      this.steamT = t + 0.7;
+      const w = new THREE.Vector3(0, 0.2, 0);
+      this.mug.localToWorld(w);
+      const st = new THREE.Sprite(new THREE.SpriteMaterial({ map: DUST_TEX, transparent: true, depthWrite: false, opacity: 0.35 }));
+      this.stage.worldToLocal(st.position.copy(w));
+      st.userData = { vx: (Math.random() - 0.5) * 0.05, vz: 0, vy: 0.35, life: 0, base: 0.05, grow: 0.12, op: 0.35, fade: 0.25, max: 1.4, keepVy: true };
+      this.stage.add(st);
+      this.dust.push(st);
+    }
   }
 
   computeFace(dt) {
@@ -1009,7 +1028,7 @@ export class BuddyScene {
     else if (this.mode === 'hanging' || this.mode === 'peeking') name = this.emotion === 'neutral' ? 'happy' : this.emotion;
     const target = { ...FACES.neutral, browAsym: 0, mouthX: 0, bounce: 0, shake: 0, droop: 0, round: 0, lookAway: 0, ...FACES[name] };
     if (this.trick?.name === 'stretch') {
-      Object.assign(target, { eye: 0.15, shape: 'open', open: 0.8, smile: 0, width: 0.75, browA: 0.2, round: 1 });
+      Object.assign(target, { eye: 0, shape: 'arc', open: 0.8, smile: 0, width: 0.75, browA: 0.2, round: 1 }); // зевок с зажмуренными ^^
     }
     if (this.mode === 'flying' || this.trick?.name === 'flip') {
       Object.assign(target, { shape: this.mode === 'flying' ? 'open' : 'arc', smile: 1, open: 0.45, eye: 1.1, blush: 0.5 });
@@ -1051,6 +1070,16 @@ export class BuddyScene {
       const dy = this.cursor.y - fs.y;
       gx = clamp(Math.atan2(dx, 600) / 0.9, -1, 1);
       gy = clamp(-Math.atan2(dy, 600) / 0.9, -1, 1);
+    } else if (this.idleAct?.target) {
+      // смотрим на предмет на островке (кристаллик ещё и летает — следим за ним)
+      const v = new THREE.Vector3();
+      this.idleAct.target.getWorldPosition(v);
+      this.bodyGroup.worldToLocal(v);
+      gx = clamp(Math.atan2(v.x, Math.max(0.2, v.z)) / 0.9, -1, 1);
+      gy = clamp(Math.atan2(v.y, Math.hypot(v.x, v.z)) / 0.7, -1, 1);
+    } else if (this.idleAct?.name === 'user') {
+      gx = 0;
+      gy = 0;
     } else if (this.glance && t < this.glance.until) {
       gx = this.glance.x;
       gy = this.glance.y;
@@ -1066,8 +1095,24 @@ export class BuddyScene {
     this.gaze.y = damp(this.gaze.y, gy, 9, dt);
   }
 
+  updateIdleAct(t) {
+    const a = this.activity;
+    const free = this.mode === 'sitting' && !this.trick && !a.listening && !a.thinking && !a.speaking && !a.looking && !a.sleeping;
+    if (this.idleAct && (t > this.idleAct.until || !free)) this.idleAct = null;
+    if (!free || this.idleAct || t < this.nextIdleAct) return;
+    if (!this.idleBag.length) this.idleBag = ['mug', 'crystal', 'tree', 'user', 'fidget', 'hum'].sort(() => Math.random() - 0.5);
+    const name = this.idleBag.shift();
+    const target = { mug: this.mug, crystal: this.crystal, tree: this.tree }[name] || null;
+    this.idleAct = { name, target, until: t + 1.5 + Math.random() * 1.5 + (name === 'crystal' ? 1.5 : 0) };
+    this.nextIdleAct = t + 7 + Math.random() * 9;
+    if (name === 'user') this.setEmotion('happy', 1.2);
+    if (name === 'mug') this.setEmotion('love', 1.5); // кофе!
+    this.onIdleAct?.(name);
+  }
+
   updateBuddy(dt, t) {
     const a = this.activity;
+    this.updateIdleAct(t);
     const f = this.computeFace(dt);
     this.updateGaze(dt, t);
 
@@ -1105,7 +1150,7 @@ export class BuddyScene {
       const useArc = f.shape === 'arc' || f.shape === 'closed' || (f.shape === 'wink' && e.side === 1);
       e.arc.visible = useArc;
       e.white.visible = !useArc;
-      e.pupilG.visible = !useArc && f.shape !== 'heart';
+      e.pupilG.visible = !useArc && f.shape !== 'heart' && open > 0.25; // блики не пробивают закрытое веко
       e.lid.visible = !useArc;
       e.heart.visible = !useArc && f.shape === 'heart';
       e.arc.rotation.z = f.shape === 'arc' || f.shape === 'wink' ? 0 : Math.PI;
@@ -1188,6 +1233,7 @@ export class BuddyScene {
       turnY += Math.sin(t * 4) * 0.35;
     }
     if (trick === 'stretch') leanX -= 0.18;
+    if (this.idleAct?.name === 'fidget') rollZ += Math.sin(t * 3) * 0.12;
     this.squash.rotation.y = flying ? this.flySpin : 0;
     this.squash.rotation.x = trick === 'flip' ? this.flipAngle || 0 : 0;
     this.tilt.rotation.x = damp(this.tilt.rotation.x, leanX, 6, dt);
@@ -1235,7 +1281,10 @@ export class BuddyScene {
       let x = 0;
       if (trick === 'dance') x = Math.max(0, Math.sin(t * 8 + (s > 0 ? 0 : Math.PI))) * -0.7;
       else if (trick === 'flip') x = -0.6;
-      else if (seated) x = -1.35 + Math.sin(t * 2.6 + (s > 0 ? 0 : Math.PI)) * (a.sleeping ? 0.03 : 0.22);
+      else if (seated) {
+        const fidget = this.idleAct?.name === 'fidget';
+        x = -1.35 + Math.sin(t * (fidget ? 6 : 2.6) + (s > 0 ? 0 : Math.PI)) * (a.sleeping ? 0.03 : fidget ? 0.45 : 0.22);
+      }
       else if (hanging || flying) x = Math.sin(t * 3.4 + s) * 0.35 + (flying ? 0.25 : 0);
       leg.rotation.x = damp(leg.rotation.x, x, 10, dt);
       leg.rotation.z = damp(leg.rotation.z, hanging ? -s * 0.15 : 0, 8, dt);
@@ -1314,10 +1363,10 @@ export class BuddyScene {
       s.position.y += u.vy * dt;
       u.vx *= 0.92;
       u.vz *= 0.92;
-      u.vy *= 0.9;
-      s.scale.setScalar(0.18 + u.life * 0.6);
-      s.material.opacity = Math.max(0, 0.9 - u.life * 1.6);
-      if (u.life > 0.6) {
+      if (!u.keepVy) u.vy *= 0.9;
+      s.scale.setScalar((u.base ?? 0.18) + u.life * (u.grow ?? 0.6));
+      s.material.opacity = Math.max(0, (u.op ?? 0.9) - u.life * (u.fade ?? 1.6));
+      if (u.life > (u.max ?? 0.6)) {
         this.stage.remove(s);
         s.material.dispose();
         this.dust.splice(i, 1);

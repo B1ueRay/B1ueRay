@@ -1,6 +1,7 @@
 // Режиссёр: связывает сцену, голос, микрофон и "мозг" в main-процессе.
 import { BuddyScene } from './scene.js';
 import { Voice, Mic } from './voice.js';
+import { Sfx } from './sfx.js';
 
 const api = window.buddy || (await import('./mock-bridge.js')).createMock();
 const $ = (id) => document.getElementById(id);
@@ -25,6 +26,19 @@ const voice = new Voice();
 const mic = new Mic();
 let cfg = await api.getConfig();
 voice.configure(cfg);
+const sfx = new Sfx();
+sfx.setMuted(cfg.muted);
+// звуки сцены
+scene.onImpact = () => sfx.boing();
+scene.onSnap = () => sfx.tink();
+scene.onThrust = (sec) => sfx.whoosh(sec);
+scene.onIdleAct = (name) => {
+  if (name === 'hum') {
+    noteOnce();
+    sfx.blip();
+    setTimeout(() => sfx.blip(), 220);
+  }
+};
 
 const EMOTION_RE = /^(neutral|happy|laugh|surprised|sad|angry|thinking|love|smug|sleepy|scared|embarrassed|wink)$/i;
 const ACTION_RE = /^(jetpack|backflip|dance|stretch|wave|hide)$/i;
@@ -44,6 +58,7 @@ function emoFx(emo) {
   const now = performance.now();
   if (!icon || (lastFx.emo === emo && now - lastFx.at < 8000)) return;
   lastFx = { emo, at: now };
+  sfx.pop(0.7);
   const p = scene.headScreen();
   const el = document.createElement('div');
   el.className = 'sticker';
@@ -161,6 +176,7 @@ function toast(text, ms = 4000) {
 }
 
 function pop(text, cls = 'bam') {
+  sfx.pop(cls === 'small' ? 1.3 : 1);
   const p = scene.faceScreen();
   const el = document.createElement('div');
   el.className = `pop ${cls}`;
@@ -451,13 +467,27 @@ setInterval(() => {
 }, 5000);
 
 // ---------------- трюки и самодеятельность ----------------
+// одна нотка — когда мурлычет себе под нос
+function noteOnce() {
+  const p = scene.headScreen();
+  const el = document.createElement('div');
+  el.className = 'note';
+  el.textContent = pick(NOTE_GLYPHS);
+  el.style.left = `${p.x + 30}px`;
+  el.style.top = `${p.y + 30}px`;
+  els.fx.appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+const NOTE_GLYPHS = ['♪', '♫', '♬'];
+
 function notes() {
   for (let i = 0; i < 3; i += 1) {
     setTimeout(() => {
       const p = scene.headScreen();
       const el = document.createElement('div');
       el.className = 'note';
-      el.textContent = pick(['♪', '♫', '♬']);
+      sfx.blip();
+      el.textContent = pick(NOTE_GLYPHS);
       el.style.left = `${p.x + (Math.random() - 0.5) * 120}px`;
       el.style.top = `${p.y + 30}px`;
       els.fx.appendChild(el);
@@ -847,6 +877,7 @@ function poke() {
   touch();
   scene.poke();
   pokesSinceChat += 1;
+  sfx.squeak();
   if (wasSleeping) {
     const [text, emo] = pick(WAKE_POKE);
     say(text, emo);
@@ -957,7 +988,11 @@ els.menu.addEventListener('click', async (e) => {
   if (act === 'jetpack') doTrick('jetpack');
   if (act === 'dance') doTrick('dance');
   if (act === 'reset') resetChat();
-  if (act === 'mute') cfg = await api.setConfig({ muted: !cfg.muted });
+  if (act === 'mute') {
+    cfg = await api.setConfig({ muted: !cfg.muted });
+    voice.configure(cfg);
+    sfx.setMuted(cfg.muted);
+  }
   if (act === 'settings') api.openSettings();
   if (act === 'quit') api.quit();
 });
@@ -985,6 +1020,7 @@ api.onCommand(({ name, forceShow }) => {
 api.onConfig((c) => {
   cfg = c;
   voice.configure(c);
+  sfx.setMuted(c.muted);
 });
 api.onNotice(({ text }) => toast(text, 6000));
 let lastCursor = null;
