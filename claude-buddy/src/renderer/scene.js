@@ -820,8 +820,9 @@ export class BuddyScene {
   }
 
   // ---------- реакции ----------
-  setEmotion(name, holdSec = 0) {
+  setEmotion(name, holdSec = 0, { idle = false } = {}) {
     if (!FACES[name]) name = 'neutral';
+    this.emotionIsIdle = idle; // эмоция от бытовой мелочи, а не от разговора
     // смена эмоции иногда прячется за моргание — так живее, чем мгновенный щелчок
     if (name !== this.emotion && this.blinkT < 0 && Math.random() < 0.5) this.blinkT = 0;
     this.afterglow = null;
@@ -1103,11 +1104,17 @@ export class BuddyScene {
       gy = clamp(-Math.atan2(dy, 600) / 0.9, -1, 1);
     } else if (this.idleAct?.target) {
       // смотрим на предмет на островке (кристаллик ещё и летает — следим за ним)
-      const v = new THREE.Vector3();
-      this.idleAct.target.getWorldPosition(v);
+      const v = new THREE.Vector3(0, this.idleAct.target.up, 0);
+      this.idleAct.target.obj.localToWorld(v);
       this.bodyGroup.worldToLocal(v);
-      gx = clamp(Math.atan2(v.x, Math.max(0.2, v.z)) / 0.9, -1, 1);
-      gy = clamp(Math.atan2(v.y, Math.hypot(v.x, v.z)) / 0.7, -1, 1);
+      if (v.z < 0) {
+        // предмет ушёл за спину — не дёргаем глаза, держим прежний взгляд
+        gx = this.gaze.x;
+        gy = this.gaze.y;
+      } else {
+        gx = clamp((Math.atan2(v.x, Math.max(0.2, v.z)) / 0.9) * 0.6, -0.75, 0.75);
+        gy = clamp((Math.atan2(v.y, Math.hypot(v.x, v.z)) / 0.7) * 0.6, -0.75, 0.75);
+      }
     } else if (this.idleAct?.name === 'user') {
       gx = 0;
       gy = 0;
@@ -1128,16 +1135,20 @@ export class BuddyScene {
 
   updateIdleAct(t) {
     const a = this.activity;
-    const free = this.mode === 'sitting' && !this.trick && !a.listening && !a.thinking && !a.speaking && !a.looking && !a.sleeping;
+    // busy: идёт ответ, очередь речи или открыт чат — бытовые мелочи не перебивают разговор
+    const held = this.emotionUntil && t < this.emotionUntil && !this.emotionIsIdle;
+    const free = this.mode === 'sitting' && !this.trick && !a.listening && !a.thinking && !a.speaking && !a.busy && !a.looking && !a.sleeping && !held;
     if (this.idleAct && (t > this.idleAct.until || !free)) this.idleAct = null;
+    if (!free) this.nextIdleAct = Math.max(this.nextIdleAct, t + 4);
     if (!free || this.idleAct || t < this.nextIdleAct) return;
     if (!this.idleBag.length) this.idleBag = ['mug', 'crystal', 'tree', 'user', 'fidget', 'hum'].sort(() => Math.random() - 0.5);
     const name = this.idleBag.shift();
-    const target = { mug: this.mug, crystal: this.crystal, tree: this.tree }[name] || null;
+    // точка, куда смотреть: у дерева — крона, а не корни
+    const target = { mug: { obj: this.mug, up: 0.1 }, crystal: { obj: this.crystal, up: 0 }, tree: { obj: this.tree, up: 0.95 } }[name] || null;
     this.idleAct = { name, target, until: t + 1.5 + Math.random() * 1.5 + (name === 'crystal' ? 1.5 : 0) };
     this.nextIdleAct = t + 7 + Math.random() * 9;
-    if (name === 'user') this.setEmotion('happy', 1.2);
-    if (name === 'mug') this.setEmotion('love', 1.5); // кофе!
+    if (name === 'user') this.setEmotion('happy', 1.2, { idle: true });
+    if (name === 'mug') this.setEmotion('love', 1.5, { idle: true }); // кофе!
     this.onIdleAct?.(name);
   }
 

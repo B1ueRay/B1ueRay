@@ -1134,7 +1134,7 @@ function positionBubble() {
 function loop() {
   const lip = voice.update();
   scene.setLip(lip.open, lip.round);
-  scene.setActivity({ speaking: voice.speaking });
+  scene.setActivity({ speaking: voice.speaking, busy: voice.active || Boolean(reply && !reply.done) || state.chatOpen });
   scene.frame();
   positionBubble();
   requestAnimationFrame(loop);

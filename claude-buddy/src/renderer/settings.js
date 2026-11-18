@@ -67,9 +67,12 @@ async function save() {
 
 async function memStats() {
   const m = await buddy.memoryStats();
-  $('memStats').textContent = m.corrupt
-    ? 'Файл памяти повреждён или занят другой программой — бадди его не трогает. Копия лежит рядом с memory.json. «Стереть память» начнёт с нуля.'
-    : `Фактов о тебе: ${m.user}, уроков себе: ${m.self}`;
+  $('memStats').textContent =
+    m.corrupt === 'locked'
+      ? 'Файл памяти сейчас занят другой программой (антивирус, бэкап). Ничего не стирай — просто открой настройки чуть позже.'
+      : m.corrupt
+        ? 'Файл памяти повреждён — бадди его не трогает. Копия лежит рядом с memory.json (memory.json.bad-…). «Стереть память» начнёт с нуля.'
+        : `Фактов о тебе: ${m.user}, уроков себе: ${m.self}`;
   const mem = await buddy.listMemory();
   const ul = $('memList');
   ul.textContent = '';
@@ -86,8 +89,13 @@ async function memStats() {
       del.addEventListener('click', async () => {
         del.disabled = true; // двойной клик не должен снести соседнюю запись
         li.style.opacity = '0.4';
-        await buddy.removeMemory(kind, index, item.text);
-        memStats();
+        try {
+          await buddy.removeMemory(kind, index, item.text);
+        } catch (err) {
+          alert(`Не получилось удалить: ${err.message}`);
+        } finally {
+          memStats();
+        }
       });
       li.append(tag, text, del);
       ul.appendChild(li);
@@ -96,8 +104,13 @@ async function memStats() {
 }
 $('clearMem').addEventListener('click', async () => {
   if (!confirm('Стереть всю долгую память бадди? Это не отменить.')) return;
-  await buddy.clearMemory();
-  memStats();
+  try {
+    await buddy.clearMemory();
+  } catch (err) {
+    alert(`Не получилось стереть: ${err.message}`);
+  } finally {
+    memStats();
+  }
 });
 memStats();
 $('save').addEventListener('click', save);

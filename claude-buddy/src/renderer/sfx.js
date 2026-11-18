@@ -13,6 +13,8 @@ export class Sfx {
 
   setMuted(m) {
     this.muted = Boolean(m);
+    // глушим и то, что уже звучит (например, вжух джетпака)
+    if (this.ctx && this.master) this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume, this.ctx.currentTime, 0.02);
   }
 
   ready() {
@@ -24,7 +26,11 @@ export class Sfx {
         this.master.gain.value = this.volume;
         this.master.connect(this.ctx.destination);
       }
-      if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+      if (this.ctx.state !== 'running') {
+        // приостановлен/прерван: будим, но звуки сейчас не ставим — иначе все грянут разом при возобновлении
+        this.ctx.resume().catch(() => {});
+        return false;
+      }
       return true;
     } catch {
       return false;
@@ -74,12 +80,15 @@ export class Sfx {
     if (!this.ready()) return;
     const ctx = this.ctx;
     const t0 = ctx.currentTime;
-    const len = Math.ceil(ctx.sampleRate * sec);
-    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < len; i += 1) d[i] = Math.random() * 2 - 1;
+    if (!this.noise) {
+      // один секундный буфер шума на всё время, крутится по кругу
+      this.noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const d = this.noise.getChannelData(0);
+      for (let i = 0; i < d.length; i += 1) d[i] = Math.random() * 2 - 1;
+    }
     const src = ctx.createBufferSource();
-    src.buffer = buf;
+    src.buffer = this.noise;
+    src.loop = true;
     const bp = ctx.createBiquadFilter();
     bp.type = 'bandpass';
     bp.Q.value = 0.8;

@@ -30,7 +30,7 @@ function load() {
     corrupt = false;
     return { user: Array.isArray(raw.user) ? raw.user : [], self: Array.isArray(raw.self) ? raw.self : [] };
   } catch {
-    if (!corrupt) {
+    if (corrupt !== true) { // в т.ч. после 'locked': копию порченого файла делаем всегда
       try {
         // не затираем старую копию: каждая порча — свой файл
         fs.copyFileSync(file(), `${file()}.bad-${Date.now()}`);
@@ -51,7 +51,16 @@ function save(mem, { force = false } = {}) {
   // атомарно: временный файл + переименование
   const tmp = `${file()}.tmp`;
   fs.writeFileSync(tmp, JSON.stringify(mem, null, 2), 'utf8');
-  fs.renameSync(tmp, file());
+  // на Windows антивирус/индексатор иногда держит файл — пару раз пробуем ещё
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      fs.renameSync(tmp, file());
+      break;
+    } catch (err) {
+      if (attempt >= 3 || !['EPERM', 'EBUSY', 'EACCES'].includes(err.code)) throw err;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 60);
+    }
+  }
   corrupt = false;
 }
 
@@ -125,7 +134,13 @@ function snapshot() {
 
 function stats() {
   const mem = load();
-  return { user: mem.user.length, self: mem.self.length, corrupt: Boolean(corrupt) };
+  return { user: mem.user.length, self: mem.self.length, corrupt: corrupt || false }; // 'locked' | true | false
 }
 
-module.exports = { remember, forget, clear, removeAt, snapshot, stats, load };
+// память сейчас не читается (занята/битая) — такой снимок не кэшируем на всю сессию
+function unavailable() {
+  load();
+  return Boolean(corrupt);
+}
+
+module.exports = { remember, forget, clear, removeAt, snapshot, stats, load, unavailable };

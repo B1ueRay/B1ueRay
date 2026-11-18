@@ -180,7 +180,10 @@ class Brain {
   memoryBlock(cfg) {
     if (this.memoryText == null) {
       const name = cfg.userName ? `Пользователь просил звать его: ${cfg.userName}.\n` : '';
-      this.memoryText = `${name}${memory.snapshot()}`;
+      const text = `${name}${memory.snapshot()}`;
+      // файл временно занят — не залипаем на "память недоступна" до конца сессии
+      if (memory.unavailable()) return text;
+      this.memoryText = text;
     }
     return this.memoryText;
   }
