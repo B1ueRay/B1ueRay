@@ -414,3 +414,37 @@ body.dragging * {
     opacity: 0;
   }
 }
+
+/* облачко подпрыгивает и красится по эмоции */
+.bubble.on.bump {
+  animation: bbump 0.34s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes bbump {
+  35% {
+    transform: scale(1.06) rotate(-1.2deg);
+  }
+}
+.bubble {
+  transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.3, 1.6, 0.5, 1), border-color 0.3s;
+}
+.bubble[data-emo='angry'] {
+  border-color: #d4462a;
+}
+.bubble[data-emo='love'] {
+  border-color: #e0567a;
+}
+.bubble[data-emo='sad'] {
+  border-color: #5b7fb0;
+}
+.bubble[data-emo='laugh'],
+.bubble[data-emo='happy'] {
+  border-color: #e0892a;
+}
+.bubble[data-emo='scared'],
+.bubble[data-emo='surprised'] {
+  border-color: #8a5cc2;
+}
+.bubble[data-emo]::after {
+  border-right-color: inherit;
+  border-bottom-color: inherit;
+}

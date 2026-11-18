@@ -53,7 +53,17 @@ const EMOTION_ALIAS = {
 // наклейки над головой — эмоции читаются даже на пёстром рабочем столе
 const EMO_FX = { angry: '💢', scared: '💦', embarrassed: '💦', thinking: '❓', sad: '💧', love: '💕', surprised: '❗' };
 let lastFx = { emo: '', at: 0 };
+// облачко "подпрыгивает" и меняет цвет рамки вместе с эмоцией
+function bubbleEmo(emo) {
+  if (els.bubble.dataset.emo === emo) return;
+  els.bubble.dataset.emo = emo;
+  els.bubble.classList.remove('bump');
+  void els.bubble.offsetWidth; // перезапуск анимации
+  els.bubble.classList.add('bump');
+}
+
 function emoFx(emo) {
+  bubbleEmo(emo);
   const icon = EMO_FX[emo];
   const now = performance.now();
   if (!icon || (lastFx.emo === emo && now - lastFx.at < 8000)) return;
@@ -264,6 +274,8 @@ const GREETINGS = [
   'О, снова ты{name}! Ну рассказывай.',
 ];
 const GREET_EMOS = ['happy', 'wink', 'love'];
+const PEEK_CALLS = ['ку-ку… ты где?', 'ку-ку! есть кто живой?', 'тук-тук… я только гляну…', 'ку-ку… не занят?'];
+const PEEK_SULKS = ['ну и ладно…', 'пф, не очень-то и хотелось', 'ладно, попозже загляну', 'эх, работаешь… не мешаю'];
 const FOUND_LINES = ['Нашёл меня! Ну ладно, остаюсь.', 'О, заметил! Я тут посижу, ладно?', 'Попался! В смысле, я попался.'];
 const DBL_LINES = ['Двойной тык — двойная радость!', 'Ну всё, ты меня разбудил окончательно.', 'Тык-тык! Я так тоже умею.'];
 
@@ -355,8 +367,9 @@ async function peek() {
   let clicked = false;
   try {
     await scene.peekDown();
-    showBubble('ку-ку… ты где?', { micro: true });
-    voice.say('ку-ку… ты где?', { micro: true });
+    const kuku = pick(PEEK_CALLS);
+    showBubble(kuku, { micro: true });
+    voice.say(kuku, { micro: true });
     clicked = await new Promise((resolve) => {
       state.peekClick = () => resolve(true);
       setTimeout(() => resolve(false), 9000);
@@ -373,8 +386,9 @@ async function peek() {
       scene.waveHello(1.5);
       if (!reply || reply.done) say(pick(FOUND_LINES), 'laugh');
     } else {
-      showBubble('ну и ладно…', { micro: true });
-      voice.say('ну и ладно', { micro: true });
+      const sulk = pick(PEEK_SULKS);
+      showBubble(sulk, { micro: true });
+      voice.say(sulk, { micro: true });
       scene.setEmotion('sad', 2);
       await sleep(900);
       hideBubble();
@@ -1023,10 +1037,71 @@ api.onConfig((c) => {
   sfx.setMuted(c.muted);
 });
 api.onNotice(({ text }) => toast(text, 6000));
+// ---------------- тряска мышкой: у него кружится голова ----------------
+const WIGGLE_LINES = [
+  ['Эй-эй, полегче! У меня голова кружится!', 'surprised'],
+  ['Ты чего мышкой машешь? Я тебе не кот!', 'laugh'],
+  ['Блин, у меня зрачки в узел завязались!', 'embarrassed'],
+  ['Всё-всё, вижу тебя! Хватит гипнотизировать.', 'smug'],
+  ['Уо-о-о… вертолёт… я вертолёт…', 'laugh'],
+];
+const WIGGLE_AGAIN = [
+  ['Ну хватит, а то сам тебя закручу!', 'angry'],
+  ['Опять?! Это аттракцион, гони за билет.', 'smug'],
+];
+const wig = { dir: 0, flips: [], cool: 0, count: 0, lastAt: 0 };
+function trackWiggle(x, y) {
+  if (!lastCursor) return;
+  const now = performance.now();
+  const dx = x - lastCursor.x;
+  const dy = y - lastCursor.y;
+  const ax = Math.abs(dx) >= Math.abs(dy);
+  const d = ax ? dx : dy;
+  if (Math.abs(d) < 30) return; // опрос раз в 50 мс: медленнее ~600 px/с — не тряска
+  const sgn = Math.sign(d) * (ax ? 1 : 2);
+  if (sgn !== wig.dir) {
+    if (wig.dir === -sgn) wig.flips.push(now);
+    wig.dir = sgn;
+  }
+  while (wig.flips.length && now - wig.flips[0] > 1400) wig.flips.shift();
+  if (wig.flips.length < 4 || now < wig.cool) return;
+  const f = scene.faceScreen();
+  if (Math.hypot(x - f.x, y - f.y) > 520) return; // трясут далеко — не нам
+  wig.flips.length = 0;
+  wig.cool = now + 15000;
+  onWiggle(now);
+}
+function onWiggle(now = performance.now()) {
+  if (!state.visible || state.seq) return;
+  wig.count = now - wig.lastAt < 60000 ? wig.count + 1 : 1;
+  wig.lastAt = now;
+  note('пользователь тряс мышкой у тебя перед носом — у тебя кружилась голова');
+  if (state.sleeping) wake(true);
+  scene.dizzy(2.2);
+  sfx.boing();
+  pop('💫', 'small');
+  const busy = voice.active || state.chatOpen || mic.recording || (reply && !reply.done);
+  setTimeout(() => {
+    if (busy || !state.visible) {
+      scene.setEmotion('embarrassed', 1.5);
+      return;
+    }
+    if (wig.count >= 3 && scene.canTrick) {
+      say('Ах так? Тогда смотри!', 'smug');
+      doTrick('backflip');
+      wig.count = 0;
+      return;
+    }
+    const [text, emo] = pick(wig.count === 2 ? WIGGLE_AGAIN : WIGGLE_LINES);
+    say(text, emo);
+  }, 2300);
+}
+
 let lastCursor = null;
 api.onCursor(({ x, y, screenDir }) => {
   scene.setCursor(x, y, screenDir);
   const moved = !lastCursor || Math.abs(lastCursor.x - x) + Math.abs(lastCursor.y - y) > 4;
+  trackWiggle(x, y);
   lastCursor = { x, y };
   if (!moved) return;
   state.userSeenAt = performance.now();
@@ -1070,4 +1145,4 @@ requestAnimationFrame(loop);
 setTimeout(() => appear({ kuku: true }), 600);
 
 // для отладки и превью
-window.__buddy = { scene, voice, say, send, hide, appear, peek, toggle, state, doTrick };
+window.__buddy = { scene, voice, say, send, hide, appear, peek, toggle, state, doTrick, wiggle: onWiggle };

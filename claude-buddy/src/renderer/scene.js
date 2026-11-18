@@ -152,6 +152,10 @@ const FACES = {
 };
 
 // ---------- сама сцена ----------
+// у каждой черты лица своя скорость: глаза быстрые, брови и рот мягче, румянец медленный
+const FACE_RATE = { eye: 14, pupil: 10, browY: 7, browA: 7, browAsym: 7, smile: 8, open: 9, width: 8, mouthX: 6, blush: 3, bounce: 8, shake: 10, droop: 4, round: 8, lookAway: 6 };
+const AFTERGLOW_KEYS = ['eye', 'pupil', 'browY', 'browA', 'browAsym', 'smile', 'open', 'width', 'blush', 'mouthX', 'droop'];
+
 export class BuddyScene {
   constructor(canvas) {
     this.canvas = canvas;
@@ -192,6 +196,8 @@ export class BuddyScene {
     this.glance = null;
     this.wave = 0;
     this.pokeT = -10;
+    this.dizzyUntil = 0;
+    this.afterglow = null;
     this.face = { ...FACES.neutral, browAsym: 0, mouthX: 0, bounce: 0, shake: 0, droop: 0, round: 0, lookAway: 0 };
     this.mouthKey = '';
     this.threadAttach = null; // мир. точка, куда цепляется нитка (null = нитки нет)
@@ -816,6 +822,9 @@ export class BuddyScene {
   // ---------- реакции ----------
   setEmotion(name, holdSec = 0) {
     if (!FACES[name]) name = 'neutral';
+    // смена эмоции иногда прячется за моргание — так живее, чем мгновенный щелчок
+    if (name !== this.emotion && this.blinkT < 0 && Math.random() < 0.5) this.blinkT = 0;
+    this.afterglow = null;
     this.emotion = name;
     this.emotionUntil = holdSec ? this.time + holdSec : 0;
   }
@@ -838,6 +847,12 @@ export class BuddyScene {
     this.cursor = { x, y };
     if (!prev || Math.abs(prev.x - x) + Math.abs(prev.y - y) > 3) this.cursorMovedAt = this.time;
     if (screenDir) this.screenDir = screenDir;
+  }
+
+  // головокружение: потрясли мышкой перед носом
+  dizzy(sec = 2) {
+    this.dizzyUntil = this.time + sec;
+    this.pokeT = this.time;
   }
 
   poke() {
@@ -1019,6 +1034,8 @@ export class BuddyScene {
     const a = this.activity;
     let name = this.emotion;
     if (this.emotionUntil && this.time > this.emotionUntil) {
+      // не падаем сразу в ноль: эмоция ещё пару секунд "догорает"
+      if (this.emotion !== this.baseEmotion) this.afterglow = { name: this.emotion, t0: this.time };
       this.emotion = this.baseEmotion;
       this.emotionUntil = 0;
       name = this.emotion;
@@ -1033,6 +1050,9 @@ export class BuddyScene {
     if (this.mode === 'flying' || this.trick?.name === 'flip') {
       Object.assign(target, { shape: this.mode === 'flying' ? 'open' : 'arc', smile: 1, open: 0.45, eye: 1.1, blush: 0.5 });
     }
+    if (this.time < this.dizzyUntil) {
+      Object.assign(target, { shape: 'open', eye: 1.08, pupil: 0.75, browA: 0.35, browAsym: 0.05, smile: -0.15, open: 0.3, width: 0.7, round: 1, blush: 0.2 });
+    }
     if (a.listening) {
       target.eye = Math.max(target.eye, 1.12);
       target.browY += 0.03;
@@ -1042,12 +1062,20 @@ export class BuddyScene {
       target.browA = -0.12;
       target.smile = 0.1;
     }
-    const f = this.face;
-    const k = 12;
-    for (const key of ['eye', 'pupil', 'browY', 'browA', 'browAsym', 'smile', 'open', 'width', 'blush', 'mouthX', 'bounce', 'shake', 'droop', 'round', 'lookAway']) {
-      f[key] = damp(f[key], target[key], k, dt);
+    const ag = this.afterglow;
+    if (ag && name === this.baseEmotion && !a.sleeping) {
+      const g = 0.45 * (1 - (this.time - ag.t0) / 3.5);
+      if (g <= 0) this.afterglow = null;
+      else for (const key of AFTERGLOW_KEYS) target[key] = lerp(target[key], FACES[ag.name][key] ?? target[key], g);
     }
-    f.shape = target.shape;
+    const f = this.face;
+    for (const key of Object.keys(FACE_RATE)) {
+      f[key] = damp(f[key], target[key], FACE_RATE[key], dt);
+    }
+    if (target.shape !== f.shape) {
+      if (this.blinkT < 0) this.blinkT = 0; // моргаем, чтобы спрятать смену формы глаз
+      if (this.blinkT >= 0.07) f.shape = target.shape; // меняем, когда веки сомкнуты
+    }
     return f;
   }
 
@@ -1055,7 +1083,10 @@ export class BuddyScene {
     const a = this.activity;
     let gx = 0;
     let gy = 0;
-    if (a.looking) {
+    if (t < this.dizzyUntil) {
+      gx = Math.cos(t * 5) * 0.5; // голова плывёт по кругу
+      gy = Math.sin(t * 5) * 0.3;
+    } else if (a.looking) {
       gx = this.screenDir * 0.9 + Math.sin(t * 2.4) * 0.35;
       gy = Math.sin(t * 1.3) * 0.25;
     } else if (a.thinking) {
@@ -1155,7 +1186,10 @@ export class BuddyScene {
       e.heart.visible = !useArc && f.shape === 'heart';
       e.arc.rotation.z = f.shape === 'arc' || f.shape === 'wink' ? 0 : Math.PI;
       if (e.heart.visible) e.heart.scale.setScalar(1 + Math.sin(t * 8) * 0.12);
-      e.pupilG.position.set(this.gaze.x * 0.038 + shake, this.gaze.y * 0.045, 0);
+      // при головокружении зрачки крутятся в разные стороны
+      const dzz = t < this.dizzyUntil ? 1 : 0;
+      const sp = t * 13 * e.side;
+      e.pupilG.position.set(this.gaze.x * 0.038 + shake + dzz * Math.cos(sp) * 0.024, this.gaze.y * 0.045 + dzz * Math.sin(sp) * 0.028, 0);
       const ps = f.pupil * (a.listening ? 1.1 : 1);
       e.pupilG.scale.set(ps, ps, 1); // по z не масштабируем, иначе зрачок тонет в белке
     });
@@ -1234,6 +1268,11 @@ export class BuddyScene {
     }
     if (trick === 'stretch') leanX -= 0.18;
     if (this.idleAct?.name === 'fidget') rollZ += Math.sin(t * 3) * 0.12;
+    if (t < this.dizzyUntil) {
+      const w = Math.min(1, this.dizzyUntil - t);
+      rollZ += Math.sin(t * 6) * 0.16 * w;
+      leanX += Math.cos(t * 6) * 0.08 * w;
+    }
     this.squash.rotation.y = flying ? this.flySpin : 0;
     this.squash.rotation.x = trick === 'flip' ? this.flipAngle || 0 : 0;
     this.tilt.rotation.x = damp(this.tilt.rotation.x, leanX, 6, dt);
