@@ -725,7 +725,7 @@ api.onChatEvent((ev) => {
       break;
     case 'error':
       r.done = true;
-      restoreNotes(r.ctx);
+      restoreNotes(r.ctx?.consumed); // contextNotes() отдаёт { text, consumed }
       scene.setActivity({ thinking: false, looking: false });
       setStatus('');
       els.bubble.classList.remove('thinking');
@@ -740,7 +740,7 @@ function handleError(ev) {
   const lines = {
     no_key: ['Мне нужен API-ключ Anthropic. Открываю настройки — вставь его, и поболтаем.', 'sad'],
     auth: ['Ключ не подходит, блин. Проверь его в настройках.', 'angry'],
-    permission: ['Этому ключу не дали доступ к модели. Глянь настройки.', 'sad'],
+    permission: ['Этому ключу не дали доступ — или Anthropic не пускает из твоей страны. Глянь настройки или включи VPN.', 'sad'],
     not_found: ['Такой модели нет. Выбери другую в настройках.', 'embarrassed'],
     rate_limit: ['Меня там душат лимитами. Попробуй через минутку.', 'sad'],
     network: ['Интернет отвалился? Я ничего не слышу оттуда.', 'scared'],
@@ -1032,9 +1032,18 @@ api.onCommand(({ name, forceShow }) => {
   if (name === 'reset') resetChat();
 });
 api.onConfig((c) => {
+  const gotKey = !cfg.has_apiKey && c.has_apiKey;
   cfg = c;
   voice.configure(c);
   sfx.setMuted(c.muted);
+  // только что вставили ключ — он "оживает" и коротко рассказывает, что умеет
+  if (gotKey && state.visible) {
+    whenFree(async () => {
+      await say('Ура, ожил! Теперь я настоящий — сальто в честь знакомства!', 'love');
+      await doTrick('backflip');
+      say('Скажи «полетай» или «станцуй», жми глаз или Ctrl+Alt+L — гляну на экран. Только мышкой перед носом не тряси, голова кружится. Кликни по мне — поболтаем!', 'wink');
+    });
+  }
 });
 api.onNotice(({ text }) => toast(text, 6000));
 // ---------------- тряска мышкой: у него кружится голова ----------------

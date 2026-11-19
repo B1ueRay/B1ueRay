@@ -33,9 +33,11 @@ async function load() {
   CHECKS.forEach((f) => {
     $(f).checked = Boolean(cfg[f]);
   });
-  $('hk_talk').value = cfg.hotkeys?.talk || '';
-  $('hk_toggle').value = cfg.hotkeys?.toggle || '';
-  $('hk_look').value = cfg.hotkeys?.look || '';
+  // показываем по-человечески: Ctrl+Alt+K вместо CommandOrControl+Alt+K (Electron понимает оба)
+  const short = (k) => (k || '').replace(/CommandOrControl|CmdOrCtrl/g, 'Ctrl');
+  $('hk_talk').value = short(cfg.hotkeys?.talk);
+  $('hk_toggle').value = short(cfg.hotkeys?.toggle);
+  $('hk_look').value = short(cfg.hotkeys?.look);
   $('apiKeyState').textContent = cfg.has_apiKey ? 'ключ сохранён (оставь поле пустым, чтобы не менять)' : '';
   $('sttKeyState').textContent = cfg.has_sttApiKey ? 'ключ сохранён' : '';
   fillVoices(cfg.voiceName);
