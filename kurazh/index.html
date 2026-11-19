@@ -93,16 +93,20 @@
   .ava.adult-ava { background: #3a1d19; }
 
   /* tab bar */
+  /* one bar for everyone: Live · Explore · Go live (raised brass, fixed in the middle) · Inbox · Profile */
   .tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--nav) + var(--sb)); padding-bottom: var(--sb);
     display: flex; background: #070807; border-top: 1px solid var(--line); z-index: 20; }
-  .tab { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  .tab { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
     font-size: 10.5px; font-weight: 600; letter-spacing: .02em; color: var(--muted); }
   .tab.on { color: var(--van); }
   .tab.on::before { content: ""; position: absolute; top: 0; width: 22px; height: 2px; border-radius: 2px; background: var(--gold); }
-  .tab-go { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; font-weight: 700; letter-spacing: .02em; color: var(--cash); }
-  .tab-go span { display: grid; place-items: center; width: 54px; height: 34px; margin-top: -9px; border-radius: 12px; background: var(--gold); color: var(--ink); }
-  .tab-go.golive span::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 3px var(--ink); }
+  .tab-go { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 10px; line-height: 1.3; font-size: 10.5px; font-weight: 700; letter-spacing: .02em; color: var(--cash); }
+  .tab-go span { position: absolute; top: -13px; left: 50%; width: 46px; height: 46px; margin-left: -23px; border-radius: 50%; display: grid; place-items: center;
+    background-color: var(--gold); color: var(--ink); box-shadow: 0 0 0 3px #070807, 0 6px 16px rgba(0,0,0,.45); transition: transform .12s; }
+  .tab-go span::before { content: ""; width: 13px; height: 13px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 3px var(--ink); }
+  .tab-go:active span { transform: scale(.94); }
   .tab-go.on { color: var(--van); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   /* feed: Following | For you tabs over a full-bleed vertical feed; one rail, one capsule, one comment pill */
   .feed-top { position: absolute; top: calc(var(--st) + 8px); left: 0; right: 0; z-index: 6; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 4px; padding: 0 10px 0 4px; transition: opacity .2s; }
@@ -122,7 +126,34 @@
   .cats .chip.x18.on { background: var(--gold); color: var(--ink); border-color: var(--gold); }
   .balance { flex: none; height: 32px; font-size: 13px; }
   .balance b { color: var(--gold2); display: inline-flex; gap: 5px; align-items: center; }
-  /* Explore (temporary sheet until it becomes a tab): join by code, filters, categories */
+  /* Explore tab: search, live avatars, join by code, filters, categories, hot dares */
+  .ex-search { position: relative; display: flex; align-items: center; margin-top: 14px; }
+  .ex-search > svg { position: absolute; left: 14px; color: var(--muted); pointer-events: none; }
+  .ex-search input { width: 100%; height: 48px; border-radius: 14px; border: 1px solid var(--line); background: var(--s1) var(--nap); padding: 0 50px 0 42px; outline: none; font-size: 16px; -webkit-appearance: none; appearance: none; }
+  .ex-search input::-webkit-search-cancel-button { display: none; }
+  .ex-search input::placeholder { color: var(--muted); }
+  .ex-search input:focus { border-color: var(--line2); }
+  .ex-search .x { position: absolute; right: 7px; }
+  .ex-recent { margin-top: 16px; }
+  .ex-rhead { display: flex; justify-content: space-between; align-items: center; min-height: 44px; }
+  .ex-rhead .linkb { min-height: 44px; padding: 0 2px; }
+  .ex-res h3 { margin-top: 20px; }
+  .ex-res .row .m { margin-top: 3px; }
+  .ex-res .row .m + .m { color: var(--cash); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stories { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; margin: 14px -16px 0; padding: 6px 16px 8px; -webkit-mask-image: linear-gradient(90deg, #000 90%, transparent); mask-image: linear-gradient(90deg, #000 90%, transparent); }
+  .stories::-webkit-scrollbar { display: none; }
+  .story { flex: none; width: 70px; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 600; color: var(--cash); }
+  .story-r { position: relative; width: 66px; height: 66px; border-radius: 50%; padding: 4px; background: linear-gradient(150deg, var(--gold2), var(--gold) 50%, #5d4c30); }
+  .story-r.fol { background: linear-gradient(150deg, var(--van), var(--gold2) 45%, var(--gold)); }
+  .story-r i { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 0 2px var(--bg); font: 600 26px/1 var(--serif); font-style: normal; color: var(--van); }
+  .story-r .live { position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); height: 16px; padding: 0 5px; font-size: 8.5px; letter-spacing: .1em; box-shadow: 0 0 0 2px var(--bg); }
+  .story-r .live::before { width: 4px; height: 4px; }
+  .story .nm { max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .story:active .story-r { transform: scale(.96); }
+  .hot-sub { margin-top: -4px; margin-bottom: 10px; font-size: 13px; color: var(--muted); }
+  .empty .wbtns { margin-top: 6px; width: 100%; max-width: 320px; }
+  .empty .wbtns.one { grid-template-columns: 1fr; }
+  .empty .wbtns .btn { padding: 0 12px; font-size: 14px; white-space: nowrap; }
   .explore .ex-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
   .explore .fbtn { height: 46px; justify-content: center; gap: 8px; font-size: 14px; border-radius: 14px; background-color: var(--s2); backdrop-filter: none; -webkit-backdrop-filter: none; }
   .explore .cats { flex-wrap: wrap; overflow: visible; -webkit-mask-image: none; mask-image: none; padding: 0; margin: 0; gap: 8px; }
@@ -213,6 +244,7 @@
   .rava .follow.on { background: var(--s3); color: var(--gold2); border-color: var(--line2); }
   .rava .follow::after { inset: -4px -12.5px -12px; } /* 44pt wide and tall with the avatar above it, without covering the avatar centre */
   .c-bottom { position: absolute; left: 12px; right: 70px; bottom: 14px; transition: opacity .2s; }
+  #scr-feed .c-bottom { bottom: 20px; } /* clear of the raised Go live button */
   .who { position: relative; display: flex; align-items: baseline; gap: 6px; max-width: 100%; min-height: 30px; margin-bottom: 3px; text-align: left; text-shadow: 0 1px 4px rgba(0,0,0,.75); }
   .who::after { content: ""; position: absolute; inset: -7px -6px; }
   .who b { min-width: 0; font: 600 21px/1.15 var(--serif); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -280,19 +312,71 @@
     .bn-text { font-size: 18px; }
     .who b { font-size: 19px; }
   }
-  /* streamer panel (temporary side sheet; phase 2 turns it into the full profile) */
-  .sheet-wrap.side .sheet { top: 0; left: auto; width: min(88%, 390px); max-height: none; border-radius: 24px 0 0 24px; border-top: 0; border-left: 1px solid var(--line2); transform: translateX(100%); }
-  .sheet-wrap.side.open .sheet { transform: none; }
-  .sheet-wrap.side .grab { display: none; }
-  .sheet-wrap.side .sheet-body { flex: 1; padding-top: calc(var(--st) + 12px); }
-  #sheet.notrans .sheet, #sheet.notrans .sheet-bg, #sheet .sheet.dragging { transition: none !important; }
-  .sp-head { display: flex; gap: 14px; align-items: center; margin-top: 4px; }
-  .sp-head .ava { width: 66px; height: 66px; font-size: 30px; box-shadow: 0 0 0 1.5px var(--line2); }
-  .sp-head .grow { flex: 1; min-width: 0; }
-  .sp-head h2 { overflow-wrap: anywhere; }
-  .sp-head small { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; color: var(--cash); font-size: 12.5px; margin-top: 6px; }
-  .sp-title { font: italic 600 20px/1.25 var(--serif); color: var(--van); margin-top: 16px; }
-  .sp-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+  /* push layer: profiles and settings slide in from the right over the current tab; the tab bar stays */
+  .push { position: absolute; top: 0; left: 0; right: 0; bottom: calc(var(--nav) + var(--sb)); z-index: 40; display: flex; flex-direction: column;
+    background: var(--bg) var(--nap); box-shadow: -14px 0 32px rgba(0,0,0,.4); transform: translateX(100%); visibility: hidden;
+    transition: transform .32s cubic-bezier(.2,.8,.2,1), visibility 0s linear .32s; }
+  .push.open { transform: none; visibility: visible; transition: transform .32s cubic-bezier(.2,.8,.2,1), visibility 0s; }
+  .push.dragging { transition: none; visibility: visible; }
+  body.is-watch .push, body.is-live .push { bottom: 0; }
+  .push-bar { flex: none; display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: 6px; padding: calc(var(--st) + 6px) 8px 2px; }
+  .push-bar h2 { font: 600 19px/1.15 var(--serif); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .push-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; padding: 6px 16px calc(var(--sb) + 30px); }
+  .navb { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: var(--van); flex: none; }
+  .navb:active { background: var(--s2); }
+  .pf-head { display: flex; gap: 16px; align-items: center; margin-top: 6px; }
+  .pf-ava { position: relative; flex: none; width: 88px; height: 88px; border-radius: 50%; padding: 4px; background: var(--line2); }
+  .pf-ava.on { background: linear-gradient(150deg, var(--gold2), var(--gold) 50%, #5d4c30); }
+  .pf-ava .ava { width: 100% !important; height: 100% !important; font-size: 38px !important; box-shadow: 0 0 0 2px var(--bg); }
+  .pf-ava .live { position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); box-shadow: 0 0 0 2px var(--bg); }
+  .pf-id { flex: 1; min-width: 0; }
+  .pf-id h1 { font-size: 30px; overflow-wrap: anywhere; }
+  .pf-id small { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; color: var(--cash); font-size: 13px; margin-top: 6px; }
+  .pf-id .badge { margin-top: 8px; }
+  .pf-counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 18px; padding: 12px 0; text-align: center; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .pf-counts > div + div { border-left: 1px solid var(--line); }
+  .pf-counts b { display: block; font: 600 23px/1 var(--serif); font-variant-numeric: lining-nums tabular-nums; margin-bottom: 5px; }
+  .pf-counts span { font-size: 11.5px; color: var(--muted); }
+  .pf-demo { display: block; font-size: 10.5px; color: var(--muted); letter-spacing: .06em; text-align: right; margin-top: 5px; }
+  .pf-acts { display: grid; grid-template-columns: 1fr 1fr 48px; gap: 8px; margin-top: 12px; }
+  .pf-acts.solo { grid-template-columns: 1fr; }
+  .pf-acts .btn { height: 46px; padding: 0 12px; }
+  .pf-acts .btn small { font-size: 9.5px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; }
+  .pf-bell { padding: 0 !important; color: var(--cash); }
+  .pf-bell.on { color: var(--gold2); border-color: var(--line2); }
+  .pf-bell.on svg path:first-child { fill: rgba(185,162,124,.3); }
+  .pf-live { display: flex; gap: 12px; align-items: center; width: 100%; min-height: 58px; margin-top: 14px; padding: 10px 12px 10px 14px; border-radius: 16px; text-align: left;
+    background-color: var(--green); border: 1px solid var(--line2); }
+  .pf-live .grow { flex: 1; min-width: 0; }
+  .pf-live b { display: block; font: italic 600 17px/1.2 var(--serif); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pf-live small { display: block; font-size: 12px; color: var(--cash); margin-top: 2px; }
+  .pf-sec { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .pf-sec .pf-demo { margin: 0; }
+  .pf-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; margin: 0 -16px; }
+  .pf-tile { position: relative; aspect-ratio: 3 / 4; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; padding: 8px; text-align: left; color: var(--van); background-color: var(--s2); }
+  .pf-tile::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5,6,5,.38), rgba(5,6,5,0) 34%, rgba(5,6,5,.1) 52%, rgba(5,6,5,.82)); pointer-events: none; }
+  .pf-tile > * { position: relative; }
+  .pf-tile .tt { font: 600 14px/1.15 var(--serif); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; text-shadow: 0 1px 4px rgba(0,0,0,.7); }
+  .pf-tile .tm { font-size: 10.5px; font-weight: 600; color: var(--cash); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pf-tile .tp { position: absolute; top: 7px; left: 8px; font: 700 14px/1 var(--serif); font-variant-numeric: lining-nums; color: var(--gold2); text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+  .pf-tile .st { position: absolute; top: 7px; left: 7px; }
+  .pf-tile.act .tt { font-style: italic; -webkit-line-clamp: 4; }
+  .pf-tile.act .tm b { color: var(--gold2); font: 700 13px/1 var(--serif); }
+  .pf-tile.act:active { filter: brightness(1.15); }
+  .pr-top { display: flex; align-items: center; justify-content: space-between; margin: -12px -8px 2px 0; min-height: 44px; }
+  .moneycard { display: block; width: 100%; margin-top: 16px; padding: 14px; border-radius: 18px; text-align: left; position: relative; overflow: hidden; background-color: var(--green); border: 1px solid var(--line2); }
+  .moneycard::after { content: ""; position: absolute; right: -40px; top: -40px; width: 150px; height: 150px; border-radius: 50%; border: 1px solid rgba(205,178,124,.16); pointer-events: none; }
+  .moneycard .mc-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--cash); font-weight: 700; }
+  .moneycard .mc-head svg { color: var(--gold2); }
+  .mc3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 10px 0 12px; position: relative; z-index: 1; }
+  .mc3 > span { padding: 10px; border-radius: 12px; background: rgba(0,0,0,.22); border: 1px solid var(--line); min-width: 0; }
+  .mc3 b { display: block; font: 600 20px/1 var(--serif); font-variant-numeric: lining-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mc3 small { font-size: 11px; color: var(--cash); }
+  .moneycard .mc-go { display: flex; align-items: center; justify-content: space-between; min-height: 24px; font-weight: 700; font-size: 14px; color: var(--gold2); position: relative; z-index: 1; }
+  .pg-head { display: flex; align-items: center; gap: 4px; margin-left: -12px; }
+  .set-note { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+  #role-seg { margin: 0; }
+  #role-seg button { height: 44px; }
   .sp-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
   .sp-tags span { height: 26px; padding: 0 10px; border-radius: 8px; display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; background: var(--s2); border: 1px solid var(--line); color: var(--cash); }
   .sp-tags .cour, .sp-tags .min { color: var(--gold2); border-color: var(--line2); }
@@ -321,7 +405,7 @@
   .seg { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--s1); border: 1px solid var(--line); margin: 18px 0; }
   .seg button { flex: 1; height: 38px; border-radius: 10px; font-weight: 700; font-size: 14px; color: var(--muted); }
   .seg button.on { background: var(--s3); color: var(--van); }
-  .list { display: grid; gap: 8px; }
+  .list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .row { display: flex; gap: 12px; align-items: center; padding: 13px 14px; border-radius: 16px; background-color: var(--s1); border: 1px solid var(--line); text-align: left; width: 100%; }
   .row .grow { flex: 1; min-width: 0; }
   .row .t { font-weight: 600; line-height: 1.3; }
@@ -671,7 +755,7 @@
   .watch .banner { top: calc(var(--st) + 100px); }
   .watch .c-bottom { bottom: calc(var(--sb) + 14px); }
   .watch .rail { bottom: calc(var(--sb) + 14px); }
-  .room-mini { position: absolute; left: 12px; right: 12px; bottom: calc(var(--nav) + var(--sb) + 10px); z-index: 25; display: flex; gap: 10px; align-items: center; padding: 9px 9px 9px 14px; border-radius: 16px;
+  .room-mini { position: absolute; left: 12px; right: 12px; bottom: calc(var(--nav) + var(--sb) + 20px); z-index: 25; display: flex; gap: 10px; align-items: center; padding: 9px 9px 9px 14px; border-radius: 16px;
     background: var(--glass); border: 1px solid var(--line2); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
   .room-mini .grow { flex: 1; min-width: 0; font-size: 13px; color: var(--cash); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .room-mini .grow b { color: var(--van); }
@@ -697,9 +781,9 @@
   .dev .inp { font-size: 16px; }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; overflow-wrap: anywhere; }
   /* velour finish: every surface carries the same soft nap, nothing reflects (kept last so it layers over the shorthands above) */
-  .sheet, .tabbar, .row, .stat, .acct, .rolecard, .btn, .chip, .toast, .icard, .bn, .say input, .say .mic, .inp, .x, .backb, .iconb, .pill, .say.open, .dz-form, .unclean, .dz-back { background-image: var(--nap); }
+  .sheet, .tabbar, .row, .stat, .acct, .rolecard, .btn, .chip, .toast, .icard, .bn, .say input, .say .mic, .inp, .x, .backb, .iconb, .pill, .say.open, .dz-form, .unclean, .dz-back, .moneycard, .pf-live { background-image: var(--nap); }
   .btn.gold, .chip.on, .chip.money.on, .rbtn.main > span, .tab-go span { background-image: var(--nap-dark); }
-  .btn:not(.ghost), .chip, .row, .stat { box-shadow: var(--felt); }
+  .btn:not(.ghost), .chip, .row, .stat, .moneycard, .pf-live { box-shadow: var(--felt); }
 </style>
 </head>
 <body>
@@ -707,7 +791,7 @@
   <div class="screens">
     <section class="screen on" id="scr-feed">
       <div class="feed-top">
-        <button class="ftop-ic" id="explorebtn" aria-label="Explore: categories, filters, join by code"></button>
+        <button class="ftop-ic" id="explorebtn" aria-label="Search and explore"></button>
         <div class="ftabs" id="ftabs" role="tablist" aria-label="Feed">
           <button role="tab" data-ftab="following" aria-selected="false">Following</button>
           <button role="tab" data-ftab="foryou" class="on" aria-selected="true">For you</button>
@@ -716,26 +800,35 @@
       </div>
       <div class="feed" id="feed"></div>
       <div class="feed-empty" id="feed-empty" hidden></div>
-      <div id="explore-park" hidden>
-        <div class="explore" id="explore">
+    </section>
+
+    <section class="screen" id="scr-explore" aria-labelledby="ex-h">
+      <div class="page explore" id="explore">
+        <h1 id="ex-h">Explore</h1>
+        <form class="ex-search" id="ex-form" role="search" autocomplete="off">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+          <input id="ex-q" type="search" enterkeyhint="search" maxlength="40" placeholder="Search streamers, cities, titles" aria-label="Search streamers by name, city or title" autocapitalize="none" spellcheck="false" />
+          <button type="button" class="x" id="ex-clear" aria-label="Clear search" hidden></button>
+        </form>
+        <div class="ex-res" id="ex-results" aria-live="polite"></div>
+        <div id="ex-main">
+          <div class="stories" id="stories" role="group" aria-label="Live now"></div>
           <div class="ex-acts">
             <button class="pill fbtn" id="joinbtn" aria-label="Join by code"></button>
             <button class="pill fbtn" id="fbtn" aria-label="Stream filters"></button>
           </div>
           <div class="field"><span>Categories</span><div class="cats" id="cats"></div></div>
+          <h3>Hot dares</h3>
+          <p class="hot-sub">Biggest pots across live streams. Tap one to back it.</p>
+          <div class="list" id="hot-list"></div>
         </div>
       </div>
     </section>
 
-    <section class="screen" id="scr-top">
+    <section class="screen" id="scr-inbox" aria-labelledby="in-h">
       <div class="page">
-        <h1>Dares</h1>
-        <p class="lead">The richest dares across every live stream, and your own backing.</p>
-        <div class="seg" id="top-seg">
-          <button class="on" data-seg="hot">Live now</button>
-          <button data-seg="mine">My backing</button>
-        </div>
-        <div class="list" id="top-list"></div>
+        <h1 id="in-h">Inbox</h1>
+        <div class="empty" id="inbox-soon"></div>
       </div>
     </section>
 
@@ -796,7 +889,11 @@
 
   <button class="unclean" id="unclean" aria-label="Show controls"></button>
   <div class="room-mini" id="room-mini" hidden></div>
-  <nav class="tabbar" id="tabbar"></nav>
+  <div class="push" id="push" role="dialog" aria-modal="true" aria-labelledby="push-title" aria-hidden="true" inert>
+    <div class="push-bar"><button class="navb" id="push-back" aria-label="Back"></button><h2 id="push-title"></h2><span id="push-act"></span></div>
+    <div class="push-body" id="push-body"></div>
+  </div>
+  <nav class="tabbar" id="tabbar" aria-label="Main"></nav>
 
   <div class="sheet-wrap" id="sheet"><div class="sheet-bg" data-close></div><div class="sheet"><div class="grab"></div><div class="sheet-body" id="sheet-body"></div></div></div>
   <div class="sheet-wrap pay-wrap" id="pay"><div class="sheet-bg" data-pclose></div><div class="sheet"><div class="grab"></div><div class="sheet-body pay-body"></div></div></div>
@@ -897,6 +994,11 @@ Object.assign(IC, {
   link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
   eyeoff: '<path d="M3 3l18 18M10.6 6.1c.5-.1.9-.1 1.4-.1 6.4 0 10 6 10 6a17 17 0 0 1-3.2 3.8M6.6 7.6C3.9 9.3 2 12 2 12s3.6 6 10 6c1.6 0 3-.4 4.2-.9M9.9 10a3 3 0 0 0 4.1 4.1"/>',
   chevdown: '<path d="m6 9 6 6 6-6"/>',
+  compass: '<circle cx="12" cy="12" r="8.8"/><path d="m15.6 8.4-2.1 5.1-5.1 2.1 2.1-5.1z"/>',
+  inbox: '<path d="M3.5 13.5h4.8l1.4 2.4h4.6l1.4-2.4h4.8"/><path d="M6 5h12l2.5 8.5v5A1.5 1.5 0 0 1 19 20H5a1.5 1.5 0 0 1-1.5-1.5v-5z"/>',
+  bell: '<path d="M6.2 16.5V11a5.8 5.8 0 0 1 11.6 0v5.5l1.7 1.8H4.5z"/><path d="M10 20.6a2.1 2.1 0 0 0 4 0"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M18.79 10.31 L21.08 10.49 L21.08 13.51 L18.79 13.69 L18.00 15.61 L19.49 17.35 L17.35 19.49 L15.61 18.00 L13.69 18.79 L13.51 21.08 L10.49 21.08 L10.31 18.79 L8.39 18.00 L6.65 19.49 L4.51 17.35 L6.00 15.61 L5.21 13.69 L2.92 13.51 L2.92 10.49 L5.21 10.31 L6.00 8.39 L4.51 6.65 L6.65 4.51 L8.39 6.00 L10.31 5.21 L10.49 2.92 L13.51 2.92 L13.69 5.21 L15.61 6.00 L17.35 4.51 L19.49 6.65 L18.00 8.39Z"/>',
+  pin: '<path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/>',
 });
 
 /* ═════════ integrations: sound kit, analytics, runtime config (each one optional) ═════════ */
@@ -949,7 +1051,7 @@ const defaults = () => ({
   account: null, session: false, kyc: null,
   user: null, cards: [], earnings: 0, xp: 0, verified: false,
   tx: [],
-  backs: [], follows: [], payouts: [],
+  backs: [], follows: [], payouts: [], notify: [],
   role: null, ledger: [], credits: [], courage: [], passLog: [], modQueue: [], blocked: [], reports: [],
   settings: { sound: true, vibro: true, adult: false, demoAudience: true, camPrimed: false, voice: false },
   stats: { proposed: 0, backed: 0, won: 0, refunded: 0, streams: 0, liveSec: 0, daresDone: 0, earnedTotal: 0 },
@@ -962,7 +1064,7 @@ function load() {
     S = saved ? { ...d, ...saved, settings: { ...d.settings, ...saved.settings }, stats: { ...d.stats, ...saved.stats } } : d;
   } catch { S = d; }
   for (const p of S.payouts) if (p.status === 'pending' && Date.now() - p.t > 8000) { p.status = 'paid'; p.paidAt = p.paidAt || p.t + 6000; }
-  for (const k of ['ledger', 'credits', 'courage', 'passLog', 'modQueue', 'blocked', 'reports']) if (!Array.isArray(S[k])) S[k] = [];
+  for (const k of ['ledger', 'credits', 'courage', 'passLog', 'modQueue', 'blocked', 'reports', 'follows', 'notify', 'backs']) if (!Array.isArray(S[k])) S[k] = [];
   if (S.earnings > 0 && !S.ledger.length) { // balances from before the ledger existed
     S.ledger.push({ id: uid(), kind: 'dare', t: Date.now(), text: 'Earlier stream earnings', callers: 0, pot: S.earnings, fee: 0, net: S.earnings, deducted: 0, paidOut: 0, status: 'available', availableAt: Date.now() });
   }
@@ -1249,6 +1351,7 @@ function refreshBalance() {
   const h = heldNow(), c = defCard();
   $$('[data-bal]').forEach((e) => (e.innerHTML = h ? `${ico('lock', 13)}${money(h)} held` : c ? `${ico('card', 14)}•• ${c.last4}` : `${ico('card', 14)}Add card`));
   if (cur === 'wallet') renderWallet();
+  if (cur === 'profile') renderProfile(false);
 }
 
 /* ═════════ card holds: freeze now, charge only if the dare counts ═════════ */
@@ -1324,35 +1427,27 @@ let payCtx = null;
 function openPay(html) { const m = $('#pay'); m.querySelector('.pay-body').innerHTML = html; m.classList.add('open'); sfx('open'); }
 function closePay() { $('#pay').classList.remove('open'); payCtx = null; }
 // Drag down from the grabber, the header, or anywhere once the content is scrolled to the top.
-// A side sheet (the streamer panel) closes with a swipe to the right instead.
 function sheetSwipe(wrap, close) {
-  const sh = wrap.querySelector('.sheet'); let x0 = 0, y0 = 0, t0 = 0, dx = 0, dy = 0, on = false, armed = false, side = false;
+  const sh = wrap.querySelector('.sheet'); let y0 = 0, t0 = 0, dy = 0, on = false, armed = false;
   sh.addEventListener('touchstart', (e) => {
     if (!wrap.classList.contains('open') || e.touches.length !== 1) return;
     const t = e.target, body = sh.querySelector('.sheet-body'), sc = t.closest('.dz-scroll, .dz-form') || body;
-    side = wrap.classList.contains('side');
     if (t.closest('input, textarea, select, .chips, .cats, .ideas')) { armed = false; return; }
-    armed = side || !!t.closest('.grab, .sh-head') || (sc?.scrollTop || 0) <= 0;
-    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = performance.now(); dx = dy = 0; on = false;
+    armed = !!t.closest('.grab, .sh-head') || (sc?.scrollTop || 0) <= 0;
+    y0 = e.touches[0].clientY; t0 = performance.now(); dy = 0; on = false;
   }, { passive: true });
   sh.addEventListener('touchmove', (e) => {
     if (!armed) return;
-    dx = e.touches[0].clientX - x0; dy = e.touches[0].clientY - y0;
-    if (side) {
-      if (!on && Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) { armed = false; return; } // scrolling the panel
-      if (!on && dx > 8) { on = true; sh.classList.add('dragging'); }
-      if (on) { if (e.cancelable) e.preventDefault(); sh.style.transform = `translateX(${Math.max(0, dx)}px)`; }
-      return;
-    }
+    dy = e.touches[0].clientY - y0;
     if (!on && dy > 8) { on = true; sh.classList.add('dragging'); }
     if (on) { if (e.cancelable) e.preventDefault(); sh.style.transform = `translateY(${Math.max(0, dy)}px)`; }
     if (dy < -4 && !on) armed = false; // scrolling up: leave it to the content
   }, { passive: false });
   const end = () => {
     if (!on) { armed = false; return; }
-    const d = side ? dx : dy, v = d / Math.max(1, performance.now() - t0);
+    const v = dy / Math.max(1, performance.now() - t0);
     sh.classList.remove('dragging'); on = armed = false;
-    if (d > Math.min(side ? 120 : 140, (side ? sh.offsetWidth : sh.offsetHeight) * 0.28) || (v > 0.6 && d > 40)) { close(); sfx('tap'); }
+    if (dy > Math.min(140, sh.offsetHeight * 0.28) || (v > 0.6 && dy > 40)) { close(); sfx('tap'); }
     sh.style.transform = '';
   };
   sh.addEventListener('touchend', end); sh.addEventListener('touchcancel', end);
@@ -1682,19 +1777,14 @@ function openFilters() {
     const m = e.target.closest('[data-m]'); if (m) { mx = +m.dataset.m; $$('#fm .chip', body).forEach((c) => c.classList.toggle('on', c === m)); return; }
     const c = e.target.closest('[data-c]'); if (c) { bold = c.dataset.c === '1'; $$('#fc .chip', body).forEach((x) => x.classList.toggle('on', x === c)); return; }
     if (e.target.closest('#f-clear')) { th = []; mx = 0; bold = false; $$('.chip', body).forEach((x) => x.classList.toggle('on', x.dataset.m === '0' || x.dataset.c === '0')); return; }
-    if (e.target.closest('#f-apply')) { feedThemes = th; feedMax = mx; feedBold = bold; closeSheet(); setFeedTab('foryou', true); }
+    if (e.target.closest('#f-apply')) { feedThemes = th; feedMax = mx; feedBold = bold; closeSheet(); if (cur === 'explore') show('feed'); setFeedTab('foryou', true); }
   });
 }
 $('#fbtn').addEventListener('click', openFilters);
 $('#joinbtn').innerHTML = `${ico('code', 17)}Join by code`;
 $('#joinbtn').addEventListener('click', () => openJoin());
 $('#explorebtn').innerHTML = ico('search', 23);
-// Explore is a sheet for now (phase 2 makes it a tab). Its controls live in #explore and move between the sheet and a hidden parking spot.
-function openExplore() {
-  const body = openSheet(`${sheetHead('Explore', 'Pick a category, filter what Takers are doing, or join a real stream by code')}`, { type: 'explore' });
-  body.appendChild($('#explore'));
-}
-$('#explorebtn').addEventListener('click', openExplore);
+$('#explorebtn').addEventListener('click', () => { show('explore'); sfx('tap'); }); // the header search icon opens the Explore tab
 function renderCats() {
   $('#cats').innerHTML = Object.entries(CATS).map(([k, v]) => {
     if (k === 'adult') return `<button class="chip x18 ${feedCat === k ? 'on' : ''}" data-cat="adult">${adultOn() ? '' : ico('lock', 13)}18+</button>`;
@@ -1708,8 +1798,8 @@ $('#cats').addEventListener('click', (e) => {
   if (k === 'adult' && !adultOn()) { requireAdult(() => setCat('adult')); return; }
   setCat(k);
 });
-// Picking a category from Explore shows it in For you and closes the sheet.
-function setCat(k) { feedCat = k; renderCats(); if (sheetCtx?.type === 'explore') closeSheet(); setFeedTab('foryou', true); }
+// Picking a category in Explore shows it in For you.
+function setCat(k) { feedCat = k; renderCats(); if (cur === 'explore') show('feed'); setFeedTab('foryou', true); }
 function setFeedTab(k, rebuild) {
   const changed = feedTab !== k; feedTab = k;
   $$('#ftabs [data-ftab]').forEach((b) => { const on = b.dataset.ftab === k; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
@@ -1857,12 +1947,11 @@ $('#feed-empty').addEventListener('click', (e) => {
 });
 function setFollow(st, on) {
   S.follows = on ? [...new Set([...S.follows, st.id])] : S.follows.filter((x) => x !== st.id); save();
-  $$(`.card[data-id="${CSS.escape(st.id)}"] .follow, #sheet [data-pf="follow"]`).forEach((b) => {
+  $$(`.card[data-id="${CSS.escape(st.id)}"] .follow`).forEach((b) => {
     b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on));
-    if (b.dataset.pf) b.innerHTML = on ? `${ico('check', 17)}Following` : `${ico('plus', 17)}Follow`;
-    else { b.innerHTML = followHTML(on); b.setAttribute('aria-label', `${on ? 'Unfollow' : 'Follow'} ${st.name}`); }
+    b.innerHTML = followHTML(on); b.setAttribute('aria-label', `${on ? 'Unfollow' : 'Follow'} ${st.name}`);
   });
-  $$('#sheet [data-pf="follow"]').forEach((b) => { b.classList.toggle('gold', !on); b.classList.toggle('ghost', on); });
+  if (pushCtx?.kind === 'streamer' && pushCtx.id === st.id) refreshPush();
   if (on) { toast(`You're following ${st.name}`); sfx('tap'); buzz(10); }
 }
 // One handler for the actions on any stream card: the simulated feed and the real room share it.
@@ -1882,7 +1971,7 @@ function onCardAct(st, act, btn) {
   else if (act === 'voice') toggleVoice(st, btn);
   else if (act === 'retry') Room.v?.retry();
   else if (act === 'feed') { leaveRoom(); show('feed'); }
-  else if (act === 'panel') openPanel(st);
+  else if (act === 'panel') openProfile(st);
   else if (act === 'more') openMore(st);
   else if (act === 'chat') { setClean(false); cardOf(st)?.querySelector('.say input')?.focus(); }
   else if (act === 'copy') copyLink(st);
@@ -1890,7 +1979,7 @@ function onCardAct(st, act, btn) {
   else if (act === 'clean') setClean(true);
   else if (act === 'bnx') btn.closest('.bn')?.classList.toggle('full');
 }
-/* ═════════ feed gestures: double-tap like, tap for a clean view, long-press menu, swipe left for the streamer ═════════
+/* ═════════ feed gestures: double-tap like, tap for a clean view, long-press menu, swipe left for the streamer's profile ═════════
    Touch only, so mouse, keyboard and screen readers keep the plain buttons (Like, More, the avatar, the eye button). */
 let cleanOn = false;
 function setClean(on) {
@@ -1910,7 +1999,7 @@ const G = { on: false };
 let tapT = null, lastTap = null;
 function gestureStart(e) {
   G.on = false;
-  if (e.touches.length !== 1 || anySheet()) { clearTimeout(G.lp); return; }
+  if (e.touches.length !== 1 || anySheet() || pushOpen()) { clearTimeout(G.lp); return; }
   const t = e.touches[0], tg = e.target;
   if (t.clientX < 24 || t.clientX > innerWidth - 24) return; // the system's back / forward edge swipes
   if (tg.closest('button, a, input, textarea, select, form, label, .rail, .banner, .rgate, .unmute')) return;
@@ -1930,13 +2019,12 @@ function gestureMove(e) {
   if (Math.hypot(dx, dy) > 8) clearTimeout(G.lp);
   if (!G.axis && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
     G.axis = Math.abs(dx) > 1.3 * Math.abs(dy) && dx < 0 && !gated(G.st) ? 'x' : 'y';
-    if (G.axis === 'x') { openPanel(G.st, true); G.pw = $('#sheet .sheet').offsetWidth || G.W * 0.88; }
+    if (G.axis === 'x') { openProfile(G.st, { drag: true }); G.pw = pushEl.offsetWidth || G.W; }
     else { G.on = false; return; } // vertical: scroll-snap owns the rest of this touch
   }
   if (G.axis === 'x') {
-    const sh = $('#sheet .sheet'); if (!sh) return;
     G.drag = true;
-    requestAnimationFrame(() => { if (G.drag) sh.style.transform = `translateX(${Math.max(0, G.pw + (G.x - G.x0))}px)`; });
+    requestAnimationFrame(() => { if (G.drag) pushEl.style.transform = `translateX(${Math.max(0, G.pw + (G.x - G.x0))}px)`; });
   }
 }
 function gestureEnd(e) {
@@ -1946,9 +2034,9 @@ function gestureEnd(e) {
   if (G.lpDone) { if (e.cancelable) e.preventDefault(); return; } // the menu is open: swallow the click this touch would make
   if (G.axis === 'x') {
     G.drag = false;
-    const sh = $('#sheet .sheet'), dx = G.x - G.x0, v = -dx / Math.max(1, performance.now() - G.t0);
-    sh.classList.remove('dragging'); sh.style.transform = '';
-    if (dx < -0.3 * G.pw || (v > 0.5 && dx < -40)) sfx('open'); else closeSheet();
+    const dx = G.x - G.x0, v = -dx / Math.max(1, performance.now() - G.t0);
+    pushEl.classList.remove('dragging'); pushEl.style.transform = '';
+    if (dx < -0.3 * G.pw || (v > 0.5 && dx < -40)) { commitPush(); sfx('open'); } else closePush();
     return;
   }
   if (G.axis || performance.now() - G.t0 > 350) return;
@@ -1971,18 +2059,138 @@ for (const box of [feedEl, $('#watch')]) {
   box.addEventListener('touchstart', gestureStart, { passive: true });
   box.addEventListener('touchmove', gestureMove, { passive: true });
   box.addEventListener('touchend', gestureEnd, { passive: false });
-  box.addEventListener('touchcancel', () => { clearTimeout(G.lp); if (G.axis === 'x' && G.on) { G.drag = false; const sh = $('#sheet .sheet'); sh.classList.remove('dragging'); sh.style.transform = ''; closeSheet(); } G.on = false; });
+  box.addEventListener('touchcancel', () => { clearTimeout(G.lp); if (G.axis === 'x' && G.on) { G.drag = false; pushEl.classList.remove('dragging'); pushEl.style.transform = ''; closePush(); } G.on = false; });
   box.addEventListener('contextmenu', (e) => { if (e.target.closest('.card') && !e.target.closest('input, textarea')) e.preventDefault(); });
 }
-/* ═════════ streamer panel and the stream menu (temporary sheets; phase 2 adds full profiles) ═════════ */
-function openPanel(st, dragging) {
-  if (!st) return;
-  const r = st.rules || {}, fol = S.follows.includes(st.id), real = isReal(st), who = esc(firstName(st.name));
-  const types = typesOf(st).map((t) => TAGS[t] || t);
-  const body = openSheet(`<div class="sh-head" style="justify-content:flex-end;margin:0"><button class="x" data-close aria-label="Close">${ico('x', 16)}</button></div>
-    <div class="sp-head">${avaHTML(st, 66)}<div class="grow"><h2>${esc(st.name)}</h2><small><span class="live">LIVE</span>${st.cat === 'adult' ? '<span class="adult">18+</span>' : ''}${ico('eye', 13)}${fmt(st.viewers)} · ${esc(real ? `Room ${st.code}` : st.city)}</small></div></div>
-    <div class="sp-title">${esc(st.title)}</div>
-    <div class="sp-acts">${real ? '' : `<button class="btn ${fol ? 'ghost' : 'gold'} ${fol ? 'on' : ''}" data-pf="follow" aria-pressed="${fol}">${ico(fol ? 'check' : 'plus', 17)}${fol ? 'Following' : 'Follow'}</button>`}<button class="btn ${real ? 'gold' : 'green'}" data-pf="dares" ${real ? 'style="grid-column:1/-1"' : ''}>${ico('target', 17)}Dares</button></div>
+/* ═════════ push layer: one overlay that slides in from the right, for profiles and settings ═════════
+   A visible back button (standalone mode has no system back), swipe right from anywhere but the 24 px edges, and the browser's back
+   button when Kurazh is the top page. Inside the artifact iframe it never touches the parent page's history. */
+const pushEl = $('#push'), pushBody = $('#push-body');
+let pushCtx = null, pushHist = false, pushFrom = null;
+const pushOpen = () => pushEl.classList.contains('open');
+const topLevel = (() => { try { return window.top === window; } catch { return false; } })();
+function openPush(ctx, html, { drag = false } = {}) {
+  const was = pushOpen();
+  if (!was) pushFrom = document.activeElement;
+  pushCtx = ctx;
+  $('#push-title').textContent = ctx.title || '';
+  $('#push-act').innerHTML = ctx.act || '';
+  pushBody.innerHTML = html; pushBody.scrollTop = 0;
+  pushEl.inert = false; pushEl.removeAttribute('aria-hidden');
+  if (drag) { pushEl.classList.add('dragging'); pushEl.style.transform = 'translateX(100%)'; }
+  pushEl.classList.add('open');
+  if (!was && topLevel) { try { history.pushState({ kzPush: 1 }, ''); pushHist = true; } catch { /* history unavailable */ } }
+  if (!drag) { if (!was) sfx('open'); commitPush(); }
+}
+// The layer is fully in: the screens behind it leave the focus order and the back button takes focus.
+function commitPush() {
+  if (!pushOpen()) return;
+  $('.screens').inert = true;
+  setTimeout(() => { if (pushOpen() && !pushEl.contains(document.activeElement)) $('#push-back').focus({ preventScroll: true }); }, 60);
+}
+function closePush(fromPop) {
+  if (!pushOpen()) return;
+  pushEl.classList.remove('open', 'dragging'); pushEl.style.transform = '';
+  pushEl.inert = true; pushEl.setAttribute('aria-hidden', 'true'); $('.screens').inert = false;
+  pushCtx = null;
+  if (pushHist) { pushHist = false; if (!fromPop) { try { history.back(); } catch { /* ignore */ } } }
+  const f = pushFrom; pushFrom = null;
+  if (f && f.isConnected && typeof f.focus === 'function' && !f.closest('#push')) f.focus({ preventScroll: true });
+}
+// Re-render what the layer shows, keeping the scroll position.
+function refreshPush() {
+  if (!pushCtx) return;
+  const y = pushBody.scrollTop;
+  if (pushCtx.kind === 'streamer') { const st = streamOf(pushCtx.id); if (st) pushBody.innerHTML = profileHTML(st); }
+  else if (pushCtx.kind === 'settings') pushBody.innerHTML = settingsHTML();
+  pushBody.scrollTop = y;
+}
+window.addEventListener('popstate', () => { if (pushOpen()) closePush(true); });
+$('#push-back').addEventListener('click', () => { closePush(); sfx('tap'); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && pushOpen() && !anySheet()) closePush(); });
+// swipe right anywhere on the layer (except the screen edges) to go back
+const PG = { on: false };
+pushEl.addEventListener('touchstart', (e) => {
+  PG.on = false;
+  if (e.touches.length !== 1 || anySheet() || !pushOpen()) return;
+  const t = e.touches[0];
+  if (t.clientX < 24 || t.clientX > innerWidth - 24) return;
+  if (e.target.closest('input, textarea, select, .stories')) return;
+  Object.assign(PG, { on: true, x0: t.clientX, y0: t.clientY, x: t.clientX, t0: performance.now(), axis: null, W: pushEl.offsetWidth || innerWidth });
+}, { passive: true });
+pushEl.addEventListener('touchmove', (e) => {
+  if (!PG.on) return;
+  const t = e.touches[0], dx = t.clientX - PG.x0, dy = t.clientY - PG.y0; PG.x = t.clientX;
+  if (!PG.axis) {
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+    PG.axis = dx > 0 && Math.abs(dx) > 1.3 * Math.abs(dy) ? 'x' : 'y';
+    if (PG.axis === 'y') { PG.on = false; return; }
+    pushEl.classList.add('dragging');
+  }
+  if (e.cancelable) e.preventDefault();
+  requestAnimationFrame(() => { if (PG.on && PG.axis === 'x') pushEl.style.transform = `translateX(${Math.max(0, PG.x - PG.x0)}px)`; });
+}, { passive: false });
+function pushDragEnd() {
+  if (!PG.on) return;
+  PG.on = false; if (PG.axis !== 'x') return;
+  const dx = PG.x - PG.x0, v = dx / Math.max(1, performance.now() - PG.t0);
+  pushEl.classList.remove('dragging'); pushEl.style.transform = '';
+  if (dx > 0.3 * PG.W || (v > 0.5 && dx > 40)) { closePush(); sfx('tap'); }
+}
+pushEl.addEventListener('touchend', pushDragEnd);
+pushEl.addEventListener('touchcancel', pushDragEnd);
+pushEl.addEventListener('click', (e) => {
+  if (!pushCtx) return;
+  if (pushCtx.kind === 'settings') { onMeClick(e); return; }
+  const b = e.target.closest('[data-pf]'); if (!b || b.disabled) return;
+  const st = streamOf(pushCtx.id); if (!st) return;
+  const pf = b.dataset.pf;
+  if (pf === 'follow') setFollow(st, !S.follows.includes(st.id));
+  else if (pf === 'bell') {
+    const on = !S.notify.includes(st.id);
+    S.notify = on ? [...new Set([...S.notify, st.id])] : S.notify.filter((x) => x !== st.id); save();
+    refreshPush(); sfx('tap'); buzz(10);
+    toast(on ? `Live alerts on for ${firstName(st.name)}` : `Live alerts off for ${firstName(st.name)}`);
+    track('live_alert', { on });
+  } else if (pf === 'watch') { closePush(); if (st.real) showWatch(); else goToStream(st.id); }
+  else if (pf === 'dares') { closePush(); if (st.real) showWatch(); else goToStream(st.id, true); }
+});
+
+/* ═════════ streamer profile ═════════
+   Followers, Following, Dares done and past streams are demo numbers, drawn from a fixed seed per streamer so they stay put. */
+const seeded = (key) => { let a = hash(key) || 1; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
+const compact = (n) => (n >= 1e6 ? `${(n / 1e6).toFixed(1).replace(/\.0$/, '')}M` : n >= 1e4 ? `${Math.round(n / 1e3)}K` : n >= 1e3 ? `${(n / 1e3).toFixed(1).replace(/\.0$/, '')}K` : String(n));
+const PAST = {
+  irl: ['Night market walk', 'Riverside at dusk', 'Old town, your route', 'Rain walk with the chat', 'Sunday flea market', 'Bridges after dark', 'Coffee crawl', 'First snow in the park', 'Trams and backstreets', 'Harbour at sunrise'],
+  sport: ['Leg day, your rules', 'Plank ladder', 'Hoops at the court', 'Morning run, 5 km', 'Push-up pyramid', 'Mobility hour', 'Track day recap', 'Pit-lane questions', 'Jump-rope marathon', 'Core circuit'],
+  art: ['Portraits in 2 minutes', 'Left hand only', 'Clay mascots', 'Ink and coffee', 'Draw the chat', 'Tiny maps', 'Comic in an hour', 'Speed sketch duel', 'Watercolour night', 'Posters on request'],
+  food: ['Fridge roulette', 'Omelette speedrun', 'Blindfold sandwich', 'Spice guessing', 'Soup from scratch', 'Street food review', 'Pancake towers', 'Five-ingredient dinner', 'Lemon challenge', 'Dumplings by hand'],
+  music: ['Requests till midnight', 'Opera versions', 'Water-glass tunes', 'Chat anthem live', 'Acoustic hour', 'Rap the chat', 'Covers in one take', 'Lullabies, loud', 'Duet with the chat', 'Song in 10 minutes'],
+  talk: ['Ask me anything', 'Three-question jobs', 'Story in P', 'Sell me this pen', 'Accents hour', 'Hot takes, cold tea', 'Road stories', 'Quiz with the chat', 'Late questions', 'Debate night'],
+  adult: ['Evening looks', 'Slow dance requests', 'Candid questions', 'Film heroine night', 'Poems in a whisper', 'Tango hour', 'Outfit picks', 'Boldest dates', 'Late-night talk', 'Compliments hour'],
+};
+function demoOf(st) {
+  const r = seeded('kurazh:' + st.id), mult = st.mult || 1, titles = [...(PAST[st.cat] || PAST.talk)], glow = st.glow || ['#b8975a', '#c8b69a', '#3c5c49'];
+  const past = Array.from({ length: 9 }, (_, i) => {
+    const title = titles.splice(Math.floor(r() * titles.length), 1)[0] || st.title;
+    return { title, pot: Math.round((24 + r() * 560) * mult) * U, days: 1 + i * 3 + Math.floor(r() * 3), x: Math.round(15 + r() * 70), y: Math.round(12 + r() * 50), g: glow[Math.floor(r() * glow.length)] };
+  });
+  const base = STREAMERS.find((m) => m.id === st.id)?.viewers || 300 + (hash(st.id) % 900); // never the live viewer count, which moves
+  return { followers: Math.round(base * (3 + r() * 9)), following: 8 + Math.floor(r() * 320), dares: 30 + Math.floor(r() * 900), past };
+}
+const palOf = (st) => [/^#[0-9a-f]{3,8}$/i.test(st?.pal?.[0] || '') ? st.pal[0] : '#1e221d', /^#[0-9a-f]{3,8}$/i.test(st?.pal?.[1] || '') ? st.pal[1] : '#070807'];
+function profileHTML(st) {
+  const real = isReal(st), fol = S.follows.includes(st.id), bell = S.notify.includes(st.id), who = esc(firstName(st.name)), dm = demoOf(st), r = st.rules || {};
+  const types = typesOf(st).map((t) => TAGS[t] || t), top = st.active?.d || topDare(st), [p0, p1] = palOf(st);
+  const tile = (t) => `<div class="pf-tile" style="background:radial-gradient(circle at ${t.x}% ${t.y}%, ${hexA(t.g, 0.55)}, transparent 55%),radial-gradient(circle at ${100 - t.x}% 88%, ${hexA(t.g, 0.22)}, transparent 50%),linear-gradient(160deg,${p0},${p1})"><span class="tp">${money(t.pot)}</span><span class="tt">${esc(t.title)}</span><span class="tm">${t.days} d ago · ${money(t.pot)} pot</span></div>`;
+  return `<div class="pf-head"><div class="pf-ava on">${avaHTML(st)}<span class="live">LIVE</span></div>
+      <div class="pf-id"><h1>${esc(st.name)}</h1><small>${st.cat === 'adult' ? '<span class="adult">18+</span>' : ''}${ico('pin', 13)}${esc(real ? `Room ${st.code}` : st.city)}${CATS[st.cat] && st.cat !== 'adult' ? ` · ${esc(CATS[st.cat])}` : ''}</small><small><span class="gold">${courageTxt(st.courage)}</span></small></div></div>
+    <div class="pf-counts"><div><b data-k="fol">${compact(dm.followers + (fol ? 1 : 0))}</b><span>Followers</span></div><div><b>${compact(dm.following)}</b><span>Following</span></div><div><b>${compact(dm.dares)}</b><span>Dares done</span></div></div>
+    <span class="pf-demo">Demo counts</span>
+    <div class="pf-acts ${real ? 'solo' : ''}">${real ? '' : `<button class="btn ${fol ? 'ghost on' : 'gold'}" data-pf="follow" aria-pressed="${fol}">${ico(fol ? 'check' : 'plus', 17)}${fol ? 'Following' : 'Follow'}</button>`}
+      <button class="btn ghost" disabled aria-label="Message ${esc(st.name)}, coming soon">${ico('chat', 17)}Message<small>soon</small></button>
+      ${real ? '' : `<button class="btn ghost pf-bell ${bell ? 'on' : ''}" data-pf="bell" aria-pressed="${bell}" aria-label="Tell me when ${who} goes live">${ico('bell', 20)}</button>`}</div>
+    <button class="pf-live" data-pf="watch"><span class="live">LIVE</span><span class="grow"><b>${esc(st.title)}</b><small>Live now · ${fmt(st.viewers)} watching${top ? ` · top dare ${money(top.pool)}` : ''}</small></span>${ico('chev', 18)}</button>
     <div class="sp-tags">${tagsFull(st)}</div>
     <h3>${who}’s rules</h3>
     <div class="facts">
@@ -1992,16 +2200,16 @@ function openPanel(st, dragging) {
       <div>${ico('undo', 18)}<span><b>${passesLeftOf(st)} of ${r.freePasses ?? 3}</b> free passes left this stream. After that a pass gives backers Kurazh credits.</span></div>
       <div>${ico('shield', 18)}<span><b>${courageTxt(st.courage)}</b> · how often ${who} takes on the dares that reach the top over 30 days</span></div>
     </div>
-    <p class="muted small" style="margin-top:14px">Swipe right or tap the cross to go back to the stream.</p>`, { type: 'panel', id: st.id, side: true });
-  body.addEventListener('click', (e) => {
-    const b = e.target.closest('[data-pf]'); if (!b) return;
-    const s = streamOf(st.id) || st;
-    if (b.dataset.pf === 'follow') setFollow(s, !S.follows.includes(s.id));
-    else if (b.dataset.pf === 'dares') openDares(s);
-  });
-  if (dragging) { const sh = $('#sheet .sheet'); sh.classList.add('dragging'); sh.style.transform = 'translateX(100%)'; }
-  track('panel_open', { via: dragging ? 'swipe' : 'tap' });
+    <div class="pf-sec"><h3>Past streams</h3><span class="pf-demo">Demo</span></div>
+    ${real ? `<div class="empty" style="padding:24px 12px"><div class="ring">${ico('feed', 24)}</div>No past streams on this phone yet.<div class="wbtns one"><button class="btn gold" data-pf="watch">Back to the stream</button></div></div>`
+      : `<div class="pf-grid">${dm.past.map(tile).join('')}</div>`}`;
 }
+function openProfile(st, { drag = false } = {}) {
+  if (!st) return;
+  openPush({ kind: 'streamer', id: st.id, title: st.name }, profileHTML(st), { drag });
+  track('profile_open', { via: drag ? 'swipe' : 'tap', real: isReal(st) });
+}
+/* ═════════ the stream menu ═════════ */
 const linkOf = (st) => (st.real ? watchUrl(st.code) : location.origin + location.pathname);
 async function copyLink(st) {
   try { await navigator.clipboard.writeText(linkOf(st)); toast('Link copied'); sfx('tap'); }
@@ -2013,7 +2221,7 @@ function openMore(st) {
   const body = openSheet(`${sheetHead(esc(st.name), real ? `Room ${esc(st.code)}` : 'Stream options')}
     <div class="menu" style="margin-top:14px">
       ${real ? '' : `<button data-act="voice" class="${on ? 'vo' : ''}" aria-pressed="${on}" aria-label="${on ? 'Turn the Taker’s voice off' : 'Hear the Taker talk'}"><span data-ic>${ico(on ? 'voice' : 'voiceoff', 20)}</span><span class="grow">Taker voice<small>${on ? 'On · replies are read aloud' : 'Off · hear the Taker talk back'}</small></span><i class="switch ${on ? 'on' : ''}"></i></button>`}
-      <button data-act="panel">${ico('user', 20)}<span class="grow">About ${esc(firstName(st.name))}<small>Rules, Courage and free passes</small></span>${ico('chev', 16)}</button>
+      <button data-act="panel">${ico('user', 20)}<span class="grow">${esc(firstName(st.name))}’s profile<small>Rules, Courage, free passes and past streams</small></span>${ico('chev', 16)}</button>
       <button data-act="clean">${ico('eyeoff', 20)}<span class="grow">Clean view<small>Hide the buttons and chat. Tap the video to bring them back</small></span></button>
       <button data-act="copy">${ico('link', 20)}<span class="grow">Copy link</span></button>
       <button data-act="join">${ico('code', 20)}<span class="grow">Join by code<small>Watch a real stream from another phone</small></span>${ico('chev', 16)}</button>
@@ -2022,7 +2230,7 @@ function openMore(st) {
   body.addEventListener('click', (e) => {
     const b = e.target.closest('[data-act]'); if (!b) return;
     const s = streamOf(st.id) || st, act = b.dataset.act;
-    if (!['panel', 'report', 'join'].includes(act)) closeSheet(); // those open their own sheet
+    if (!['report', 'join'].includes(act)) closeSheet(); // those open their own sheet
     onCardAct(s, act, b);
   });
 }
@@ -2214,13 +2422,11 @@ function openJoin(prefill = '') {
 /* ═════════ sheets ═════════ */
 let sheetCtx = null;
 function openSheet(html, ctx = {}) {
-  const wrap = $('#sheet'), old = $('#sheet-body'), ex = $('#explore');
-  if (ex && old.contains(ex)) $('#explore-park').appendChild(ex); // Explore's controls outlive its sheet
+  const wrap = $('#sheet'), old = $('#sheet-body');
   const body = old.cloneNode(false); // a fresh node, without old listeners
   body.className = 'sheet-body';
   old.replaceWith(body); body.innerHTML = html;
-  const side = !!ctx.side, sh = wrap.querySelector('.sheet');
-  if (wrap.classList.contains('side') !== side) { wrap.classList.add('notrans'); wrap.classList.toggle('side', side); void sh.offsetWidth; wrap.classList.remove('notrans'); }
+  const sh = wrap.querySelector('.sheet');
   wrap.classList.toggle('dz-on', ctx.type === 'dares'); wrap.classList.remove('dz-compose');
   sh.classList.remove('dragging'); sh.style.transform = '';
   if (!wrap.classList.contains('open')) sfx('open');
@@ -2474,12 +2680,40 @@ function openWithdraw() {
   });
 }
 
-/* ═════════ top dares tab ═════════ */
-let topSeg = 'hot', topSig = '';
-$('#top-seg').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-seg]'); if (!b) return;
-  topSeg = b.dataset.seg; $$('#top-seg button').forEach((x) => x.classList.toggle('on', x === b)); renderTop(true);
-});
+/* ═════════ Explore: search, live avatars, categories, filters, join by code, hot dares ═════════ */
+const RECENT_KEY = 'kurazh.recent.v1'; // recent searches: a per-device convenience, kept out of S
+let exQ = '', hotSig = '';
+const recentGet = () => { try { const v = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); return Array.isArray(v) ? v.filter((x) => typeof x === 'string' && x).slice(0, 8) : []; } catch { return []; } };
+function recentSave(q) {
+  q = String(q || '').trim().replace(/\s+/g, ' ').slice(0, 40); if (q.length < 2) return;
+  const list = [q, ...recentGet().filter((x) => x.toLowerCase() !== q.toLowerCase())].slice(0, 8);
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch { /* private mode */ }
+}
+const visibleStreams = () => streams.filter((s) => s.cat !== 'adult' || adultOn());
+const byFollowThenViewers = (a, b) => (S.follows.includes(b.id) - S.follows.includes(a.id)) || b.viewers - a.viewers;
+function searchStreams(q) {
+  const n = q.trim().toLowerCase(); if (!n) return [];
+  return visibleStreams().filter((s) => [s.name, s.city, s.title].some((f) => String(f || '').toLowerCase().includes(n))).sort(byFollowThenViewers);
+}
+function renderSearch() {
+  const box = $('#ex-results'), q = exQ.trim();
+  $('#ex-clear').hidden = !exQ; $('#ex-main').hidden = !!q;
+  if (!q) {
+    const rec = recentGet();
+    box.innerHTML = rec.length ? `<div class="ex-recent"><div class="ex-rhead"><span class="tag">Recent searches</span><button class="linkb" data-rclear>Clear</button></div>
+      <div class="chips">${rec.map((r) => `<button class="chip" data-rq="${esc(r)}">${ico('clock', 13)}${esc(r)}</button>`).join('')}</div></div>` : '';
+    return;
+  }
+  const hits = searchStreams(q);
+  box.innerHTML = hits.length ? `<h3>Streamers · ${hits.length}</h3><div class="list">${hits.map((st) => `<button class="row" data-prof="${esc(st.id)}">${avaHTML(st, 44)}<div class="grow"><div class="t">${esc(st.name)}</div>
+      <div class="m"><span class="live">LIVE</span>${st.cat === 'adult' ? '<span class="adult" style="height:19px">18+</span>' : ''}${esc(st.city)} · ${fmt(st.viewers)} watching</div><div class="m">${esc(st.title)}</div></div>${ico('chev', 16)}</button>`).join('')}</div>`
+    : `<div class="empty"><div class="ring">${ico('search', 24)}</div>No streamer matches “${esc(q)}”. Try a name, a city or what they’re doing.<div class="wbtns"><button class="btn ghost" data-exclear>Clear search</button><button class="btn ghost" data-exjoin>${ico('code', 16)}Join by code</button></div></div>`;
+}
+function renderStories() {
+  const live = [...visibleStreams()].sort(byFollowThenViewers);
+  const room = Room.R && Room.v ? `<button class="story" data-story="room" aria-label="Back to ${esc(Room.R.name || 'the room')}, live"><span class="story-r"><i style="background:var(--green)">${esc(String(Room.R.name || '?')[0].toUpperCase())}</i><span class="live">LIVE</span></span><span class="nm">${esc(firstName(Room.R.name || 'Room'))}</span></button>` : '';
+  $('#stories').innerHTML = room + live.map((st) => { const [p0, p1] = palOf(st), fol = S.follows.includes(st.id); return `<button class="story" data-story="${esc(st.id)}" aria-label="Watch ${esc(st.name)} live${fol ? ', followed' : ''}"><span class="story-r ${fol ? 'fol' : ''}"><i style="background:linear-gradient(150deg,${p0},${p1})">${esc(String(st.name)[0].toUpperCase())}</i><span class="live">LIVE</span></span><span class="nm">${esc(firstName(st.name))}</span></button>`; }).join('');
+}
 function hotItems() {
   const items = [];
   for (const st of streams) {
@@ -2487,39 +2721,42 @@ function hotItems() {
     if (st.active && st.active.phase !== 'result') items.push({ st, d: st.active.d, phase: st.active.phase, t: st.active.t });
     for (const d of st.dares) items.push({ st, d, phase: 'queue' });
   }
-  return items.sort((a, b) => b.d.pool - a.d.pool).slice(0, 20);
+  return items.sort((a, b) => b.d.pool - a.d.pool).slice(0, 12);
 }
-function renderTop(force) {
-  const list = $('#top-list');
-  if (topSeg === 'mine') {
-    const msig = 'm' + S.backs.map((b) => b.status + b.amount).join();
-    if (!force && msig === topSig) return;
-    topSig = msig;
-    list.innerHTML = S.backs.length ? S.backs.map((b) => {
-      const [cls, lbl] = { held: ['go', 'HELD'], captured: ['ok', 'CHARGED'], released: ['back', 'RELEASED'] }[b.status] || ['q', b.status];
-      return `<button class="row" data-go="${b.streamId}"><div class="grow"><div class="t">${esc(b.text)}</div><div class="m"><span class="st ${cls}">${lbl}</span>${b.mine ? '<span class="st mine">YOURS</span>' : ''}${esc(b.streamer)} · ${ago(b.t)}</div></div><div class="amt money">${money(b.amount)}</div></button>`;
-    }).join('') : `<div class="empty"><div class="ring">${ico('target', 24)}</div>You haven't backed any dares yet.<br>Open a stream and tap Dares.</div>`;
-    return;
-  }
-  const items = hotItems(), sig = items.map((i) => i.d.id + i.phase).join();
-  if (force || sig !== topSig) {
-    topSig = sig;
-    list.innerHTML = items.map(({ st, d, phase, t }) => `<button class="row" data-go="${st.id}" data-d="${d.id}">
+function renderHot(force) {
+  const list = $('#hot-list'), items = hotItems(), sig = items.map((i) => i.d.id + i.phase).join();
+  if (force || sig !== hotSig) {
+    hotSig = sig;
+    list.innerHTML = items.length ? items.map(({ st, d, phase, t }) => `<button class="row" data-go="${esc(st.id)}" data-d="${esc(d.id)}">
       ${avaHTML(st, 38)}
       <div class="grow"><div class="t">${esc(d.text)}</div><div class="m">${phase === 'doing' ? `<span class="st go" data-k="t">${mmss(t)}</span>` : phase === 'voting' ? '<span class="st vote">VOTING</span>' : '<span class="st q">QUEUED</span>'}${st.cat === 'adult' ? '<span class="adult" style="height:19px">18+</span>' : ''}${d.mine ? '<span class="st mine">YOURS</span>' : ''}${esc(st.name)}</div></div>
-      <div class="amt money" data-k="p">${money(d.pool)}</div></button>`).join('');
-  } else {
-    for (const { st, d, phase } of items) {
-      const r = list.querySelector(`[data-d="${d.id}"]`); if (!r) continue;
-      r.querySelector('[data-k="p"]').textContent = money(d.pool);
-      const t = r.querySelector('[data-k="t"]'); if (t && phase === 'doing') t.textContent = mmss(st.active.t);
-    }
+      <div class="amt money" data-k="p">${money(d.pool)}</div></button>`).join('')
+      : `<div class="empty"><div class="ring">${ico('target', 24)}</div>No dares in any queue right now. Be the first to call one.<div class="wbtns one"><button class="btn gold" data-tab="live">Find a stream</button></div></div>`;
+    return;
+  }
+  for (const { st, d, phase } of items) {
+    const r = list.querySelector(`[data-d="${CSS.escape(d.id)}"]`); if (!r) continue;
+    r.querySelector('[data-k="p"]').textContent = money(d.pool);
+    const t = r.querySelector('[data-k="t"]'); if (t && phase === 'doing') t.textContent = mmss(st.active.t);
   }
 }
-$('#top-list').addEventListener('click', (e) => {
-  const r = e.target.closest('[data-go]'); if (!r) return;
-  goToStream(r.dataset.go, topSeg === 'hot');
+function renderExplore() { renderStories(); renderSearch(); renderHot(true); }
+$('#ex-clear').innerHTML = ico('x', 16);
+$('#ex-q').addEventListener('input', (e) => { exQ = e.target.value; renderSearch(); });
+$('#ex-form').addEventListener('submit', (e) => { e.preventDefault(); recentSave(exQ); $('#ex-q').blur(); });
+$('#ex-clear').addEventListener('click', () => { exQ = ''; $('#ex-q').value = ''; renderSearch(); $('#ex-q').focus(); });
+$('#scr-explore').addEventListener('click', (e) => {
+  const rq = e.target.closest('[data-rq]'); if (rq) { exQ = rq.dataset.rq; $('#ex-q').value = exQ; recentSave(exQ); renderSearch(); sfx('tap'); return; }
+  if (e.target.closest('[data-rclear]')) { try { localStorage.removeItem(RECENT_KEY); } catch { /* ignore */ } renderSearch(); return; }
+  if (e.target.closest('[data-exclear]')) { exQ = ''; $('#ex-q').value = ''; renderSearch(); return; }
+  if (e.target.closest('[data-exjoin]')) { openJoin(); return; }
+  const pr = e.target.closest('[data-prof]'); if (pr) { recentSave(exQ); openProfile(byId(pr.dataset.prof)); return; }
+  const sto = e.target.closest('[data-story]'); if (sto) { if (sto.dataset.story === 'room') showWatch(); else goToStream(sto.dataset.story); sfx('tap'); return; }
+  const r = e.target.closest('[data-go]'); if (r) goToStream(r.dataset.go, true);
 });
+$('#inbox-soon').innerHTML = `<div class="ring">${ico('inbox', 24)}</div><h2 style="color:var(--van)">Coming soon</h2>
+  <span>Your money chat, a thread for every dare you back and the things you missed will land here.</span>
+  <div class="wbtns"><button class="btn ghost" data-tab="wallet">${ico('wallet', 17)}Open Wallet</button><button class="btn gold" data-tab="live">Find a stream</button></div>`;
 function goToStream(id, sheet) {
   if (String(id).startsWith('room:')) { if (Room.R?.id === id) showWatch(); else toast('That live room has ended or you left it'); return; }
   const st = byId(id); if (!st) return;
@@ -2542,7 +2779,7 @@ const LEDGER_ST = { pending: ['go', 'PENDING'], available: ['ok', 'AVAILABLE'], 
 let walletSeg = null;
 function renderWallet() {
   const seg = walletSeg || (S.role === 'taker' ? 'earn' : 'money');
-  const head = `<h1>Wallet</h1><div class="seg" id="w-seg"><button class="${seg === 'money' ? 'on' : ''}" data-ws="money">Your money</button><button class="${seg === 'earn' ? 'on' : ''}" data-ws="earn">Earnings</button></div>`;
+  const head = `<div class="pg-head"><button class="navb" data-wback aria-label="Back">${ico('back', 24)}</button><h1>Wallet</h1></div><div class="seg" id="w-seg"><button class="${seg === 'money' ? 'on' : ''}" data-ws="money">Your money</button><button class="${seg === 'earn' ? 'on' : ''}" data-ws="earn">Earnings</button></div>`;
   $('#wallet').innerHTML = head + (seg === 'money' ? moneyView() : earnView());
 }
 function moneyView() {
@@ -2582,6 +2819,7 @@ function earnView() {
     ${S.payouts.length ? `<h3>Payouts</h3><div class="list">${S.payouts.map((p) => `<button class="row" data-rc="payout:${p.id}">${ico('card', 20)}<div class="grow"><div class="t">${money2(p.amount)} to ${esc(p.card || 'card')}</div><div class="m">${ago(p.t)} · no fee · 1–2 business days</div></div><span class="st ${p.status === 'paid' ? 'ok' : 'q'}">${p.status === 'paid' ? 'PAID' : 'PROCESSING'}</span></button>`).join('')}</div>` : ''}`;
 }
 $('#wallet').addEventListener('click', (e) => {
+  if (e.target.closest('[data-wback]')) { show(walletFrom || 'profile'); sfx('tap'); return; }
   const s = e.target.closest('[data-ws]'); if (s) { walletSeg = s.dataset.ws; renderWallet(); sfx('tap'); return; }
   const rc = e.target.closest('[data-rc]'); if (rc) { const [k, id] = rc.dataset.rc.split(':'); openReceipt(k, id); return; }
   const b = e.target.closest('[data-w]'); if (!b) return;
@@ -2634,64 +2872,95 @@ function openReceipt(kind, id) {
     <button class="linkb" data-support="payments" style="margin-top:14px">${ico('flag', 14)} Report a problem</button>`, { type: 'receipt' });
 }
 
-/* ═════════ profile ═════════ */
+/* ═════════ own profile: the public-style header, the money card and your dares; settings behind the gear ═════════ */
 function avatarHTML(size = 66) {
   const a = S.account, u = S.user || { nick: 'guest' };
   return `<div class="ava" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.46)}px">${a?.picture ? `<img src="${esc(a.picture)}" alt="" referrerpolicy="no-referrer" />` : esc(u.nick[0].toUpperCase())}</div>`;
 }
-function renderProfile() {
-  const u = S.user || { nick: 'guest' }, l = level(S.xp), lo = lvlFloor(l), hi = lvlFloor(l + 1);
-  const st = S.stats, role = S.role || 'caller', a = S.account;
-  $('#profile').innerHTML = `<h1>Profile</h1>
-    <div class="me-head">${avatarHTML()}
-      <div><h2>${esc(u.nick)}</h2><div class="muted small">Level ${l} · ${S.xp} XP · ${courageTxt(myCourage())}</div>
+// A dare you wrote or backed, with where it stands now.
+function actTile(b) {
+  const s = streamOf(b.streamId), [p0, p1] = palOf(s);
+  let [cls, lbl] = { captured: ['ok', 'CHARGED'], released: ['back', 'RELEASED'] }[b.status] || ['go', 'HELD'];
+  if (b.status === 'held' && s) {
+    const a = s.active;
+    if (a?.d.id === b.dareId) [cls, lbl] = a.phase === 'voting' ? ['vote', 'VOTING'] : a.phase === 'doing' ? ['go', 'TAKING'] : ['go', 'HELD'];
+    else if (s.dares?.some((d) => d.id === b.dareId)) [cls, lbl] = ['q', 'QUEUED'];
+  }
+  return `<button class="pf-tile act" data-rc="hold:${esc(b.id)}" style="background:linear-gradient(160deg,${p0},${p1})" aria-label="${b.mine ? 'You wrote' : 'You backed'} “${esc(b.text)}” for ${money(b.amount)} on ${esc(b.streamer)}: ${lbl.toLowerCase()}. Open the receipt">
+    <span class="st ${cls}">${lbl}</span><span class="tt">“${esc(b.text)}”</span><span class="tm"><b>${money(b.amount)}</b> · ${b.mine ? 'Wrote' : 'Backed'} · ${esc(firstName(b.streamer))}</span></button>`;
+}
+let profHTML = '';
+function renderProfile(force = true) {
+  const u = S.user || { nick: 'guest' }, st = S.stats, l = level(S.xp);
+  const held = heldNow(), cb = creditBal(), ea = earnAvail(), ep = earnPending();
+  const html = `<div class="pr-top"><span class="tag">Your profile</span><button class="navb" data-p="settings" aria-label="Settings">${ico('gear', 23)}</button></div>
+    <div class="pf-head"><div class="pf-ava">${avatarHTML(82)}</div>
+      <div class="pf-id"><h1>${esc(u.nick)}</h1><small>Level ${l} · ${courageTxt(myCourage())} · ${S.role === 'taker' ? 'Taker' : 'Caller'} tonight</small>
       ${S.verified ? `<span class="badge ok">${ico('shield', 13)}Identity verified</span>` : '<span class="badge no">Identity not verified</span>'}</div></div>
-    <div class="lvl"><div class="bn-row small"><span>To level ${l + 1}</span><span>${hi - S.xp} XP</span></div><div class="bar"><i style="width:${((S.xp - lo) / (hi - lo)) * 100}%"></i></div></div>
-    <h3>Tonight you’re a</h3>
-    <div class="seg" id="role-seg" style="margin-top:0"><button class="${role === 'caller' ? 'on' : ''}" data-role="caller">Caller</button><button class="${role === 'taker' ? 'on' : ''}" data-role="taker">Taker</button></div>
-    <p class="muted small" style="margin-top:-8px">${role === 'caller' ? 'Write the dare. Back it. Vote.' : 'Go live. Take the dare. Get paid.'} Switch anytime. Call it or do it.</p>
-    <h3>As a Caller</h3>
-    <div class="grid2"><div class="stat"><b>${st.proposed}</b><span>dares written</span></div><div class="stat"><b>${st.backed}</b><span>times backed</span></div>
-      <div class="stat"><b>${st.won}</b><span>counted with your money</span></div><div class="stat"><b class="gold">${money2(creditBal())}</b><span>Kurazh credits</span></div></div>
-    <h3>As a Taker</h3>
-    <div class="grid2"><div class="stat"><b class="gold">${myCourage()}</b><span>Courage · 30 days${S.courage.length ? ` · ${S.courage.length} decisions` : ' · starts at 80'}</span></div><div class="stat"><b>${st.daresDone}</b><span>dares completed</span></div>
-      <div class="stat"><b>${st.streams}</b><span>streams · ${Math.round(st.liveSec / 60)} min live</span></div><div class="stat"><b class="gold">${money2(st.earnedTotal)}</b><span>earned in total</span></div></div>
-    <h3>Account</h3>
+    <div class="pf-counts"><div><b>${S.follows.length}</b><span>Following</span></div><div><b>${st.backed}</b><span>Times backed</span></div><div><b>${st.daresDone}</b><span>Dares done</span></div></div>
+    <button class="moneycard" data-p="wallet"><span class="mc-head"><span>Your money</span>${ico('lock', 15)}</span>
+      <span class="mc3"><span><b>${money2(held)}</b><small>On hold</small></span><span><b>${money2(cb)}</b><small>Credits</small></span><span><b>${money2(ea)}</b><small>${ep > 0 ? `Earnings · ${money2(ep)} pending` : 'Earnings'}</small></span></span>
+      <span class="mc-go">Open Wallet${ico('chev', 16)}</span></button>
+    <div class="pf-sec"><h3>Your dares</h3><span class="pf-demo">Written or backed</span></div>
+    ${S.backs.length ? `<div class="pf-grid">${S.backs.slice(0, 30).map(actTile).join('')}</div>`
+      : `<div class="empty" style="padding:26px 12px"><div class="ring">${ico('target', 24)}</div>No dares yet. Open a stream, write a dare and back it. It shows up here with its status.<div class="wbtns"><button class="btn gold" data-tab="live">Find a stream</button><button class="btn ghost" data-tab="explore">Hot dares</button></div></div>`}
+    <p class="legal">${legalLinks()}</p>`;
+  if (!force && html === profHTML) return; // the 1 s tick only touches the page when something changed
+  profHTML = html; $('#profile').innerHTML = html;
+}
+const switchHTML = (on) => `<i class="switch ${on ? 'on' : ''}" aria-hidden="true"></i>`;
+function settingsHTML() {
+  const a = S.account, u = S.user || { nick: 'guest' }, role = S.role || 'caller', vib = typeof navigator.vibrate === 'function';
+  return `<h3 style="margin-top:8px">Account and security</h3>
     <div class="menu">
-      <button data-p="security">${ico('lock', 20)}<span class="grow">Security<small>${a?.method === 'google' ? 'Signed in with Google' : 'Email and password'}${a?.twoStep ? ' · two-step on' : ' · add your phone for two-step'}${S.verified ? ' · identity verified' : ''}</small></span>${ico('chev', 16)}</button>
-      ${S.verified ? '' : `<button data-p="verify">${ico('idcard', 20)}<span class="grow">Verify identity<small>Needed for money, going live and 18+</small></span>${ico('chev', 16)}</button>`}
-      <button data-p="adult"><span class="adult" style="margin-left:-1px">18+</span><span class="grow">Adult section<small>${adultOn() ? 'Visible' : 'Hidden from the feed'}</small></span><i class="switch ${adultOn() ? 'on' : ''}"></i></button>
-      <button data-p="nick">${ico('pen', 20)}<span class="grow">Change nickname</span>${ico('chev', 16)}</button>
+      <button data-p="security">${ico('lock', 20)}<span class="grow">Security<small>${a?.method === 'google' ? 'Signed in with Google' : 'Email and password'}${a?.twoStep ? ' · two-step on' : ' · add your phone for two-step'} · sign out</small></span>${ico('chev', 16)}</button>
+      <button data-p="nick">${ico('pen', 20)}<span class="grow">Nickname<small>${esc(u.nick)}</small></span>${ico('chev', 16)}</button>
     </div>
-    <h3>Help</h3>
+    <h3>Who are you tonight?</h3>
+    <div class="seg" id="role-seg" role="group" aria-label="Who are you tonight?"><button class="${role === 'caller' ? 'on' : ''}" data-role="caller" aria-pressed="${role === 'caller'}">Caller</button><button class="${role === 'taker' ? 'on' : ''}" data-role="taker" aria-pressed="${role === 'taker'}">Taker</button></div>
+    <p class="set-note">${role === 'caller' ? 'Write the dare. Back it. Vote.' : 'Go live. Take the dare. Get paid.'} This only changes the tips you see. Anyone can watch, call a dare or go live.</p>
+    <h3>Identity</h3>
+    <div class="menu"><button data-p="verify">${ico('idcard', 20)}<span class="grow">${S.verified ? 'Identity verified' : 'Verify identity'}<small>${S.verified ? 'You can hold money, go live and enter 18+' : 'Needed for money, going live and 18+'}</small></span>${S.verified ? '<span class="st ok">VERIFIED</span>' : ico('chev', 16)}</button></div>
+    <h3>Sound and touch</h3>
     <div class="menu">
-      <button data-p="support">${ico('help', 20)}<span class="grow">Help & support<small>Help center, payments, safety, contact us</small></span>${ico('chev', 16)}</button>
+      <button data-p="sound" role="switch" aria-checked="${!!S.settings.sound}">${ico('sound', 20)}<span class="grow">Sounds</span>${switchHTML(S.settings.sound)}</button>
+      <button data-p="vibro" role="switch" aria-checked="${!!S.settings.vibro}">${ico('vibro', 20)}<span class="grow">Vibration${vib ? '' : '<small>This device has no vibration</small>'}</span>${switchHTML(S.settings.vibro)}</button>
+    </div>
+    <h3>Privacy and safety</h3>
+    <div class="menu">
+      <button data-p="adult" role="switch" aria-checked="${adultOn()}"><span class="adult" style="margin-left:-1px">18+</span><span class="grow">18+ section<small>${adultOn() ? 'Visible' : 'Hidden from the feed'}</small></span>${switchHTML(adultOn())}</button>
       <button data-p="rules">${ico('shield', 20)}<span class="grow">Rules<small>Safety, Courage rules, Terms, Privacy, Community guidelines</small></span>${ico('chev', 16)}</button>
     </div>
-    <h3>App</h3>
+    <h3>Help and app</h3>
     <div class="menu">
-      <button data-p="sound">${ico('sound', 20)}<span class="grow">Sounds</span><i class="switch ${S.settings.sound ? 'on' : ''}"></i></button>
-      <button data-p="vibro">${ico('vibro', 20)}<span class="grow">Vibration</span><i class="switch ${S.settings.vibro ? 'on' : ''}"></i></button>
+      <button data-p="support">${ico('help', 20)}<span class="grow">Support<small>Help center, payments, safety, contact us</small></span>${ico('chev', 16)}</button>
       <button data-p="install" data-pwa>${ico('phone', 20)}<span class="grow">Install on your phone</span>${ico('chev', 16)}</button>
-      <button data-p="reset" style="color:var(--bad)">${ico('reset', 20)}<span class="grow">Delete account</span></button>
     </div>
+    <div class="menu" style="margin-top:26px"><button data-p="reset" style="color:var(--bad)">${ico('reset', 20)}<span class="grow">Delete account</span></button></div>
     <p class="legal">${legalLinks()}</p>
-    <button class="muted small" data-p="ver" style="display:block;margin:14px auto 0;text-align:center">Kurazh 0.4 · demo · data stays on this device</button>`;
+    <button class="muted small" data-p="ver" style="display:block;margin:14px auto 0;text-align:center;min-height:44px">Kurazh 0.4 · demo · data stays on this device</button>`;
 }
+function openSettings() { openPush({ kind: 'settings', title: 'Settings' }, settingsHTML()); track('settings_open'); }
+// Re-render whatever shows your settings and profile.
+function refreshMe() { if (pushCtx?.kind === 'settings') refreshPush(); if (cur === 'profile') renderProfile(); }
 function setRole(role, first) {
   if (role !== 'caller' && role !== 'taker') return;
-  const changed = S.role !== role; S.role = role; save(); renderTabs(); identify();
+  const changed = S.role !== role; S.role = role; save(); identify(); // the tabs stay the same for both
   if (changed || first) track('role_select', { role, first_time: !!first });
 }
-$('#profile').addEventListener('click', (e) => {
+// One handler for the profile page and the settings list.
+function onMeClick(e) {
   const r = e.target.closest('[data-role]');
-  if (r) { setRole(r.dataset.role, false); sfx('tap'); renderProfile(); toast(r.dataset.role === 'taker' ? 'Taker mode. Go live is in the middle tab' : 'Caller mode. Dares is in the middle tab', 'gold'); return; }
+  if (r) { setRole(r.dataset.role, false); sfx('tap'); refreshMe(); toast(r.dataset.role === 'taker' ? 'Taker tonight. Go live is the brass button in the middle' : 'Caller tonight. Pick a stream and write a dare', 'gold'); return; }
+  const rc = e.target.closest('[data-rc]'); if (rc) { const [k, id] = rc.dataset.rc.split(':'); openReceipt(k, id); return; }
   const b = e.target.closest('[data-p]'); if (!b) return;
   const p = b.dataset.p;
-  if (p === 'rules') openRules();
+  if (p === 'settings') openSettings();
+  else if (p === 'wallet') show('wallet');
+  else if (p === 'rules') openRules();
   else if (p === 'support') openSupport('home');
   else if (p === 'ver') devTap();
-  else if (p === 'verify') openVerify();
+  else if (p === 'verify') { if (S.verified) openSecurity(); else openVerify(); }
   else if (p === 'security') openSecurity();
   else if (p === 'adult') {
     if (adultOn()) { S.settings.adult = false; save(); if (feedCat === 'adult') setCat('all'); refreshViews(); toast('18+ section hidden'); }
@@ -2699,23 +2968,25 @@ $('#profile').addEventListener('click', (e) => {
   } else if (p === 'sound' || p === 'vibro') {
     S.settings[p] = !S.settings[p]; save();
     if (p === 'sound') { try { window.KurazhSound?.setEnabled?.(S.settings.sound); } catch { /* optional */ } if (S.settings.sound) sfx('tap'); }
-    renderProfile();
+    if (p === 'vibro') buzz(15);
+    refreshMe();
   } else if (p === 'nick') {
     const body = openSheet(`${sheetHead('New nickname')}<form id="nick-f"><input class="inp" id="nick-i" maxlength="20" value="${esc(S.user.nick)}" style="margin-top:16px" aria-label="Nickname" /><button class="btn gold block" style="margin-top:12px">Save</button></form>`, { type: 'nick' });
     body.querySelector('#nick-f').addEventListener('submit', (ev) => {
       ev.preventDefault(); const v = $('#nick-i').value.trim();
       if (v.length < 2) return toast('At least 2 characters', 'bad');
       if (!Safety.scan(v).ok || !Safety.scan(v, 'adult').ok) { sfx('blocked'); return toast("The filter won't allow that nickname", 'bad'); }
-      S.user.nick = v; save(); closeSheet(); renderProfile(); toast('Nickname updated', 'ok');
+      S.user.nick = v; save(); closeSheet(); refreshMe(); toast('Nickname updated', 'ok');
     });
   } else if (p === 'install') {
     if (deferredInstall) { deferredInstall.prompt(); deferredInstall = null; return; }
     openSheet(`${sheetHead('Install on your phone')}<ol class="rules" style="margin-top:16px"><li><b>iPhone (Safari):</b> Share → Add to Home Screen.</li><li><b>Android (Chrome):</b> menu ⋮ → Install app.</li></ol><p class="muted small" style="margin-top:12px">Once installed, Kurazh opens full screen and works offline. Going live needs a connection.</p>`, { type: 'install' });
   } else if (p === 'reset') confirmDelete();
-});
+}
+$('#profile').addEventListener('click', onMeClick);
 let deferredInstall = null;
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstall = e; });
-function refreshViews() { renderCats(); renderTabs(); if (cur === 'profile') renderProfile(); if (cur === 'wallet') renderWallet(); if (cur === 'live' && !L.on) renderSetup(); if (cur === 'top') renderTop(true); }
+function refreshViews() { renderCats(); if (cur === 'profile') renderProfile(); if (pushCtx) refreshPush(); if (cur === 'wallet') renderWallet(); if (cur === 'live' && !L.on) renderSetup(); if (cur === 'explore') renderExplore(); }
 
 /* ═════════ hidden developer settings: five taps on the KURAZH logo or the version line, or ?dev ═════════ */
 let devTaps = [];
@@ -3526,44 +3797,55 @@ function frame(ts) {
   lastFrame = ts; const t = ts / 1000;
   if (L.on && !L.camOk) drawScene($('#cam-fake'), L.fake, t); // also feeds the cover stream real viewers see, so it never pauses
   // Viewer scenes pause behind a sheet and during a sideways drag.
-  if (anySheet() || G.drag) return;
+  if (anySheet() || G.drag || pushOpen()) return;
   if (cur === 'feed') { const card = feedEl.children[curIdx]; const st = curStream(); if (card && st) drawScene(card.querySelector('canvas'), st, t); }
   else if (cur === 'live' && !L.on) drawScene($('#prev-canvas'), prevScene, t);
   if (cur === 'watch' && Room.R && !Room.hasVideo) { const cv = $('#watch canvas'); if (cv) drawScene(cv, Room.R, t); }
 }
 
-/* ═════════ navigation ═════════ */
-let cur = 'feed';
-// The center button follows the role: Callers get Dares, Takers get Go live. Both stay one tap away.
+/* ═════════ navigation ═════════
+   One bar for every role: Live · Explore · Go live · Inbox · Profile. The Caller/Taker preference only changes copy.
+   Tab names map onto screens: the Live tab shows the feed, the centre button the Go live setup. The Wallet is a screen without a tab. */
+let cur = 'feed', walletFrom = 'profile';
+const TABS = [['live', 'feed', 'Live'], ['explore', 'compass', 'Explore'], null, ['inbox', 'inbox', 'Inbox'], ['profile', 'user', 'Profile']];
+const TAB_SCREEN = { live: 'feed', golive: 'live' };
+const SCREEN_TAB = { feed: 'live', watch: 'live', live: 'golive', wallet: 'profile' };
 function renderTabs() {
-  const taker = S?.role === 'taker';
-  const side = taker ? ['top', 'target', 'Dares'] : ['live', 'camera', 'Go live'];
-  const center = taker ? '<button class="tab-go golive" data-tab="live" aria-label="Go live"><span></span>Go live</button>'
-    : `<button class="tab-go" data-tab="top" aria-label="Dares"><span>${ico('target', 20)}</span>Dares</button>`;
-  $('#tabbar').innerHTML = [['feed', 'feed', 'Live'], side].map(([k, i, l]) => `<button class="tab" data-tab="${k}">${ico(i, 23)}${l}</button>`).join('') + center
-    + [['wallet', 'wallet', 'Wallet'], ['profile', 'user', 'Profile']].map(([k, i, l]) => `<button class="tab" data-tab="${k}">${ico(i, 23)}${l}</button>`).join('');
-  $$('.tabbar [data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === cur));
+  $('#tabbar').innerHTML = TABS.map((t) => (t ? `<button class="tab" data-tab="${t[0]}" aria-label="${t[2]}">${ico(t[1], 23)}<span aria-hidden="true">${t[2]}</span></button>`
+    : '<button class="tab-go" data-tab="golive" aria-label="Go live"><span aria-hidden="true"></span>Go live</button>')).join('');
+  markTabs();
+}
+function markTabs() {
+  const on = SCREEN_TAB[cur] || cur;
+  $$('.tabbar [data-tab]').forEach((b) => { const y = b.dataset.tab === on; b.classList.toggle('on', y); if (y) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
 }
 function show(tab) {
   if (L.on && tab !== 'live') return;
   if (tab === 'watch' && !Room.R) tab = 'feed';
+  if (tab === 'wallet' && cur !== 'wallet') walletFrom = cur;
+  closePush();
   cur = tab;
   $$('.screen').forEach((s) => s.classList.toggle('on', s.id === 'scr-' + tab));
-  $$('.tabbar [data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+  markTabs();
   document.body.classList.toggle('is-watch', tab === 'watch');
   document.body.classList.toggle('feedish', tab === 'feed' || tab === 'watch');
   if (tab !== 'feed' && tab !== 'watch') { setClean(false); $$('form.say.open').forEach((f) => sayOpen(f, false)); }
-  if (tab === 'top') renderTop(true);
+  if (tab === 'explore') renderExplore();
   if (tab === 'wallet') renderWallet();
   if (tab === 'profile') renderProfile();
   if (tab === 'live' && !L.on) renderSetup();
   if (tab === 'feed') renderChat(curStream());
   if (tab === 'watch') { updateCard(Room.R, true); renderChat(Room.R); }
+  const scr = $('#scr-' + tab); if (scr && !['feed', 'watch', 'live'].includes(tab)) scr.scrollTop = 0;
   renderRoomMini(); pageView(tab);
 }
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-tab]'); if (!b) return;
-  closeSheet(); show(b.dataset.tab); sfx('tap');
+  const scr = TAB_SCREEN[b.dataset.tab] || b.dataset.tab;
+  closeSheet();
+  // Go live needs a verified identity; the existing check runs first and brings you back to the setup afterwards.
+  if (scr === 'live' && !L.on && needKyc('go live', () => show('live'))) { closePush(); sfx('tap'); return; }
+  show(scr); sfx('tap');
 });
 
 /* ═════════ account, two-step verification and identity (KYC) ═════════ */
@@ -4069,7 +4351,7 @@ async function onAuthClick(e) {
     const watching = !!pendingWatch;
     afterAuth();
     if (!watching) show(role === 'taker' ? 'live' : 'feed');
-    toast(role === 'taker' ? 'Taker mode. Set your rules and go live' : 'Caller mode. Pick a stream and write a dare', 'gold');
+    toast(role === 'taker' ? 'Taker tonight. Set your rules and go live' : 'Caller tonight. Pick a stream and write a dare', 'gold');
   }
   else if (act === 'showpw') { const i = b.previousElementSibling; i.type = i.type === 'password' ? 'text' : 'password'; b.textContent = i.type === 'password' ? 'Show' : 'Hide'; }
   else if (act === 'resend') { sendCode(A.codeFor); go(A.step); toast('New code sent'); }
@@ -4104,9 +4386,9 @@ async function onAuthClick(e) {
   else if (act === 'replace') go('replace');
   else if (act === 'wipe') { try { localStorage.removeItem(KEY); } catch { /* ignore */ } location.reload(); }
 }
-function needKyc(what) {
+function needKyc(what, next) {
   if (S.verified) return false;
-  toast(`Verify your identity to ${what}`, 'bad'); openVerify();
+  toast(`Verify your identity to ${what}`, 'bad'); openVerify(next);
   return true;
 }
 function openSecurity() {
@@ -4148,6 +4430,7 @@ load();
 L.demo = S.settings.demoAudience !== false;
 try { window.KurazhSound?.setEnabled?.(!!S.settings.sound); } catch { /* sound kit is optional */ }
 document.addEventListener('pointerdown', () => { try { window.KurazhSound?.unlock?.(); } catch { /* optional */ } }, { once: true, capture: true });
+$('#push-back').innerHTML = ico('back', 24);
 renderTabs();
 renderCats();
 buildFeed();
@@ -4159,7 +4442,8 @@ setInterval(() => {
   const vis = curStream();
   streams.forEach((st) => tickStream(st, st === vis && cur === 'feed'));
   if (cur === 'feed') for (let i = Math.max(0, curIdx - 1); i <= Math.min(feedList.length - 1, curIdx + 1); i++) updateCard(feedList[i]); // only the card on screen and its neighbours
-  if (cur === 'top') renderTop();
+  if (cur === 'explore') renderHot();
+  if (cur === 'profile') renderProfile(false);
   if (cur === 'watch' && Room.R) renderRoomStatus();
   renderDaresSheet();
   ledgerTick();
@@ -4179,7 +4463,8 @@ if (qs.has('dev')) setTimeout(openDev, 300);
 pageView(cur);
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
 window.Kurazh = { Safety, BANK, UNSAFE, ADULT_UNSAFE, S: () => S, streams, L, money, settle, byId, updateCard,
-  Room, joinRoom, leaveRoom, takerDecline, previewFee, liveRules, courageOf, myCourage, creditBal, earnAvail, earnPending, openReceipt, onGoogleIdentity, decodeJwt, setRole, show, cfg, toast };
+  Room, joinRoom, leaveRoom, takerDecline, previewFee, liveRules, courageOf, myCourage, creditBal, earnAvail, earnPending, openReceipt, onGoogleIdentity, decodeJwt, setRole, show, cfg, toast,
+  openProfile, closePush, openSettings, demoOf, searchStreams };
 </script>
 </body>
 </html>
