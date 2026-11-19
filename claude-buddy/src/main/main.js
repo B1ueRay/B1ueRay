@@ -65,13 +65,22 @@ function lockDown(w) {
 app.commandLine.appendSwitch('enable-transparent-visuals');
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
+let pageReady = false;
+const pendingNotices = [];
 function send(channel, payload) {
-  if (win && !win.isDestroyed()) win.webContents.send(channel, payload);
+  if (!win || win.isDestroyed()) return;
+  // пока страница не загрузилась, уведомления копим — иначе "хоткей занят" теряется при старте
+  if (channel === 'notice' && !pageReady) {
+    pendingNotices.push(payload);
+    return;
+  }
+  win.webContents.send(channel, payload);
 }
 
 function overlayBounds(display) {
   const wa = display.workArea;
-  const width = Math.round(BASE_WIDTH * (cfg.size || 1));
+  // на коротких экранах (ноутбук с масштабом 150%) не даём окну стать шире, чем позволяет высота
+  const width = Math.round(Math.min(BASE_WIDTH * (cfg.size || 1), wa.height * 0.65));
   return { x: wa.x + wa.width - width, y: wa.y, width, height: wa.height };
 }
 
@@ -105,6 +114,12 @@ function createOverlay() {
   ignoring = true;
   win.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
   win.once('ready-to-show', () => win.showInactive());
+  pageReady = false;
+  win.webContents.on('did-finish-load', () => {
+    pageReady = true;
+    // даём app.js подписаться на события
+    setTimeout(() => pendingNotices.splice(0).forEach((n) => send('notice', n)), 1500);
+  });
   lockDown(win);
   // Alt+F4 по оверлею не должен убивать бадди навсегда — живём до "Выйти"
   win.on('close', (e) => {
@@ -233,7 +248,8 @@ function syncLoginItem() {
     // portable-сборка распаковывается во временную папку — регистрируем сам .exe;
     // при запуске через `electron .` нужен путь к приложению аргументом
     const exe = process.env.PORTABLE_EXECUTABLE_FILE || process.execPath;
-    const args = app.isPackaged ? [] : [app.getAppPath()];
+    // путь в кавычках: иначе папка с пробелом ("Новая папка") ломает автозапуск
+    const args = app.isPackaged ? [] : [`"${app.getAppPath()}"`];
     app.setLoginItemSettings({ openAtLogin: want, path: exe, args });
   } catch {
     /* не на всех платформах */

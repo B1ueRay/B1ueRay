@@ -672,7 +672,8 @@ export class BuddyScene {
     const h = window.innerHeight;
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
-    this.ppu = 110 * (w / 440);
+    // масштаб и по ширине, и по высоте: на коротком экране колобок с облачком должны влезть
+    this.ppu = Math.min(110 * (w / 440), Math.max(60, (h - 220) / 4.98));
     const visH = h / this.ppu;
     const dist = visH / 2 / Math.tan(THREE.MathUtils.degToRad(this.camera.fov / 2));
     this.camera.position.set(0, visH / 2, dist);

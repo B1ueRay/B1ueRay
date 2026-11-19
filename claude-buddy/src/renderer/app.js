@@ -1041,7 +1041,7 @@ api.onConfig((c) => {
     whenFree(async () => {
       await say('Ура, ожил! Теперь я настоящий — сальто в честь знакомства!', 'love');
       await doTrick('backflip');
-      say('Скажи «полетай» или «станцуй», жми глаз или Ctrl+Alt+L — гляну на экран. Только мышкой перед носом не тряси, голова кружится. Кликни по мне — поболтаем!', 'wink');
+      say('Скажи «полетай» или «станцуй», жми глаз или Ctrl+Alt+Shift+L — гляну на экран. Только мышкой перед носом не тряси, голова кружится. Кликни по мне — поболтаем!', 'wink');
     });
   }
 });
@@ -1072,29 +1072,37 @@ function trackWiggle(x, y) {
     if (wig.dir === -sgn) wig.flips.push(now);
     wig.dir = sgn;
   }
+  // трясти надо именно у него перед носом: внутри окна и рядом с лицом, иначе это просто работа мышкой
+  const f = scene.faceScreen();
+  const near = x >= 0 && x <= window.innerWidth && Math.hypot(x - f.x, y - f.y) < 220;
+  if (!near) {
+    wig.flips.length = 0;
+    return;
+  }
   while (wig.flips.length && now - wig.flips[0] > 1400) wig.flips.shift();
   if (wig.flips.length < 4 || now < wig.cool) return;
-  const f = scene.faceScreen();
-  if (Math.hypot(x - f.x, y - f.y) > 520) return; // трясут далеко — не нам
   wig.flips.length = 0;
-  wig.cool = now + 15000;
+  wig.cool = now + 40000;
   onWiggle(now);
 }
 function onWiggle(now = performance.now()) {
   if (!state.visible || state.seq) return;
-  wig.count = now - wig.lastAt < 60000 ? wig.count + 1 : 1;
+  wig.count = now - wig.lastAt < 300000 ? wig.count + 1 : 1; // считаем за 5 минут
   wig.lastAt = now;
   note('пользователь тряс мышкой у тебя перед носом — у тебя кружилась голова');
   if (state.sleeping) wake(true);
   scene.dizzy(2.2);
   sfx.boing();
   pop('💫', 'small');
-  const busy = voice.active || state.chatOpen || mic.recording || (reply && !reply.done);
+  const isBusy = () => voice.active || state.chatOpen || mic.recording || (reply && !reply.done) || state.seq;
+  const busyNow = isBusy();
   setTimeout(() => {
-    if (busy || !state.visible) {
+    // за 2.3 с мог начаться ответ — не перебиваем его своей репликой
+    if (busyNow || isBusy() || !state.visible) {
       scene.setEmotion('embarrassed', 1.5);
       return;
     }
+    if (wig.count > 3) return; // дальше молча: покружилась голова — и ладно
     if (wig.count >= 3 && scene.canTrick) {
       say('Ах так? Тогда смотри!', 'smug');
       doTrick('backflip');
@@ -1135,6 +1143,10 @@ function positionBubble() {
   const left = Math.max(8, Math.min(window.innerWidth - bw - 8, h.x - bw / 2));
   els.bubble.style.left = `${left}px`;
   els.bubble.style.bottom = `${window.innerHeight - h.y + 8}px`;
+  // облачко не уезжает за верх экрана: ограничиваем высоту и показываем хвост текста
+  const t = els.bubbleText;
+  t.style.maxHeight = `${Math.max(40, Math.min(window.innerHeight * 0.46, h.y - 16) - 30)}px`;
+  if (t.scrollHeight > t.clientHeight + 2) t.scrollTop = t.scrollHeight;
   els.bubble.style.setProperty('--tail', `${Math.max(18, Math.min(bw - 18, h.x - left))}px`);
   els.status.style.left = `${h.x}px`;
   els.status.style.top = `${h.y + 6}px`;

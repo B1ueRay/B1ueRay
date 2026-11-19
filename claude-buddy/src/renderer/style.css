@@ -448,3 +448,13 @@ body.dragging * {
   border-right-color: inherit;
   border-bottom-color: inherit;
 }
+
+/* обрезаем и прокручиваем сам текст, а не облачко — тогда хвостик облачка не срезается */
+.bubble {
+  overflow: visible;
+  max-height: none;
+}
+#bubbleText {
+  display: block;
+  overflow: hidden;
+}

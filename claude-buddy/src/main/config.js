@@ -29,9 +29,10 @@ const DEFAULTS = {
   size: 1,
   launchAtLogin: false,
   hotkeys: {
-    talk: 'CommandOrControl+Alt+K',
-    toggle: 'CommandOrControl+Alt+H',
-    look: 'CommandOrControl+Alt+L',
+    // с Shift — чтобы не отнимать у IDE Ctrl+Alt+L (Reformat), Ctrl+Alt+H, Ctrl+Alt+K
+    talk: 'CommandOrControl+Alt+Shift+K',
+    toggle: 'CommandOrControl+Alt+Shift+H',
+    look: 'CommandOrControl+Alt+Shift+L',
   },
 };
 
