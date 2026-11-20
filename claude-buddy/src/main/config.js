@@ -58,6 +58,9 @@ function load() {
     raw = {};
   }
   const cfg = { ...DEFAULTS, ...raw, hotkeys: { ...DEFAULTS.hotkeys, ...(raw.hotkeys || {}) } };
+  // миграция: старые хоткеи по умолчанию (без Shift) отнимали Ctrl+Alt+L/H/K у IDE — меняем на новые
+  const OLD = { talk: 'CommandOrControl+Alt+K', toggle: 'CommandOrControl+Alt+H', look: 'CommandOrControl+Alt+L' };
+  for (const k of Object.keys(OLD)) if (cfg.hotkeys[k] === OLD[k]) cfg.hotkeys[k] = DEFAULTS.hotkeys[k];
   for (const k of SECRET_FIELDS) {
     const enc = raw[`${k}Enc`];
     if (enc && canEncrypt()) {

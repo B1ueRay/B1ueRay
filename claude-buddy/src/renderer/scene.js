@@ -690,6 +690,7 @@ export class BuddyScene {
   animate(duration, fn, easing = (k) => k) {
     return new Promise((resolve) => {
       this.anims.push({ t: 0, duration, fn, easing, resolve });
+      this.onWake?.(); // цикл мог "припарковаться", пока бадди спрятан
     });
   }
   wait(sec) {
@@ -980,8 +981,20 @@ export class BuddyScene {
   }
 
   // ---------- кадр ----------
-  frame() {
-    const dt = Math.min(this.clock.getDelta(), 0.05);
+  // спрятан и ничего не летит — рисовать нечего
+  get idleHidden() {
+    return this.mode === 'hidden' && !this.anims.length && this.threadSnap === undefined && !this.dust.length && this.islandGroup.scale.x < 0.01;
+  }
+
+  // само что-то быстро движется — нужен полный кадр
+  get lively() {
+    const t = this.time;
+    return Boolean(this.anims.length || this.trick || this.mode !== 'sitting' || t < this.dizzyUntil || this.wave > 0 || t - this.pokeT < 1.2 || (this.squashT ?? 9) < 0.9);
+  }
+
+  frame(dtIn) {
+    // dt задаёт цикл (он знает, сколько кадров пропущено); без него — как раньше
+    const dt = dtIn ?? Math.min(this.clock.getDelta(), 0.05);
     this.time += dt;
     const t = this.time;
 

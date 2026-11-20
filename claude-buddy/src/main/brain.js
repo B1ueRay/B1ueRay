@@ -180,7 +180,10 @@ class Brain {
   memoryBlock(cfg) {
     if (this.memoryText == null) {
       const name = cfg.userName ? `Пользователь просил звать его: ${cfg.userName}.\n` : '';
-      const text = `${name}${memory.snapshot()}`;
+      const k = (x) => (x || 'не задана').replace(/CommandOrControl|CmdOrCtrl/g, 'Ctrl');
+      const h = cfg.hotkeys || {};
+      const keys = `Горячие клавиши у пользователя: поговорить — ${k(h.talk)}, спрятаться/позвать — ${k(h.toggle)}, посмотреть на экран — ${k(h.look)}.\n`;
+      const text = `${name}${keys}${memory.snapshot()}`;
       // файл временно занят — не залипаем на "память недоступна" до конца сессии
       if (memory.unavailable()) return text;
       this.memoryText = text;

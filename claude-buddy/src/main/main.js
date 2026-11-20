@@ -4,7 +4,7 @@ const path = require('path');
 const { fileURLToPath } = require('url');
 const {
   app, BrowserWindow, Tray, Menu, nativeImage, screen, globalShortcut,
-  ipcMain, desktopCapturer, session, shell, systemPreferences,
+  ipcMain, desktopCapturer, session, shell, systemPreferences, powerMonitor,
 } = require('electron');
 const config = require('./config');
 const { Brain } = require('./brain');
@@ -121,6 +121,18 @@ function createOverlay() {
     setTimeout(() => pendingNotices.splice(0).forEach((n) => send('notice', n)), 1500);
   });
   lockDown(win);
+  // у оверлея нет меню: иначе Ctrl+R перезагружает бадди, Ctrl+-/+ меняют масштаб, Ctrl+Shift+I — devtools
+  win.removeMenu();
+  // новая страница начинает с "мышь сквозь окно" — main должен думать так же, иначе колонка окна глотает клики
+  win.webContents.on('did-start-loading', () => {
+    pageReady = false;
+    ignoring = true;
+    win.setIgnoreMouseEvents(true, { forward: true });
+  });
+  // упал рендерер (драйвер, OOM) — оживаем сами, а не висим пустым окном до вечера
+  win.webContents.on('render-process-gone', (_e, d) => {
+    if (!quitting && d.reason !== 'clean-exit') setTimeout(() => win && !win.isDestroyed() && win.reload(), 1000);
+  });
   // Alt+F4 по оверлею не должен убивать бадди навсегда — живём до "Выйти"
   win.on('close', (e) => {
     if (!quitting) e.preventDefault();
@@ -133,23 +145,30 @@ function createOverlay() {
 
 // Положение курсора относительно окна — чтобы глаза следили за мышкой по всему экрану.
 function startCursorFeed() {
-  clearInterval(cursorTimer);
+  clearTimeout(cursorTimer);
   let last = '';
-  cursorTimer = setInterval(() => {
-    if (!win || win.isDestroyed()) return;
-    const p = screen.getCursorScreenPoint();
-    const b = win.getBounds();
-    const d = screen.getDisplayMatching(b);
-    const key = `${p.x},${p.y},${b.x}`;
-    if (key === last) return;
-    last = key;
-    send('cursor', {
-      x: p.x - b.x,
-      y: p.y - b.y,
-      // в какую сторону от окна "основной" экран: -1 = влево, 1 = вправо
-      screenDir: d.workArea.x + d.workArea.width / 2 < b.x + b.width / 2 ? -1 : 1,
-    });
-  }, 50);
+  let movedAt = Date.now();
+  const tick = () => {
+    if (win && !win.isDestroyed()) {
+      const p = screen.getCursorScreenPoint();
+      const b = win.getBounds();
+      const key = `${p.x},${p.y},${b.x}`;
+      if (key !== last) {
+        last = key;
+        movedAt = Date.now();
+        const d = screen.getDisplayMatching(b);
+        send('cursor', {
+          x: p.x - b.x,
+          y: p.y - b.y,
+          // в какую сторону от окна "основной" экран: -1 = влево, 1 = вправо
+          screenDir: d.workArea.x + d.workArea.width / 2 < b.x + b.width / 2 ? -1 : 1,
+        });
+      }
+    }
+    // мышь лежит 3 с — опрашиваем 4 раза в секунду; шевельнулась — снова 20 раз
+    cursorTimer = setTimeout(tick, Date.now() - movedAt > 3000 ? 250 : 50);
+  };
+  tick();
 }
 
 function openSettings() {
@@ -431,6 +450,11 @@ app.whenReady().then(() => {
   screen.on('display-removed', resnap);
   lastLoginItem = null;
   syncLoginItem();
+  // экран заблокирован / сон — рисовать некому
+  powerMonitor.on('lock-screen', () => send('power', { away: true }));
+  powerMonitor.on('suspend', () => send('power', { away: true }));
+  powerMonitor.on('unlock-screen', () => send('power', { away: false }));
+  powerMonitor.on('resume', () => send('power', { away: false }));
 });
 
 app.on('will-quit', () => globalShortcut.unregisterAll());

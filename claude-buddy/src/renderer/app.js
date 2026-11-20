@@ -95,6 +95,8 @@ function cleanSpeech(text) {
     .trim();
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// хоткей по-человечески: CommandOrControl+Alt+Shift+L → Ctrl+Alt+Shift+L
+const hk = (k) => (k || '').replace(/CommandOrControl|CmdOrCtrl/g, 'Ctrl');
 // "мешок" без повторов: фраза не вернётся, пока не прозвучат остальные, и не пойдёт дважды подряд
 const bags = new WeakMap();
 const pick = (arr) => {
@@ -162,6 +164,7 @@ const state = {
 let bubbleTimer = 0;
 function showBubble(text, { micro = false, sticky = false } = {}) {
   clearTimeout(bubbleTimer);
+  els.bubble.classList.remove('thinking'); // send() вернёт точки сам, после showBubble
   els.bubbleText.textContent = text;
   els.bubble.classList.toggle('micro', micro);
   els.bubble.classList.add('on');
@@ -1068,11 +1071,16 @@ api.onConfig((c) => {
     whenFree(async () => {
       await say('Ура, ожил! Теперь я настоящий — сальто в честь знакомства!', 'love');
       await doTrick('backflip');
-      say('Скажи «полетай» или «станцуй», жми глаз или Ctrl+Alt+Shift+L — гляну на экран. Только мышкой перед носом не тряси, голова кружится. Кликни по мне — поболтаем!', 'wink');
+      const look = hk(cfg.hotkeys?.look);
+      say(`Скажи «полетай» или «станцуй», жми глаз${look ? ` или ${look}` : ''} — гляну на экран. Только мышкой перед носом не тряси, голова кружится. Кликни по мне — поболтаем!`, 'wink');
     });
   }
 });
 api.onNotice(({ text }) => toast(text, 6000));
+api.onPower?.(({ away }) => {
+  state.away = away;
+  if (!away) scene.onWake?.();
+});
 // ---------------- тряска мышкой: у него кружится голова ----------------
 const WIGGLE_LINES = [
   ['Эй-эй, полегче! У меня голова кружится!', 'surprised'],
@@ -1133,7 +1141,7 @@ function onWiggle(now = performance.now()) {
     if (wig.count >= 3 && scene.canTrick) {
       say('Ах так? Тогда смотри!', 'smug');
       doTrick('backflip');
-      wig.count = 0;
+      wig.count = 3; // после сальто — дальше молча, просто кружится голова
       return;
     }
     const [text, emo] = pick(wig.count === 2 ? WIGGLE_AGAIN : WIGGLE_LINES);
@@ -1179,17 +1187,52 @@ function positionBubble() {
   els.status.style.top = `${h.y + 6}px`;
 }
 
-let lastLoopAt = performance.now();
-function loop() {
-  const nowMs = performance.now();
-  const lip = voice.update(Math.min(0.1, (nowMs - lastLoopAt) / 1000));
-  lastLoopAt = nowMs;
+// Окно прозрачное, во всю высоту экрана и живёт целый день — рисуем не чаще, чем нужно:
+// спрятан и ничего не анимируется — не рисуем вовсе; дремлет — 20 к/с; сидит в простое — 30;
+// трюк, речь, тычок, перетаскивание, мышь у окна — полная частота (но не больше ~75 на 144 Гц).
+let lastDrawAt = 0;
+let parked = 0;
+let idleDrawn = false;
+function frameBudget() {
+  if (scene.idleHidden && !voice.active) return 0;
+  if (state.away && !scene.lively && !voice.active) return 0; // экран заблокирован
+  const cursorNear = lastCursor && lastCursor.x > -60 && lastCursor.x < window.innerWidth + 60 && scene.time - scene.cursorMovedAt < 0.6;
+  if (scene.lively || voice.active || down || cursorNear) return 60;
+  return state.sleeping ? 20 : 30;
+}
+function drawFrame(now) {
+  // dt по настоящему времени: анимации-обещания идут с той же скоростью при любой частоте
+  const dt = lastDrawAt ? Math.min(0.1, (now - lastDrawAt) / 1000) : 1 / 60;
+  lastDrawAt = now;
+  const lip = voice.update(dt);
   scene.setLip(lip.open, lip.round);
   scene.setActivity({ speaking: voice.speaking, busy: voice.active || Boolean(reply && !reply.done) || state.chatOpen });
-  scene.frame();
+  scene.frame(dt);
   positionBubble();
+}
+function loop(now) {
+  const fps = frameBudget();
+  if (fps === 0) {
+    if (!idleDrawn) drawFrame(now); // последний кадр — уже пустой
+    idleDrawn = true;
+    lastDrawAt = 0; // после паузы первый dt = 1/60, без рывка
+    parked = setTimeout(() => {
+      parked = 0;
+      requestAnimationFrame(loop);
+    }, 250);
+    return;
+  }
+  idleDrawn = false;
+  if (now - lastDrawAt >= 800 / fps) drawFrame(now);
   requestAnimationFrame(loop);
 }
+// любая новая анимация (появление, подглядывание) будит цикл сразу, не ждём таймера
+scene.onWake = () => {
+  if (!parked) return;
+  clearTimeout(parked);
+  parked = 0;
+  requestAnimationFrame(loop);
+};
 requestAnimationFrame(loop);
 
 // поехали: спуск на ниточке, "ку-ку", БАМ
