@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Kurazh Test Rig</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,600&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+  /* Layout: a full-screen WebGL stage with a frosted test-runner panel docked right (bottom on phones) and a caption bar. Single matte dark look. */
+  :root {
+    --bg: #070807; --panel: rgba(13,17,14,.8); --line: rgba(236,226,207,.12); --line2: rgba(184,151,90,.42);
+    --gold: #b8975a; --gold2: #cdb27c; --cash: #c8b69a; --van: #ece2cf; --muted: #8f8b7e; --ok: #93b49c; --bad: #c07466; --green: #1e3a2c; --ink: #121410;
+    --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    --sans: Manrope, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: dark;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--van); font: 14px/1.4 var(--sans); overflow: hidden; -webkit-font-smoothing: antialiased; }
+  #c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  button:focus-visible { outline: 1.5px solid var(--gold2); outline-offset: 2px; }
+  .glass { background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+
+  .top { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 14px); left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; pointer-events: none; z-index: 5; }
+  .brand .k { font: 700 11px var(--sans); letter-spacing: .5em; color: var(--gold2); }
+  .brand h1 { margin: 6px 0 0; font: 600 34px/1 var(--serif); letter-spacing: -.01em; }
+  .brand p { margin: 6px 0 0; color: var(--cash); font-size: 13px; max-width: 30ch; }
+  .ctrl { pointer-events: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .ctrl button { height: 34px; padding: 0 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+  .ctrl button.gold { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+  .ctrl svg { width: 14px; height: 14px; }
+
+  .tests { position: fixed; z-index: 5; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(env(safe-area-inset-top, 0px) + 110px); width: 340px;
+    border-radius: 18px; padding: 14px 14px 12px; display: grid; gap: 10px; max-height: calc(100% - 220px); }
+  .t-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .t-head b { font: 600 20px var(--serif); }
+  .runpill { display: inline-flex; align-items: center; gap: 7px; height: 24px; padding: 0 10px; border-radius: 999px; font: 600 11px var(--mono); border: 1px solid var(--line2); color: var(--gold2); white-space: nowrap; }
+  .runpill i { width: 7px; height: 7px; border-radius: 50%; background: var(--gold2); animation: blink 1.2s infinite; }
+  .runpill.done { color: var(--ok); border-color: rgba(147,180,156,.5); }
+  .runpill.done i { background: var(--ok); animation: none; }
+  @keyframes blink { 50% { opacity: .25; } }
+  .prog { height: 3px; border-radius: 3px; background: rgba(236,226,207,.1); overflow: hidden; }
+  .prog i { display: block; height: 100%; width: 0; background: var(--gold); transition: width .5s ease; }
+  .tlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; overflow-y: auto; min-height: 0; }
+  .tlist li { display: grid; grid-template-columns: 20px 1fr auto; gap: 10px; align-items: center; padding: 6px 4px; border-radius: 9px; font-size: 13px; color: var(--muted); }
+  .tlist .ic { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid rgba(236,226,207,.22); display: grid; place-items: center; }
+  .tlist li.run { color: var(--van); background: rgba(184,151,90,.09); }
+  .tlist li.run .ic { border-color: rgba(205,178,124,.25); border-top-color: var(--gold2); animation: spin .8s linear infinite; }
+  .tlist li.pass { color: var(--cash); }
+  .tlist li.pass .ic { border-color: var(--ok); background: rgba(147,180,156,.16); }
+  .tlist li.pass .ic::before { content: ""; width: 7px; height: 4px; border: 1.5px solid var(--ok); border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); }
+  .tlist .ms { font: 500 11px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .t-toggle { display: none; }
+
+  .caption { position: fixed; z-index: 5; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 22px); width: min(640px, calc(100% - 32px));
+    border-radius: 16px; padding: 12px 16px; display: flex; gap: 12px; align-items: center; }
+  .caption .step { flex: none; font: 600 11px var(--mono); color: var(--gold2); border: 1px solid var(--line2); border-radius: 7px; padding: 3px 7px; }
+  .caption .txt { font: italic 600 19px/1.25 var(--serif); color: var(--van); min-width: 0; }
+  .hint { position: fixed; z-index: 4; left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 26px); color: var(--muted); font-size: 12px; pointer-events: none; }
+
+  @media (max-width: 860px) {
+    .brand h1 { font-size: 28px; }
+    .brand p { display: none; }
+    .ctrl button span { display: none; }
+    .ctrl button { padding: 0 10px; }
+    .tests { top: auto; right: max(12px, env(safe-area-inset-right, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); width: auto;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); max-height: 46%; padding: 12px; }
+    .tests.collapsed .tlist li:not(.run) { display: none; }
+    .t-toggle { display: inline-flex; font-size: 12px; font-weight: 700; color: var(--gold2); }
+    .caption { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 66px); width: calc(100% - 24px); padding: 10px 12px; }
+    .caption .txt { font-size: 16px; }
+    .hint { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .runpill i, .tlist li.run .ic { animation: none; } }
+</style>
+
+</head>
+<body>
+<canvas id="c" aria-label="3D simulation of the Kurazh test run" tabindex="0"></canvas>
+
+<header class="top">
+  <div class="brand"><div class="k">KURAZH</div><h1>Test rig</h1><p>Every check of the app, played out on one stage: sign-up, safety filter, card holds, voting and payouts.</p></div>
+  <nav class="ctrl" aria-label="Playback">
+    <button class="glass" id="b-play" aria-label="Pause"></button>
+    <button class="glass" id="b-restart" aria-label="Restart run"></button>
+    <button class="glass" id="b-speed" aria-label="Playback speed">1×</button>
+    <button class="glass" id="b-outcome" aria-label="Outcome of the next run"></button>
+    <button class="glass gold" id="b-cam" hidden aria-label="Return to the cinematic camera"></button>
+  </nav>
+</header>
+
+<aside class="tests glass collapsed" id="tests" aria-label="Test run">
+  <div class="t-head"><b>End-to-end run</b><span class="runpill" id="runpill"><i></i><span id="runtxt">0/12</span></span></div>
+  <div class="prog"><i id="progbar"></i></div>
+  <ol class="tlist" id="tlist"></ol>
+  <button class="t-toggle" id="t-toggle" aria-expanded="false">Show all checks</button>
+</aside>
+
+<div class="caption glass" role="status" aria-live="polite"><span class="step" id="capstep">00</span><span class="txt" id="captxt">Setting the stage…</span></div>
+<div class="hint">Drag to orbit · scroll to zoom</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+'use strict';
+const $ = (s) => document.querySelector(s);
+const C = { bg: 0x070807, floor: 0x0d1611, green: 0x1e3a2c, green2: 0x284a39, gold: 0xb8975a, gold2: 0xcdb27c, cash: 0xc8b69a, van: 0xece2cf, sage: 0x93b49c, rose: 0xc07466, ox: 0x7e2b25, ink: 0x121410 };
+const HEX = { gold: '#b8975a', gold2: '#cdb27c', cash: '#c8b69a', van: '#ece2cf', muted: '#8f8b7e', ok: '#93b49c', bad: '#c07466', green: '#1e3a2c', ink: '#121410', ox: '#7e2b25' };
+const SERIF = '"Cormorant Garamond", Georgia, serif', SANS = 'Manrope, system-ui, sans-serif';
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const lerp = (a, b, k) => a + (b - a) * k;
+const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+const easeBack = (t) => { const c = 1.7; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+
+/* ═════════ renderer, scene, camera ═════════ */
+const canvas = $('#c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.95;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(C.bg);
+scene.fog = new THREE.Fog(C.bg, 16, 38);
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 120);
+camera.position.set(0, 8, 17);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.maxPolarAngle = 1.48; controls.minDistance = 2.5; controls.maxDistance = 30;
+controls.target.set(0, 1.4, 0);
+
+// soft studio environment for the metals
+{
+  const pm = new THREE.PMREMGenerator(renderer);
+  const env = new THREE.Scene();
+  env.add(new THREE.Mesh(new THREE.BoxGeometry(30, 30, 30), new THREE.MeshBasicMaterial({ color: 0x0c0f0c, side: THREE.BackSide })));
+  const panel = (col, p, w, h) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: col, side: THREE.DoubleSide })); m.position.copy(p); m.lookAt(0, 0, 0); env.add(m); };
+  panel(0xfff0d8, V(0, 12, 2), 14, 10); panel(0xcdb27c, V(11, 4, 6), 8, 5); panel(0x2c4a3b, V(-11, 3, -4), 8, 8); panel(0xece2cf, V(-4, 6, 11), 6, 3);
+  scene.environment = pm.fromScene(env, 0.04).texture;
+}
+scene.add(new THREE.HemisphereLight(0xece2cf, 0x0e1712, 0.22));
+const key = new THREE.DirectionalLight(0xffe6c0, 1.25);
+key.position.set(6, 12, 8); key.castShadow = true;
+key.shadow.mapSize.set(1024, 1024); key.shadow.camera.left = -12; key.shadow.camera.right = 12; key.shadow.camera.top = 12; key.shadow.camera.bottom = -12; key.shadow.bias = -0.0005;
+scene.add(key);
+const rim = new THREE.PointLight(0xcdb27c, 1.4, 16); rim.position.set(-4, 5, -5); scene.add(rim);
+const fill = new THREE.PointLight(0x93b49c, 0.7, 16); fill.position.set(5, 3, -4); scene.add(fill);
+
+const std = (color, rough = 0.85, metal = 0, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal, envMapIntensity: metal > 0.3 ? 1 : 0.35, ...extra });
+const goldMat = std(C.gold, 0.32, 0.95);
+const goldDim = std(C.gold, 0.5, 0.7);
+const shadowy = (o) => { o.traverse((m) => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); return o; };
+
+/* ═════════ canvas helpers ═════════ */
+function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+function wrap(c, text, maxW) { const out = []; let line = ''; for (const w of text.split(' ')) { const t = line ? line + ' ' + w : w; if (c.measureText(t).width > maxW && line) { out.push(line); line = w; } else line = t; } if (line) out.push(line); return out; }
+function texFrom(cv) { const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t; }
+// A camera-facing label with a redraw hook.
+function makeSprite(w, h, worldH, draw) {
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const tex = texFrom(cv);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, toneMapped: false }));
+  sp.scale.set(worldH * (w / h), worldH, 1);
+  sp.userData.base = sp.scale.clone();
+  sp.userData.redraw = (...a) => { const c = cv.getContext('2d'); c.clearRect(0, 0, w, h); draw(c, w, h, ...a); tex.needsUpdate = true; };
+  sp.userData.redraw();
+  return sp;
+}
+function pill(text, kind = 'gold', worldH = 0.32, widthText = text) {
+  const tones = { gold: [HEX.gold2, 'rgba(14,18,15,.9)', HEX.gold], ok: [HEX.ok, 'rgba(14,22,17,.92)', HEX.ok], bad: [HEX.bad, 'rgba(26,14,13,.92)', HEX.bad], van: [HEX.van, 'rgba(14,18,15,.88)', 'rgba(236,226,207,.25)'] };
+  const probe = document.createElement('canvas').getContext('2d'); probe.font = `700 52px ${SANS}`;
+  const w = Math.ceil(Math.max(probe.measureText(text).width, probe.measureText(widthText).width) * 1.08 + 90), h = 104;
+  return makeSprite(w, h, worldH, (c, W, H, t = text, k = kind) => {
+    const [fg, bg, br] = tones[k];
+    rr(c, 4, 4, W - 8, H - 8, 46); c.fillStyle = bg; c.fill(); c.lineWidth = 4; c.strokeStyle = br; c.stroke();
+    c.fillStyle = fg; c.font = `700 52px ${SANS}`; c.textBaseline = 'middle'; c.textAlign = 'center'; c.fillText(t, W / 2, H / 2 + 2);
+  });
+}
+
+/* ═════════ tween clock (pausable, speed, abortable) ═════════ */
+let simT = 0, speed = 1, paused = false, token = 0;
+const tweens = [];
+class Abort extends Error {}
+function tween(dur, fn, ease = easeInOut, quiet = false) {
+  const tok = token;
+  return new Promise((res, rej) => tweens.push({ t0: simT, dur: Math.max(1, dur), fn, ease, res, rej, tok, quiet }));
+}
+const fx = (dur, fn, ease) => { tween(dur, fn, ease, true); };
+const wait = (ms) => tween(ms, () => {});
+function stepTweens() {
+  for (let i = tweens.length - 1; i >= 0; i--) {
+    const tw = tweens[i];
+    const k = Math.min(1, (simT - tw.t0) / tw.dur);
+    tw.fn(tw.ease(k), k);
+    if (k >= 1) { tweens.splice(i, 1); tw.res(); }
+  }
+}
+function abortAll() { token++; const old = tweens.splice(0); for (const tw of old) if (!tw.quiet) tw.rej(new Abort()); }
+
+/* ═════════ stage ═════════ */
+const floor = new THREE.Mesh(new THREE.CircleGeometry(22, 96), std(0x060a07, 0.97, 0, { envMapIntensity: 0.1 }));
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+for (const r of [2.6, 5.4, 8.6, 12]) {
+  const ring = new THREE.Mesh(new THREE.RingGeometry(r, r + 0.025, 160), new THREE.MeshBasicMaterial({ color: C.gold, transparent: true, opacity: r < 9 ? 0.32 : 0.14 }));
+  ring.rotation.x = -Math.PI / 2; ring.position.y = 0.004; scene.add(ring);
+}
+// ambient gold dust
+const dust = (() => {
+  const n = 260, pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, r = 2 + Math.random() * 13; pos.set([Math.cos(a) * r, Math.random() * 7, Math.sin(a) * r], i * 3); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const p = new THREE.Points(g, new THREE.PointsMaterial({ color: C.gold2, size: 0.035, transparent: true, opacity: 0.55, depthWrite: false }));
+  scene.add(p); return p;
+})();
+
+// pedestal + phone
+const ped = shadowy(new THREE.Mesh(new THREE.CylinderGeometry(1.35, 1.45, 0.3, 64), std(0x15281e, 0.8, 0, { envMapIntensity: 0.2 })));
+ped.position.set(0, 0.15, -1.6); scene.add(ped);
+const pedRing = new THREE.Mesh(new THREE.TorusGeometry(1.37, 0.018, 8, 120), goldMat); pedRing.rotation.x = Math.PI / 2; pedRing.position.set(0, 0.3, -1.6); scene.add(pedRing);
+function roundedShape(w, h, r) { const s = new THREE.Shape(), x = -w / 2, y = -h / 2; s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r); s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h); s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r); s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y); return s; }
+const phone = new THREE.Group(); phone.position.set(0, 2.15, -1.6); scene.add(phone);
+{
+  const body = new THREE.Mesh(new THREE.ExtrudeGeometry(roundedShape(1.6, 3.3, 0.24), { depth: 0.1, bevelEnabled: true, bevelThickness: 0.035, bevelSize: 0.035, bevelSegments: 5, curveSegments: 14 }), goldMat);
+  body.geometry.translate(0, 0, -0.05); body.castShadow = true; phone.add(body);
+  const glass = new THREE.Mesh(new THREE.ShapeGeometry(roundedShape(1.52, 3.22, 0.2), 14), std(0x050605, 0.2, 0.1)); glass.position.z = 0.088; phone.add(glass);
+}
+const SW = 600, SH = 1290;
+const scv = document.createElement('canvas'); scv.width = SW; scv.height = SH;
+const sctx = scv.getContext('2d');
+const stex = texFrom(scv);
+const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.46, 1.46 * SH / SW), new THREE.MeshBasicMaterial({ map: stex, transparent: true, toneMapped: false }));
+screen.position.z = 0.095; phone.add(screen);
+const phoneFront = () => phone.localToWorld(V(0, 0.35, 0.3));
+
+// shield (safety filter)
+const shield = new THREE.Mesh(new THREE.IcosahedronGeometry(1.25, 1), new THREE.MeshBasicMaterial({ color: C.sage, wireframe: true, transparent: true, opacity: 0, depthWrite: false }));
+shield.scale.set(1.25, 1.55, 0.45); shield.position.set(0, 2.15, -0.95); scene.add(shield);
+
+// vault for held money
+const vault = new THREE.Group(); vault.position.set(-2.7, 0, -0.9); scene.add(vault);
+{
+  const vp = shadowy(new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.82, 0.24, 48), std(C.green, 0.8))); vp.position.y = 0.12; vault.add(vp);
+  const cube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: C.van, transparent: true, opacity: 0.12, roughness: 0.1, metalness: 0, depthWrite: false }));
+  cube.position.y = 0.76; vault.add(cube);
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), new THREE.LineBasicMaterial({ color: C.gold2 })); edges.position.y = 0.76; vault.add(edges);
+  const shackle = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.03, 10, 24, Math.PI), goldMat); shackle.position.set(0, 1.42, 0); vault.add(shackle);
+  const lockBody = shadowy(new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.26, 0.12), goldMat)); lockBody.position.set(0, 1.3, 0); vault.add(lockBody);
+  vault.userData.shackle = shackle;
+}
+const vaultLabel = pill('ON HOLD · $0', 'gold', 0.3, 'ON HOLD · $888'); vaultLabel.position.set(-2.7, 2.05, -0.9); scene.add(vaultLabel);
+const coinGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.028, 28);
+const stack = [];
+for (let i = 0; i < 36; i++) {
+  const m = new THREE.Mesh(coinGeo, goldMat); const col = i % 4, row = Math.floor(i / 4);
+  m.position.set(-2.7 + (col % 2 ? 0.14 : -0.14), 0.3 + row * 0.032, -0.9 + (col > 1 ? 0.14 : -0.14)); m.visible = false; m.castShadow = true; scene.add(m); stack.push(m);
+}
+let held = 0;
+function setHeld(v) { held = Math.max(0, v); vaultLabel.userData.redraw(`ON HOLD · $${held}`, held ? 'gold' : 'van'); const n = Math.min(stack.length, Math.ceil(held / 2.5)); stack.forEach((m, i) => (m.visible = i < n)); }
+
+// platform fee obelisk
+const fee = shadowy(new THREE.Mesh(new THREE.BoxGeometry(0.32, 1.3, 0.32), goldDim)); fee.position.set(-4.4, 0.65, -2.6); scene.add(fee);
+const feeLabel = pill('Platform 20% · $0', 'van', 0.24, 'Platform 20% · $888'); feeLabel.position.set(-4.4, 1.65, -2.6); scene.add(feeLabel);
+
+// KYC gate
+const gate = new THREE.Group(); gate.position.set(0, 0, 8.4); scene.add(gate);
+{
+  for (const x of [-1.25, 1.25]) { const p = shadowy(new THREE.Mesh(new THREE.BoxGeometry(0.22, 3, 0.22), goldMat)); p.position.set(x, 1.5, 0); gate.add(p); }
+  const beam = shadowy(new THREE.Mesh(new THREE.BoxGeometry(2.72, 0.24, 0.26), goldMat)); beam.position.y = 3.05; gate.add(beam);
+  const strip = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.05, 0.02), new THREE.MeshBasicMaterial({ color: C.cash })); strip.position.set(0, 2.9, 0.14); gate.add(strip); gate.userData.strip = strip;
+  const scan = new THREE.Mesh(new THREE.BoxGeometry(2.28, 0.03, 0.5), new THREE.MeshBasicMaterial({ color: C.sage, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })); scan.position.y = 2.8; gate.add(scan); gate.userData.scan = scan;
+}
+const gateLabel = pill('VERIFICATION', 'van', 0.26); gateLabel.position.set(0, 3.55, 8.4); scene.add(gateLabel);
+function gateLight(kind) { gate.userData.strip.material.color.setHex(kind === 'ok' ? C.sage : kind === 'bad' ? C.rose : C.cash); }
+async function scan(ms = 800) {
+  const s = gate.userData.scan; s.material.opacity = 0.7;
+  await tween(ms, (k) => { s.position.y = lerp(2.8, 0.15, k); });
+  s.material.opacity = 0;
+}
+
+// tripod camera with REC light
+const tripod = new THREE.Group(); tripod.position.set(2.2, 0, 0.6); tripod.rotation.y = Math.PI + 0.35; scene.add(tripod);
+{
+  for (let i = 0; i < 3; i++) { const l = shadowy(new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.025, 1.4, 8), std(0x1a1c19, 0.5, 0.6))); const a = i * 2.1; l.position.set(Math.cos(a) * 0.22, 0.66, Math.sin(a) * 0.22); l.rotation.set(Math.sin(a) * 0.32, 0, -Math.cos(a) * 0.32); tripod.add(l); }
+  const cam = shadowy(new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.28, 0.26), std(0x151714, 0.4, 0.5))); cam.position.y = 1.45; tripod.add(cam);
+  const lens = shadowy(new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.1, 0.2, 20), goldMat)); lens.rotation.x = Math.PI / 2; lens.position.set(0, 1.45, 0.22); tripod.add(lens);
+  const rec = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 8), new THREE.MeshBasicMaterial({ color: 0x3a1512 })); rec.position.set(0.15, 1.62, 0.1); tripod.add(rec); tripod.userData.rec = rec;
+}
+let recOn = false;
+
+// road and car for the vehicle check
+const road = new THREE.Mesh(new THREE.PlaneGeometry(30, 1.6), std(0x0a0d0b, 0.95)); road.rotation.x = -Math.PI / 2; road.position.set(0, 0.006, -5.6); road.receiveShadow = true; scene.add(road);
+for (let x = -14; x < 15; x += 1.6) { const d = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.05), new THREE.MeshBasicMaterial({ color: C.gold, transparent: true, opacity: 0.55 })); d.rotation.x = -Math.PI / 2; d.position.set(x, 0.01, -5.6); scene.add(d); }
+const car = new THREE.Group(); car.position.set(-13, 0, -5.6); scene.add(car);
+const wheels = [];
+{
+  const bodyM = std(C.cash, 0.35, 0.55);
+  const b = shadowy(new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.38, 0.92), bodyM)); b.position.y = 0.42; car.add(b);
+  const cab = shadowy(new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.34, 0.82), std(0x111612, 0.15, 0.3))); cab.position.set(-0.1, 0.78, 0); car.add(cab);
+  const trim = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.04, 0.94), goldMat); trim.position.y = 0.6; car.add(trim);
+  for (const [x, z] of [[0.62, 0.46], [-0.62, 0.46], [0.62, -0.46], [-0.62, -0.46]]) { const w = shadowy(new THREE.Mesh(new THREE.CylinderGeometry(0.21, 0.21, 0.16, 20), std(0x0c0d0c, 0.7))); w.rotation.x = Math.PI / 2; w.position.set(x, 0.22, z); car.add(w); wheels.push(w); }
+  for (const z of [0.3, -0.3]) { const hl = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), new THREE.MeshBasicMaterial({ color: 0xfff1d6 })); hl.position.set(0.96, 0.46, z); car.add(hl); }
+}
+const carSign = pill('Driving · dares paused', 'gold', 0.3); carSign.position.set(0, 2.0, 0); car.add(carSign); carSign.visible = false;
+
+/* ═════════ people ═════════ */
+function makePerson({ shirt = C.cash, pants = 0x1b231e, skin = 0xe0b48f, hair = 0x2a1d14, scale = 1, phoneHand = true } = {}) {
+  const g = new THREE.Group();
+  const mShirt = std(shirt, 0.88), mPants = std(pants, 0.9), mSkin = std(skin, 0.6), mHair = std(hair, 0.7);
+  const hips = new THREE.Group(); hips.position.y = 0.9; g.add(hips);
+  const legGeo = new THREE.CylinderGeometry(0.075, 0.064, 0.8, 12); legGeo.translate(0, -0.4, 0);
+  const legL = new THREE.Mesh(legGeo, mPants); legL.position.x = -0.1; hips.add(legL);
+  const legR = new THREE.Mesh(legGeo, mPants); legR.position.x = 0.1; hips.add(legR);
+  for (const leg of [legL, legR]) { const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.08, 0.24), std(0x0e0f0e, 0.6)); shoe.position.set(0, -0.82, 0.05); leg.add(shoe); }
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.235, 0.2, 0.6, 18), mShirt); torso.position.y = 0.32; hips.add(torso);
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.235, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), mShirt); cap.position.y = 0.62; hips.add(cap);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.12, 10), mSkin); neck.position.y = 0.88; hips.add(neck);
+  const head = new THREE.Group(); head.position.y = 1.06; hips.add(head);
+  head.add(new THREE.Mesh(new THREE.SphereGeometry(0.17, 20, 16), mSkin));
+  const hairM = new THREE.Mesh(new THREE.SphereGeometry(0.178, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), mHair); hairM.rotation.x = -0.35; head.add(hairM);
+  for (const x of [-0.06, 0.06]) { const e = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), std(0x15100c, 0.4)); e.position.set(x, 0.01, 0.155); head.add(e); }
+  const armGeo = new THREE.CylinderGeometry(0.052, 0.046, 0.6, 10); armGeo.translate(0, -0.3, 0);
+  const mkArm = (x) => { const a = new THREE.Group(); a.position.set(x, 0.6, 0); hips.add(a); a.add(new THREE.Mesh(armGeo, mShirt)); const h = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 8), mSkin); h.position.y = -0.62; a.add(h); return a; };
+  const armL = mkArm(-0.29), armR = mkArm(0.29);
+  let mini = null;
+  if (phoneHand) { mini = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.18, 0.016), std(0x111311, 0.3, 0.4)); mini.position.set(0, -0.66, 0.06); const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.084, 0.16), new THREE.MeshBasicMaterial({ color: C.green2 })); scr.position.z = -0.009; scr.rotation.y = Math.PI; mini.add(scr); armR.add(mini); }
+  const token = new THREE.Mesh(new THREE.SphereGeometry(0.09, 16, 12), new THREE.MeshStandardMaterial({ color: C.sage, emissive: C.sage, emissiveIntensity: 0.6, roughness: 0.4 }));
+  token.position.y = -0.78; token.visible = false; armL.add(token);
+  g.scale.setScalar(scale); shadowy(g); scene.add(g);
+  return { g, hips, legL, legR, armL, armR, head, token, mini, mode: 'idle', walking: false, phase: Math.random() * 6, pose: { lx: 0, rx: 0, lz: 0, rz: 0, ll: 0, lr: 0, y: 0.9, tilt: 0, sway: 0 }, badges: [] };
+}
+function animPerson(p, t, dt) {
+  const T = { lx: 0, rx: 0, lz: -0.08, rz: 0.08, ll: 0, lr: 0, y: 0.9, tilt: Math.sin(t * 0.6 + p.phase) * 0.12, sway: 0 };
+  const ph = t + p.phase;
+  if (p.walking) {
+    const s = Math.sin(ph * 9); T.ll = s * 0.6; T.lr = -s * 0.6; T.lx = -s * 0.45; T.rx = s * 0.45; T.y = 0.9 + Math.abs(Math.cos(ph * 9)) * 0.04;
+  } else if (p.mode === 'phone') { T.rx = -1.25; T.rz = 0.15; T.y = 0.9 + Math.sin(ph * 2) * 0.006; }
+  else if (p.mode === 'raise') { T.rx = -1.25; T.rz = 0.15; T.lz = -2.75 + Math.sin(ph * 5) * 0.08; }
+  else if (p.mode === 'dance') { T.lz = -2.3 + Math.sin(ph * 6) * 0.45; T.rz = 2.3 - Math.sin(ph * 6) * 0.45; T.y = 0.9 + Math.abs(Math.sin(ph * 6)) * 0.07; T.sway = Math.sin(ph * 3) * 0.14; T.ll = Math.sin(ph * 6) * 0.15; T.lr = -Math.sin(ph * 6) * 0.15; T.tilt = Math.sin(ph * 3) * 0.2; }
+  else if (p.mode === 'cheer') { T.lz = -2.85 + Math.sin(ph * 12) * 0.12; T.rz = 2.85 - Math.sin(ph * 12) * 0.12; T.y = 0.9 + Math.max(0, Math.sin(ph * 7)) * 0.22; }
+  else if (p.mode === 'shrug') { T.lz = -0.75; T.rz = 0.75; T.lx = -0.5; T.rx = -0.5; T.tilt = 0.25; }
+  else if (p.mode === 'wave') { T.rz = 2.5 + Math.sin(ph * 8) * 0.35; }
+  const k = 1 - Math.exp(-dt * 10);
+  for (const key of Object.keys(T)) p.pose[key] = lerp(p.pose[key], T[key], k);
+  const P = p.pose;
+  p.armL.rotation.set(P.lx, 0, P.lz); p.armR.rotation.set(P.rx, 0, P.rz);
+  p.legL.rotation.x = P.ll; p.legR.rotation.x = P.lr;
+  p.hips.position.y = P.y; p.hips.rotation.z = P.sway; p.head.rotation.y = P.tilt;
+}
+function faceTo(p, x, z, ms = 320, quiet = false) {
+  const from = p.g.rotation.y; let to = Math.atan2(x - p.g.position.x, z - p.g.position.z);
+  while (to - from > Math.PI) to -= Math.PI * 2; while (to - from < -Math.PI) to += Math.PI * 2;
+  return tween(ms, (k) => (p.g.rotation.y = lerp(from, to, k)), easeInOut, quiet);
+}
+async function walk(p, x, z, pace = 2.1) {
+  const from = p.g.position.clone(), to = V(x, 0, z), dist = from.distanceTo(to);
+  if (dist < 0.02) return;
+  faceTo(p, x, z, 260, true); p.walking = true;
+  await tween((dist / pace) * 1000, (k) => p.g.position.lerpVectors(from, to, k), (t) => t);
+  p.walking = false;
+}
+function badge(p, text, kind = 'ok') {
+  const b = pill(text, kind, 0.27);
+  b.position.set(0, 2.3 + p.badges.length * 0.34, 0);
+  b.scale.set(0.001, 0.001, 1); p.g.add(b); p.badges.push(b);
+  fx(380, (k) => b.scale.set(b.userData.base.x * k / p.g.scale.x, b.userData.base.y * k / p.g.scale.y, 1), easeBack);
+  return b;
+}
+function clearBadges(p) { for (const b of p.badges) p.g.remove(b); p.badges = []; }
+
+const streamer = makePerson({ shirt: 0xe9dcc5, pants: 0x1a221d, skin: 0xe8bf9c, hair: 0x1a120c, phoneHand: false });
+const streamerTag = pill('Nika · streamer', 'van', 0.26); streamerTag.position.set(0, 2.35, 0); streamer.g.add(streamerTag);
+const earnLabel = pill('+$0 earned', 'gold', 0.28, '+$888 earned'); earnLabel.position.set(0, 2.72, 0); streamer.g.add(earnLabel); earnLabel.visible = false;
+const teen = makePerson({ shirt: 0x6d8a74, pants: 0x232b25, skin: 0xe6bd98, hair: 0x4a3322, scale: 0.78 });
+const VIEWER_STYLE = [
+  { shirt: 0x284a39, hair: 0x2a1d14, name: 'Olena', card: ['Visa', '4242'] }, { shirt: 0xc8b69a, hair: 0x151010, name: 'Taras', card: ['Mastercard', '4444'] },
+  { shirt: 0x93b49c, hair: 0x6b4a2a, name: 'Iryna', card: ['Visa', '1881'] }, { shirt: 0xece2cf, hair: 0x2a1d14, name: 'Bohdan', card: ['Visa', '7310'] },
+  { shirt: 0x7e2b25, hair: 0x1a120c, name: 'Sofia', card: ['Mastercard', '5100'] }, { shirt: 0x3c5c49, hair: 0x4a3322, name: 'Maks', card: ['Visa', '0420'] },
+  { shirt: 0xb9a07a, hair: 0x151010, name: 'Dana', card: ['Mastercard', '9001'] }, { shirt: 0x1e3a2c, hair: 0x6b4a2a, name: 'Yurii', card: ['Visa', '3346'] },
+];
+const viewers = VIEWER_STYLE.map((s, i) => {
+  const p = makePerson({ shirt: s.shirt, hair: s.hair, skin: [0xe0b48f, 0xd9a882, 0xeec7a6, 0xc99470][i % 4] });
+  const a = (24 + i * (132 / 7)) * Math.PI / 180;
+  p.spot = V(Math.cos(a) * 4.7, 0, -1 + Math.sin(a) * 4.7);
+  p.name = s.name; p.card = s.card; p.amount = 0;
+  return p;
+});
+const people = [streamer, teen, ...viewers];
+
+/* ═════════ flying things: coins, cards, notes, bursts ═════════ */
+const transient = new Set();
+function addT(o) { scene.add(o); transient.add(o); return o; }
+const coinPool = [];
+function coin() { let m = coinPool.find((c) => !c.visible); if (!m) { m = new THREE.Mesh(coinGeo, goldMat); m.castShadow = true; scene.add(m); coinPool.push(m); } m.visible = true; return m; }
+function arc(from, to, h) { const mid = from.clone().lerp(to, 0.5); mid.y = Math.max(from.y, to.y) + h; return (k) => { const a = from.clone().lerp(mid, k), b = mid.clone().lerp(to, k); return a.lerp(b, k); }; }
+async function flyCoin(from, to, ms = 1100, h = 2) {
+  const m = coin(), path = arc(from, to, h);
+  await tween(ms, (k) => { m.position.copy(path(k)); m.rotation.set(k * 9, k * 4, 0); });
+  m.visible = false;
+}
+function dareCard(text, kind, amount) {
+  const sp = makeSprite(640, 300, 0.85, (c, W, H) => {
+    rr(c, 6, 6, W - 12, H - 12, 34); c.fillStyle = kind === 'bad' ? 'rgba(30,14,12,.95)' : 'rgba(14,20,16,.95)'; c.fill();
+    c.lineWidth = 6; c.strokeStyle = kind === 'bad' ? HEX.bad : HEX.gold; c.stroke();
+    c.fillStyle = kind === 'bad' ? HEX.bad : HEX.gold2; c.font = `800 26px ${SANS}`; c.fillText(kind === 'bad' ? 'DARE · UNSAFE' : 'NEW DARE', 40, 62);
+    c.fillStyle = HEX.van; c.font = `italic 600 52px ${SERIF}`;
+    wrap(c, `“${text}”`, W - 80).slice(0, 2).forEach((l, i) => c.fillText(l, 40, 140 + i * 58));
+    if (amount) { c.fillStyle = HEX.gold2; c.font = `700 40px ${SERIF}`; c.fillText(amount, 40, 262); }
+  });
+  addT(sp); return sp;
+}
+function handPos(p) { return p.mini ? p.mini.getWorldPosition(V(0, 0, 0)) : p.g.position.clone().add(V(0, 1.6, 0)); }
+function cardSprite(p) {
+  const [brand, last4] = p.card;
+  const sp = makeSprite(480, 300, 0.5, (c, W, H, status = 'HELD', amt = 0) => {
+    const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#284a39'); g.addColorStop(1, '#0f1c15');
+    rr(c, 6, 6, W - 12, H - 12, 30); c.fillStyle = g; c.fill(); c.lineWidth = 4; c.strokeStyle = 'rgba(205,178,124,.6)'; c.stroke();
+    rr(c, 40, 70, 74, 56, 10); c.fillStyle = HEX.gold2; c.fill();
+    c.fillStyle = HEX.van; c.font = `800 30px ${SANS}`; c.fillText(brand.toUpperCase(), 40, 50);
+    c.font = `600 34px ${SANS}`; c.fillText(`•• ${last4}`, 40, 178);
+    const tone = status === 'HELD' ? [HEX.gold2, 'rgba(184,151,90,.2)'] : status === 'CHARGED' ? [HEX.ok, 'rgba(147,180,156,.2)'] : [HEX.cash, 'rgba(236,226,207,.12)'];
+    rr(c, 40, 206, W - 80, 62, 31); c.fillStyle = tone[1]; c.fill();
+    c.fillStyle = tone[0]; c.font = `800 30px ${SANS}`; c.fillText(`${status === 'HELD' ? '🔒 ' : ''}${status} $${amt}`, 62, 248);
+  });
+  sp.position.set(0, 2.55, 0); p.g.add(sp); return sp;
+}
+function note(from) {
+  const sp = makeSprite(128, 128, 0.32, (c) => { c.fillStyle = HEX.gold2; c.font = `600 104px ${SERIF}`; c.textAlign = 'center'; c.fillText(Math.random() < 0.5 ? '♪' : '♫', 64, 100); });
+  sp.position.copy(from); addT(sp);
+  const dx = (Math.random() - 0.5) * 1.2;
+  fx(1600, (k) => { sp.position.set(from.x + dx * k, from.y + k * 1.6, from.z); sp.material.opacity = 1 - k; if (k >= 1) scene.remove(sp); }, (t) => t);
+}
+function burst(at, n = 140, color = C.gold2) {
+  const pos = new Float32Array(n * 3), vel = [];
+  for (let i = 0; i < n; i++) { pos.set([at.x, at.y, at.z], i * 3); const a = Math.random() * Math.PI * 2, u = Math.random() * 2 - 1, s = 1.5 + Math.random() * 2.5; vel.push([Math.cos(a) * Math.sqrt(1 - u * u) * s, Math.abs(u) * s + 1.5, Math.sin(a) * Math.sqrt(1 - u * u) * s]); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const pts = new THREE.Points(g, new THREE.PointsMaterial({ color, size: 0.07, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  addT(pts);
+  fx(1800, (k) => { const tt = k * 1.8; for (let i = 0; i < n; i++) { pos[i * 3] = at.x + vel[i][0] * tt; pos[i * 3 + 1] = at.y + vel[i][1] * tt - 2.4 * tt * tt; pos[i * 3 + 2] = at.z + vel[i][2] * tt; } g.attributes.position.needsUpdate = true; pts.material.opacity = 1 - k; if (k >= 1) scene.remove(pts); }, (t) => t);
+}
+
+/* ═════════ the phone screen: the Kurazh app itself ═════════ */
+const PH = { mode: 'off', queue: 0, pot: 0, backers: 0, t: 30, total: 30, yes: 0, outcome: 'counted', earned: 0, toast: '', toastUntil: 0, chat: [] };
+function say(nick, text, sys = false) { PH.chat.push({ nick, text, sys }); if (PH.chat.length > 6) PH.chat.shift(); }
+function drawScreen(now) {
+  const c = sctx, W = SW, H = SH;
+  c.clearRect(0, 0, W, H); c.save(); rr(c, 0, 0, W, H, 62); c.clip();
+  const g = c.createLinearGradient(0, 0, W * 0.4, H); g.addColorStop(0, '#1f3a2c'); g.addColorStop(1, '#060807'); c.fillStyle = g; c.fillRect(0, 0, W, H);
+  if (PH.mode === 'off') {
+    c.fillStyle = HEX.gold2; c.font = `600 64px ${SERIF}`; c.textAlign = 'center'; c.fillText('K U R A Z H', W / 2, H / 2 - 10);
+    c.fillStyle = HEX.muted; c.font = `600 26px ${SANS}`; c.fillText('Waiting for a streamer', W / 2, H / 2 + 50); c.restore(); stex.needsUpdate = true; return;
+  }
+  for (let i = 0; i < 7; i++) { const x = (Math.sin(now * 0.0003 + i * 1.7) * 0.4 + 0.5) * W, y = (0.15 + i * 0.09) * H, r = 70 + i * 12; const rg = c.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, i % 2 ? 'rgba(205,178,124,.16)' : 'rgba(147,180,156,.12)'); rg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = rg; c.fillRect(x - r, y - r, r * 2, r * 2); }
+  // silhouette of the streamer on camera
+  const sway = PH.mode === 'doing' ? Math.sin(now * 0.008) * 14 : Math.sin(now * 0.001) * 4;
+  c.fillStyle = 'rgba(5,6,5,.92)'; c.beginPath(); c.ellipse(W / 2 + sway * 0.4, H * 0.98, 250, 300, 0, 0, Math.PI * 2); c.fill();
+  c.fillRect(W / 2 - 34 + sway * 0.6, H * 0.6, 68, 140); c.beginPath(); c.arc(W / 2 + sway, H * 0.58, 92, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = 'rgba(205,178,124,.45)'; c.lineWidth = 4; c.beginPath(); c.arc(W / 2 + sway, H * 0.58, 92, Math.PI * 1.05, Math.PI * 1.72); c.stroke();
+  const sh = c.createLinearGradient(0, 0, 0, H); sh.addColorStop(0, 'rgba(5,6,5,.7)'); sh.addColorStop(0.3, 'rgba(5,6,5,0)'); sh.addColorStop(0.62, 'rgba(5,6,5,0)'); sh.addColorStop(1, 'rgba(5,6,5,.9)'); c.fillStyle = sh; c.fillRect(0, 0, W, H);
+  // header
+  c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+  rr(c, 36, 56, 96, 38, 8); c.fillStyle = HEX.ox; c.fill(); c.fillStyle = HEX.van; c.font = `800 20px ${SANS}`; c.fillText('LIVE', 62, 82);
+  c.beginPath(); c.arc(50, 75, 5, 0, Math.PI * 2); c.fill();
+  c.fillStyle = HEX.cash; c.font = `600 22px ${SANS}`; c.fillText(`${(2431 + Math.floor(now / 900) % 37).toLocaleString('en-US')} watching · Kyiv`, 148, 82);
+  c.fillStyle = HEX.van; c.font = `600 54px ${SERIF}`; c.fillText('Nika Lysenko', 36, 158);
+  let x = 36; for (const [t, gold] of [['City', 0], ['Night out', 0], ['Dares from $5', 1]]) { c.font = `700 20px ${SANS}`; const w = c.measureText(t).width + 28; rr(c, x, 180, w, 36, 9); c.fillStyle = 'rgba(11,15,12,.7)'; c.fill(); c.lineWidth = 2; c.strokeStyle = gold ? HEX.gold : 'rgba(236,226,207,.15)'; c.stroke(); c.fillStyle = gold ? HEX.gold2 : HEX.cash; c.fillText(t, x + 14, 205); x += w + 10; }
+  // dare banner
+  const by = 244, bw = W - 60, bh = PH.mode === 'live' ? 190 : 330;
+  rr(c, 30, by, bw, bh, 28); c.fillStyle = 'rgba(11,15,12,.82)'; c.fill(); c.lineWidth = 2; c.strokeStyle = PH.mode === 'live' ? 'rgba(236,226,207,.14)' : 'rgba(184,151,90,.5)'; c.stroke();
+  const lbl = (t, col) => { c.fillStyle = col; c.font = `800 19px ${SANS}`; c.fillText(t.split('').join(String.fromCharCode(8202)), 58, by + 50); };
+  if (PH.mode === 'live') {
+    lbl('PICKING THE NEXT DARE', HEX.muted); c.textAlign = 'right'; c.fillStyle = HEX.cash; c.font = `600 22px ${SANS}`; c.fillText(`queued ${PH.queue}`, W - 58, by + 50); c.textAlign = 'left';
+    c.fillStyle = HEX.cash; c.font = `500 26px ${SANS}`;
+    c.fillText(PH.queue ? 'Leading: “Sing a verse in a whisper”' : 'Waiting for the first dare', 58, by + 100);
+    if (PH.pot) { c.fillStyle = HEX.gold2; c.font = `700 40px ${SERIF}`; c.fillText(`$${PH.pot} on hold`, 58, by + 150); }
+  } else if (PH.mode === 'doing') {
+    lbl('LIVE DARE', HEX.gold2); c.textAlign = 'right'; c.fillStyle = PH.t < 6 ? HEX.bad : HEX.van; c.font = `700 42px ${SANS}`; c.fillText(`0:${String(Math.ceil(PH.t)).padStart(2, '0')}`, W - 58, by + 58); c.textAlign = 'left';
+    c.fillStyle = HEX.van; c.font = `italic 600 48px ${SERIF}`; wrap(c, '“Sing a verse in a whisper”', bw - 60).forEach((l, i) => c.fillText(l, 58, by + 128 + i * 54));
+    rr(c, 58, by + 228, bw - 56, 8, 4); c.fillStyle = 'rgba(236,226,207,.12)'; c.fill(); rr(c, 58, by + 228, (bw - 56) * (PH.t / PH.total), 8, 4); c.fillStyle = HEX.gold; c.fill();
+    c.fillStyle = HEX.gold2; c.font = `700 44px ${SERIF}`; c.fillText(`$${PH.pot}`, 58, by + 298); const pw = c.measureText(`$${PH.pot}`).width; c.fillStyle = HEX.cash; c.font = `600 22px ${SANS}`; c.fillText(`held · ${PH.backers} backers`, 58 + pw + 14, by + 296);
+  } else if (PH.mode === 'vote') {
+    lbl('DOES IT COUNT?', HEX.ok);
+    c.fillStyle = HEX.van; c.font = `italic 600 40px ${SERIF}`; c.fillText('“Sing a verse in a whisper”', 58, by + 108);
+    const bar = (yy, label, pct, col) => { rr(c, 58, yy, bw - 56, 70, 16); c.fillStyle = 'rgba(236,226,207,.06)'; c.fill(); rr(c, 58, yy, (bw - 56) * pct / 100, 70, 16); c.fillStyle = col; c.fill(); c.fillStyle = HEX.van; c.font = `700 26px ${SANS}`; c.fillText(label, 82, yy + 45); c.textAlign = 'right'; c.fillText(`${Math.round(pct)}%`, W - 82, yy + 45); c.textAlign = 'left'; };
+    bar(by + 140, 'Yes', PH.yes, 'rgba(147,180,156,.35)'); bar(by + 224, 'No', 100 - PH.yes, 'rgba(192,116,102,.3)');
+  } else if (PH.mode === 'result') {
+    const ok = PH.outcome === 'counted';
+    c.textAlign = 'center'; c.fillStyle = ok ? HEX.ok : HEX.cash; c.font = `600 66px ${SERIF}`; c.fillText(ok ? 'Counted' : 'Not counted', W / 2, by + 120);
+    c.fillStyle = HEX.van; c.font = `600 26px ${SANS}`; c.fillText(ok ? `Holds captured · $${PH.earned} to Nika` : 'Every hold released in full', W / 2, by + 180);
+    c.fillStyle = HEX.muted; c.font = `500 22px ${SANS}`; c.fillText(ok ? '20% platform fee on completed dares' : 'Nothing was charged to any card', W / 2, by + 226); c.textAlign = 'left';
+  }
+  // toast
+  if (PH.toast && now < PH.toastUntil) {
+    rr(c, 40, 600, W - 80, 86, 20); c.fillStyle = 'rgba(30,14,12,.95)'; c.fill(); c.lineWidth = 3; c.strokeStyle = HEX.bad; c.stroke();
+    c.fillStyle = HEX.van; c.font = `700 26px ${SANS}`; c.fillText(PH.toast, 70, 652);
+  }
+  // chat
+  let cy = H - 330;
+  for (const m of PH.chat.slice(-5)) {
+    if (m.sys) { c.font = `600 21px ${SANS}`; const w = Math.min(W - 80, c.measureText(m.text).width + 30); rr(c, 36, cy - 28, w, 40, 10); c.fillStyle = 'rgba(30,58,44,.85)'; c.fill(); c.fillStyle = HEX.cash; c.fillText(m.text, 50, cy - 1); }
+    else { c.font = `700 23px ${SANS}`; c.fillStyle = HEX.gold2; c.fillText(m.nick, 36, cy); const nw = c.measureText(m.nick).width; c.font = `500 23px ${SANS}`; c.fillStyle = HEX.van; c.fillText(m.text, 46 + nw, cy); }
+    cy += 46;
+  }
+  rr(c, 30, H - 104, W - 140, 66, 18); c.fillStyle = 'rgba(11,15,12,.7)'; c.fill(); c.lineWidth = 2; c.strokeStyle = 'rgba(236,226,207,.14)'; c.stroke();
+  c.fillStyle = HEX.muted; c.font = `500 24px ${SANS}`; c.fillText('Say something', 56, H - 62);
+  rr(c, W - 94, H - 104, 66, 66, 18); c.fillStyle = HEX.gold; c.fill();
+  c.restore(); stex.needsUpdate = true;
+}
+
+/* ═════════ HUD ═════════ */
+const TESTS = [
+  'Sign-up rejects anyone under 18', 'Email code confirmed', 'SMS code · two-step verification on', 'Identity verified · ID and selfie',
+  'Streamer goes live · dares from $5', 'Safety filter blocks a dangerous dare', 'Viewer suggests a dare', 'Card holds placed, nothing charged',
+  'Streamer performs against the clock', 'Viewers vote', '', 'Vehicle safety pauses dares',
+];
+let outcome = 'counted', nextOutcome = 'counted', tStart = 0, passed = 0;
+function settleName(o) { return o === 'counted' ? 'Counted · holds captured, streamer paid' : 'Not counted · every hold released'; }
+function renderTests() {
+  TESTS[10] = settleName(outcome);
+  $('#tlist').innerHTML = TESTS.map((t, i) => `<li id="t${i}" class="pending"><span class="ic"></span><span>${t}</span><span class="ms"></span></li>`).join('');
+  passed = 0; updateRun();
+}
+function updateRun() {
+  $('#runtxt').textContent = passed === TESTS.length ? `${passed}/${TESTS.length} passed` : `${passed}/${TESTS.length}`;
+  $('#runpill').classList.toggle('done', passed === TESTS.length);
+  $('#progbar').style.width = (passed / TESTS.length) * 100 + '%';
+}
+function T(i) { const li = $('#t' + i); li.className = 'run'; tStart = simT; $('#capstep').textContent = String(i + 1).padStart(2, '0'); li.scrollIntoView({ block: 'nearest' }); }
+function P(i) { const li = $('#t' + i); li.className = 'pass'; li.querySelector('.ms').textContent = `${((simT - tStart) / 1000).toFixed(1)}s`; passed++; updateRun(); }
+function cap(t) { $('#captxt').textContent = t; }
+
+/* ═════════ camera direction ═════════ */
+const SHOTS = {
+  wide: [V(0, 8.5, 17), V(0, 1.4, 0)], gate: [V(4.2, 3.4, 15), V(0, 1.4, 8)], gateClose: [V(2.2, 2.3, 12.4), V(0, 1.7, 8.4)],
+  stage: [V(0.5, 3.8, 8.5), V(0, 1.9, -1)], phone: [V(0.9, 2.5, 2.6), V(0, 2.1, -1.6)], shield: [V(-3, 2.8, 4.2), V(0, 2, -1)],
+  vault: [V(-0.6, 3.6, 4.6), V(-2.2, 1.1, -0.6)], streamer: [V(5.2, 3.0, 3.6), V(1.9, 1.3, -1.2)], crowd: [V(0.6, 5.4, -2.2), V(0, 1.0, 3.2)],
+  road: [V(3.5, 3.6, 0.8), V(0, 0.8, -5.6)], settle: [V(-1, 4.2, 5.5), V(-1.2, 1.2, -1)],
+};
+let cinematic = true, shot = SHOTS.wide;
+function shotTo(name) { shot = SHOTS[name]; }
+controls.addEventListener('start', () => { if (cinematic) { cinematic = false; $('#b-cam').hidden = false; } });
+function driveCamera(dt, t) {
+  if (!cinematic) return;
+  const [pos, tgt] = shot;
+  const aspect = camera.aspect, scale = aspect < 0.8 ? 1.55 : aspect < 1.2 ? 1.2 : 1;
+  const want = tgt.clone().add(pos.clone().sub(tgt).multiplyScalar(scale));
+  if (!reduced) { const drift = V(Math.sin(t * 0.13) * 0.5, Math.sin(t * 0.17) * 0.15, 0); want.add(drift); }
+  const k = 1 - Math.exp(-dt * 1.6);
+  camera.position.lerp(want, k); controls.target.lerp(tgt, k);
+}
+
+/* ═════════ scene reset ═════════ */
+const viewerCards = new Map();
+function resetScene() {
+  for (const p of people) { p.mode = 'idle'; p.walking = false; p.token.visible = false; clearBadges(p); }
+  for (const [p, sp] of viewerCards) p.g.remove(sp); viewerCards.clear();
+  viewers.forEach((p, i) => { p.g.position.set((i - 3.5) * 0.9, 0, 15 + (i % 2) * 0.8); p.g.rotation.y = Math.PI; p.g.visible = true; p.amount = 0; });
+  teen.g.position.set(-3, 0, 13); teen.g.rotation.y = Math.PI; teen.g.visible = true;
+  streamer.g.position.set(6.5, 0, -1.4); streamer.g.rotation.y = -Math.PI / 2;
+  earnLabel.visible = false; earnLabel.userData.redraw('+$0 earned', 'gold');
+  feeLabel.userData.redraw('Platform 20% · $0', 'van');
+  car.position.set(-13, 0, -5.6); carSign.visible = false;
+  shield.material.opacity = 0; shield.scale.set(1.25, 1.55, 0.45);
+  gateLight('idle'); gate.userData.scan.material.opacity = 0;
+  vault.userData.shackle.position.y = 1.42;
+  coinPool.forEach((c) => (c.visible = false));
+  for (const o of transient) scene.remove(o); transient.clear();
+  Object.assign(PH, { mode: 'off', queue: 0, pot: 0, backers: 0, t: 30, total: 30, yes: 0, earned: 0, toast: '', chat: [] });
+  recOn = false; setHeld(0);
+}
+
+/* ═════════ the run ═════════ */
+async function run() {
+  outcome = nextOutcome; renderTests(); resetScene(); shotTo('wide');
+  cap(`A full end-to-end run · ${outcome === 'counted' ? 'the dare counts this time' : 'this time the dare is voted down'}`);
+  await wait(1800);
+
+  // 1 · under-18 rejected
+  T(0); shotTo('gate'); cap('A 16-year-old tries to sign up');
+  await walk(teen, 0, 9.4, 1.8);
+  await scan(700); gateLight('bad'); badge(teen, '✕ Under 18 · rejected', 'bad');
+  cap('Date of birth check: anyone under 18 is turned away'); await wait(1500);
+  clearBadges(teen); gateLight('idle');
+  await walk(teen, -4.5, 14, 2.2); teen.g.visible = false; P(0);
+
+  // 2-4 · Olena: email, SMS, identity
+  const v0 = viewers[0];
+  T(1); shotTo('gateClose'); cap('Olena signs up and confirms her email with a 6-digit code');
+  await walk(v0, 0, 9.3, 2); await faceTo(v0, 0, 0); await scan(600); badge(v0, '✓ Email confirmed'); P(1);
+  T(2); cap('A text message code turns on two-step verification'); await wait(700); badge(v0, '✓ SMS code'); P(2);
+  T(3); cap('Her ID card is captured, then a live selfie check'); await scan(800); badge(v0, '✓ ID document'); await wait(500); badge(v0, '✓ Selfie match'); gateLight('ok'); await wait(900); P(3);
+  shotTo('wide'); cap('Every viewer goes through the same checks');
+  clearBadges(v0);
+  await Promise.all(viewers.map((p, i) => (async () => {
+    await wait(i * 380);
+    if (i) { await walk(p, 0, 9.3, 2.6); const b = badge(p, '✓ Verified', 'ok'); await wait(260); p.g.remove(b); p.badges = []; }
+    await walk(p, p.spot.x, p.spot.z, 2.4); await faceTo(p, 0, -1.6); p.mode = 'phone';
+  })()));
+  gateLight('idle');
+
+  // 5 · streamer goes live
+  T(4); shotTo('stage'); cap('Nika goes live: City, Night out · dares from $5');
+  await walk(streamer, 1.9, -1.2, 1.8); await faceTo(streamer, 0, 4); streamer.mode = 'wave';
+  recOn = true; PH.mode = 'live'; say('', 'Nika is live · safety filter on', true);
+  await wait(1700); streamer.mode = 'idle'; P(4);
+
+  // 6 · safety filter
+  T(5); shotTo('shield'); cap('Dana sends “Jump off the roof”. It never reaches Nika');
+  {
+    const v = viewers[6], c = dareCard('Jump off the roof', 'bad', ''), from = handPos(v), to = V(0, 2.3, -0.5), path = arc(from, to, 1.3);
+    await tween(1200, (k) => { c.position.copy(path(k)); });
+    shield.material.color.setHex(C.rose);
+    fx(900, (k) => { shield.material.opacity = Math.sin(k * Math.PI) * 0.7; const s = 1 + Math.sin(k * Math.PI) * 0.06; shield.scale.set(1.25 * s, 1.55 * s, 0.45 * s); });
+    PH.toast = 'Filter blocked · Dangerous'; PH.toastUntil = performance.now() + 3200 / speed;
+    const p0 = c.position.clone();
+    await tween(900, (k) => { c.position.set(p0.x + k * 0.6, lerp(p0.y, 0.2, k * k), p0.z + k * 0.8); c.material.rotation = k * 2.5; c.material.opacity = 1 - k; });
+    scene.remove(c); shield.material.color.setHex(C.sage);
+  }
+  cap('Dangerous, illegal and humiliating dares are stopped by the filter'); await wait(900); P(5);
+
+  // 7 · suggest
+  T(6); shotTo('phone'); cap('Olena suggests “Sing a verse in a whisper” for $5');
+  {
+    const c = dareCard('Sing a verse in a whisper', 'ok', '$5 stake'), from = handPos(v0), to = phoneFront(), path = arc(from, to, 1.6);
+    await tween(1300, (k) => { c.position.copy(path(k)); });
+    await tween(350, (k) => { c.scale.set(c.userData.base.x * (1 - k), c.userData.base.y * (1 - k), 1); });
+    scene.remove(c); PH.queue = 1; say('olena_s', '+$5 on “Sing a verse…”');
+  }
+  await wait(700); P(6);
+
+  // 8 · holds
+  T(7); shotTo('vault'); cap('$5 is frozen on Visa •• 4242. Nothing is charged yet');
+  const hold = async (p, amt) => {
+    let sp = viewerCards.get(p);
+    if (!sp) { sp = cardSprite(p); viewerCards.set(p, sp); sp.scale.set(0.001, 0.001, 1); }
+    p.amount += amt; sp.userData.redraw('HELD', p.amount);
+    await tween(380, (k) => sp.scale.set(sp.userData.base.x * k, sp.userData.base.y * k, 1), easeBack);
+    const from = sp.getWorldPosition(V(0, 0, 0)), to = V(-2.7, 1.1, -0.9), n = Math.min(4, Math.ceil(amt / 5));
+    await Promise.all(Array.from({ length: n }, (_, j) => (async () => { await wait(j * 120); await flyCoin(from, to, 1000, 1.8); })()));
+    setHeld(held + amt); PH.pot = held; PH.backers += 1;
+  };
+  await hold(v0, 5);
+  cap('Others back it too. Each stake is held on their own card');
+  await Promise.all([[1, 10], [3, 5], [4, 20], [5, 5], [7, 10]].map(([i, a], k) => (async () => { await wait(k * 300); await hold(viewers[i], a); say(viewers[i].name.toLowerCase(), `+$${a} on it`); })()));
+  vault.userData.shackle.position.y = 1.38;
+  cap(`$${held} frozen across 6 cards. Banks show it as pending`); await wait(1200); P(7);
+
+  // 9 · perform
+  T(8); shotTo('streamer'); PH.mode = 'doing'; PH.t = 30; streamer.mode = 'dance';
+  cap('Nika takes the dare: 30 seconds on the clock'); say('', 'Nika takes on “Sing a verse in a whisper”', true);
+  await tween(4600, (k) => { PH.t = 30 * (1 - k); if (Math.random() < 0.06) note(streamer.g.position.clone().add(V(0, 2.1, 0))); }, (t) => t);
+  streamer.mode = 'idle'; P(8);
+
+  // 10 · vote
+  T(9); shotTo('crowd'); PH.mode = 'vote'; PH.yes = 0;
+  cap('Time’s up. Viewers vote: does it count?');
+  const yesSet = outcome === 'counted' ? [0, 1, 2, 3, 4, 5] : [1, 6, 7];
+  await Promise.all(viewers.map((p, i) => (async () => {
+    await wait(i * 160);
+    const yes = yesSet.includes(i); p.token.material.color.setHex(yes ? C.sage : C.rose); p.token.material.emissive.setHex(yes ? C.sage : C.rose); p.token.visible = true; p.mode = 'raise';
+  })()));
+  const target = outcome === 'counted' ? 78 : 38;
+  await tween(1600, (k) => (PH.yes = target * k), easeOut);
+  cap(outcome === 'counted' ? '78% say yes. It needs 60%, so it counts' : 'Only 38% say yes. It needed 60%'); await wait(1300); P(9);
+
+  // 11 · settle
+  T(10); shotTo('settle'); viewers.forEach((p) => { p.token.visible = false; p.mode = 'phone'; });
+  PH.mode = 'result'; PH.outcome = outcome; vault.userData.shackle.position.y = 1.5;
+  if (outcome === 'counted') {
+    const toStreamer = Math.round(held * 0.8), toFee = held - toStreamer; PH.earned = toStreamer;
+    cap(`Holds captured: $${toStreamer} to Nika, $${toFee} platform fee`);
+    for (const [p, sp] of viewerCards) sp.userData.redraw('CHARGED', p.amount);
+    const vpos = V(-2.7, 1.1, -0.9);
+    await Promise.all([
+      ...Array.from({ length: 10 }, (_, j) => (async () => { await wait(j * 110); await flyCoin(vpos, streamer.g.position.clone().add(V(0, 1.4, 0)), 1100, 2.2); })()),
+      ...Array.from({ length: 3 }, (_, j) => (async () => { await wait(200 + j * 160); await flyCoin(vpos, V(-4.4, 1.3, -2.6), 900, 1.4); })()),
+      (() => { const h0 = held; return tween(1800, (k) => setHeld(Math.round(h0 * (1 - k)))); })(),
+    ]);
+    setHeld(0); earnLabel.visible = true; earnLabel.userData.redraw(`+$${toStreamer} earned`, 'gold'); feeLabel.userData.redraw(`Platform 20% · $${toFee}`, 'gold');
+    streamer.mode = 'cheer'; burst(streamer.g.position.clone().add(V(0, 2, 0)));
+    say('', `Counted · $${toStreamer} to Nika`, true);
+  } else {
+    cap('Not counted. Every hold is released in full, nothing is charged');
+    const vpos = V(-2.7, 1.1, -0.9);
+    await Promise.all([
+      ...[...viewerCards.keys()].map((p, j) => (async () => { await wait(j * 140); await flyCoin(vpos, p.g.position.clone().add(V(0, 2.4, 0)), 1100, 1.8); viewerCards.get(p).userData.redraw('RELEASED', p.amount); })()),
+      (() => { const h0 = held; return tween(1600, (k) => setHeld(Math.round(h0 * (1 - k)))); })(),
+    ]);
+    setHeld(0); streamer.mode = 'shrug'; say('', 'Not counted · holds released', true);
+  }
+  await wait(1800); streamer.mode = 'idle'; P(10);
+
+  // 12 · vehicle safety
+  T(11); shotTo('road'); cap('Max is road-tripping. While the car moves, dares pause');
+  carSign.visible = true; carSign.userData.redraw('Driving · dares paused', 'gold');
+  await tween(3200, (k) => { car.position.x = lerp(-13, 0, k); wheels.forEach((w) => (w.rotation.y = k * 40)); }, easeOut);
+  carSign.userData.redraw('Stopped · dares on', 'ok'); cap('Parked, so dares are back on. No dare ever runs while driving');
+  await wait(1700);
+  carSign.userData.redraw('Driving · dares paused', 'gold');
+  await tween(2600, (k) => { car.position.x = lerp(0, 14, k); wheels.forEach((w) => (w.rotation.y = 40 + k * 40)); }, (t) => t * t);
+  carSign.visible = false; P(11);
+
+  // done
+  shotTo('wide'); cap(`All ${TESTS.length} checks passed`);
+  burst(V(0, 3.4, -1.6), 220); viewers.forEach((p) => (p.mode = 'cheer')); streamer.mode = 'cheer';
+  await wait(4200);
+  viewers.forEach((p) => (p.mode = 'phone')); streamer.mode = 'idle';
+  nextOutcome = outcome === 'counted' ? 'released' : 'counted'; renderOutcome();
+  await wait(1200);
+}
+async function loop() {
+  for (;;) {
+    try { await run(); }
+    catch (e) { if (!(e instanceof Abort)) { console.error(e); await new Promise((r) => setTimeout(r, 1000)); } }
+  }
+}
+
+/* ═════════ controls ═════════ */
+const ICON = {
+  pause: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6v12M15 6v12"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z"/></svg>',
+  restart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.6L4 8.7M4 4v4.7h4.7"/></svg>',
+  cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+};
+function renderPlay() { $('#b-play').innerHTML = paused ? `${ICON.play}<span>Play</span>` : `${ICON.pause}<span>Pause</span>`; $('#b-play').setAttribute('aria-label', paused ? 'Play' : 'Pause'); }
+function renderOutcome() { $('#b-outcome').innerHTML = `<span>Next run:</span> ${nextOutcome === 'counted' ? 'counted' : 'voted down'}`; }
+$('#b-restart').innerHTML = `${ICON.restart}<span>Restart</span>`;
+$('#b-cam').innerHTML = `${ICON.cam}<span>Cinematic camera</span>`;
+renderPlay(); renderOutcome();
+$('#b-play').addEventListener('click', () => { paused = !paused; renderPlay(); });
+$('#b-restart').addEventListener('click', () => { abortAll(); paused = false; renderPlay(); });
+$('#b-speed').addEventListener('click', () => { speed = speed === 1 ? 2 : speed === 2 ? 0.5 : 1; $('#b-speed').textContent = `${speed === 0.5 ? '½' : speed}×`; });
+$('#b-outcome').addEventListener('click', () => { nextOutcome = nextOutcome === 'counted' ? 'released' : 'counted'; renderOutcome(); abortAll(); paused = false; renderPlay(); });
+$('#b-cam').addEventListener('click', () => { cinematic = true; $('#b-cam').hidden = true; });
+$('#t-toggle').addEventListener('click', () => { const t = $('#tests'); const c = t.classList.toggle('collapsed'); $('#t-toggle').textContent = c ? 'Show all checks' : 'Show current check'; $('#t-toggle').setAttribute('aria-expanded', String(!c)); });
+canvas.addEventListener('keydown', (e) => { if (e.key === ' ') { e.preventDefault(); paused = !paused; renderPlay(); } });
+
+/* ═════════ frame loop ═════════ */
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+let last = performance.now(), wall = 0, screenAcc = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (!paused) { simT += dt * speed * 1000; stepTweens(); }
+  wall += dt;
+  const t = simT / 1000;
+  for (const p of people) if (p.g.visible) animPerson(p, t, paused ? 0 : dt * speed);
+  phone.position.y = 2.15 + (reduced ? 0 : Math.sin(wall * 1.1) * 0.04);
+  vaultLabel.position.y = 2.05 + Math.sin(wall * 1.4) * 0.03;
+  dust.rotation.y += dt * 0.02;
+  tripod.userData.rec.material.color.setHex(recOn && Math.sin(wall * 5) > 0 ? 0xc0392b : 0x3a1512);
+  screenAcc += dt; if (screenAcc > 1 / 20) { screenAcc = 0; drawScreen(now); }
+  driveCamera(dt, wall);
+  controls.update();
+  renderer.render(scene, camera);
+}
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
+  [vaultLabel, feeLabel, gateLabel, streamerTag, earnLabel, carSign].forEach((s) => s.userData.redraw());
+  setHeld(0); feeLabel.userData.redraw('Platform 20% · $0', 'van');
+});
+requestAnimationFrame(frame);
+loop();
+</script>
+
+</body>
+</html>
