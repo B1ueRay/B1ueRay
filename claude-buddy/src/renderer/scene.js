@@ -989,7 +989,7 @@ export class BuddyScene {
   // само что-то быстро движется — нужен полный кадр
   get lively() {
     const t = this.time;
-    return Boolean(this.anims.length || this.trick || this.mode !== 'sitting' || t < this.dizzyUntil || this.wave > 0 || t - this.pokeT < 1.2 || (this.squashT ?? 9) < 0.9);
+    return Boolean(this.anims.length || this.trick || this.mode !== 'sitting' || t < this.dizzyUntil || this.wave > 0 || t - this.pokeT < 1.2 || (this.squashT ?? 9) < 0.9 || this.face.shake > 0.1 || this.face.bounce > 0.1);
   }
 
   frame(dtIn) {

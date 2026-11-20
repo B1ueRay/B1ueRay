@@ -194,7 +194,9 @@ export class Voice {
     // лёгкий разброс высоты и чуть выше на вопросах — чтобы не звучать роботом
     const jit = [-0.1, 0, 0, 0.1][Math.floor(Math.random() * 4)];
     const q = /\?["»)]?$/.test(text) ? 0.1 : 0;
-    const pitch = Math.min(2, Math.max(0.5, Math.round((this.cfg.voicePitch + P.p + jit + q) * 10) / 10 + 0.005));
+    // шаг SAPI = trunc(pitch*10-10): ниже 1.0 сдвигаем вниз, выше — вверх, чтобы не съедало шаг
+    const pv = Math.round((this.cfg.voicePitch + P.p + jit + q) * 10) / 10;
+    const pitch = Math.min(2, Math.max(0.5, pv + (pv < 1 ? -0.005 : 0.005)));
     u.pitch = micro ? 2 : pitch;
     u.rate = micro ? Math.min(2, this.cfg.voiceRate * 1.25) : stepRate(this.cfg.voiceRate, P.r);
     u.volume = micro ? Math.min(1, this.cfg.voiceVolume * 0.75) : Math.min(1, this.cfg.voiceVolume * P.v);
@@ -233,6 +235,8 @@ export class Voice {
       if (this.current !== item || this.speaking) return;
       u.onend = null;
       u.onerror = null;
+      u.onstart = null; // отменённая фраза, стартовавшая с опозданием, не должна дёргать рот следующей
+      u.onboundary = null;
       this.synth.cancel();
       this.speaking = true;
       this.uttStart = performance.now() / 1000;

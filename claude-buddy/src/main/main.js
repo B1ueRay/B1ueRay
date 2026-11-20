@@ -130,8 +130,21 @@ function createOverlay() {
     win.setIgnoreMouseEvents(true, { forward: true });
   });
   // упал рендерер (драйвер, OOM) — оживаем сами, а не висим пустым окном до вечера
+  // с нарастающей паузой: если рендерер падает на каждом старте, не перезапускаем его раз в секунду весь день
+  let crashes = 0;
+  let healthyTimer = 0;
   win.webContents.on('render-process-gone', (_e, d) => {
-    if (!quitting && d.reason !== 'clean-exit') setTimeout(() => win && !win.isDestroyed() && win.reload(), 1000);
+    if (quitting || d.reason === 'clean-exit') return;
+    clearTimeout(healthyTimer);
+    const delay = [1000, 5000, 30000, 300000][Math.min(crashes, 3)];
+    crashes += 1;
+    setTimeout(() => {
+      if (!win || win.isDestroyed()) return;
+      win.reload();
+      healthyTimer = setTimeout(() => {
+        crashes = 0; // минуту прожил без падений — считаем, что выздоровел
+      }, 60000);
+    }, delay);
   });
   // Alt+F4 по оверлею не должен убивать бадди навсегда — живём до "Выйти"
   win.on('close', (e) => {
@@ -451,10 +464,13 @@ app.whenReady().then(() => {
   lastLoginItem = null;
   syncLoginItem();
   // экран заблокирован / сон — рисовать некому
-  powerMonitor.on('lock-screen', () => send('power', { away: true }));
-  powerMonitor.on('suspend', () => send('power', { away: true }));
-  powerMonitor.on('unlock-screen', () => send('power', { away: false }));
-  powerMonitor.on('resume', () => send('power', { away: false }));
+  // "нет человека" = экран заблокирован ИЛИ комп спит; пробуждение при залоченном экране — всё ещё нет
+  const power = { locked: false, suspended: false };
+  const sendPower = () => send('power', { away: power.locked || power.suspended });
+  powerMonitor.on('lock-screen', () => { power.locked = true; sendPower(); });
+  powerMonitor.on('unlock-screen', () => { power.locked = false; sendPower(); });
+  powerMonitor.on('suspend', () => { power.suspended = true; sendPower(); });
+  powerMonitor.on('resume', () => { power.suspended = false; sendPower(); });
 });
 
 app.on('will-quit', () => globalShortcut.unregisterAll());

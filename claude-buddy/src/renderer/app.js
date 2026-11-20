@@ -489,10 +489,10 @@ setInterval(() => {
     showBubble(m, { micro: true });
     // вслух — только первые пару раз за сон, дальше молча в облачке (ночью никого не будим)
     state.mumbles = (state.mumbles || 0) + 1;
-    if (state.mumbles <= 2) voice.say(m, { micro: true });
+    if (state.mumbles <= 2 && !state.away) voice.say(m, { micro: true });
   }
   // долго спал — один раз за твоё отсутствие сам просыпается и потягивается (тихо)
-  if (!state.selfWoke && (now - state.sleptAt) / 60000 > 20 && Math.random() < 0.0005) {
+  if (!state.away && !state.selfWoke && (now - state.sleptAt) / 60000 > 20 && Math.random() < 0.0005) {
     state.selfWoke = true;
     wake();
     doTrick('stretch');
@@ -503,6 +503,7 @@ setInterval(() => {
 }, 400);
 
 setInterval(() => {
+  if (state.away) return; // экран заблокирован — никаких "ку-ку" в пустую комнату
   if (!state.visible && !state.seq && state.peekAt && performance.now() > state.peekAt) {
     state.peekAt = 0;
     peek();
@@ -580,7 +581,7 @@ const FREE_WILL = [
 ];
 state.nextFreeWill = performance.now() + 90000;
 setInterval(() => {
-  if (!cfg.freeWill || !state.visible || state.seq || state.sleeping || state.chatOpen) return;
+  if (state.away || !cfg.freeWill || !state.visible || state.seq || state.sleeping || state.chatOpen) return;
   if (voice.active || scene.activity.thinking || scene.activity.listening || mic.recording) return;
   const now = performance.now();
   if (now - state.lastInteraction < 45000 || now < state.nextFreeWill) return;
@@ -906,7 +907,7 @@ function timeLine() {
 }
 state.nextChat = performance.now() + 150000;
 setInterval(() => {
-  if (!state.visible || state.seq || state.sleeping || state.chatOpen || voice.active || mic.recording) return;
+  if (state.away || !state.visible || state.seq || state.sleeping || state.chatOpen || voice.active || mic.recording) return;
   if (scene.activity.thinking || scene.activity.listening) return;
   const now = performance.now();
   if (now < state.nextChat || now - state.lastInteraction < 120000) return;
@@ -1078,8 +1079,18 @@ api.onConfig((c) => {
 });
 api.onNotice(({ text }) => toast(text, 6000));
 api.onPower?.(({ away }) => {
+  const wasAway = state.away;
   state.away = away;
-  if (!away) scene.onWake?.();
+  if (!away) {
+    scene.onWake?.();
+    if (wasAway) {
+      // разблокировали — не вываливаем сразу всё, что "накопилось" за ночь
+      const now = performance.now();
+      if (!state.visible) schedulePeek();
+      state.nextFreeWill = Math.max(state.nextFreeWill || 0, now + 90000);
+      state.nextChat = Math.max(state.nextChat || 0, now + 150000);
+    }
+  }
 });
 // ---------------- тряска мышкой: у него кружится голова ----------------
 const WIGGLE_LINES = [
