@@ -458,3 +458,12 @@ body.dragging * {
   display: block;
   overflow: hidden;
 }
+
+#bubbleText { scroll-behavior: smooth; }
+#bubbleText .seg { transition: opacity 0.35s, color 0.35s; }
+#bubbleText .seg.past { opacity: 0.45; }
+#bubbleText .seg.tail { opacity: 0.6; }
+#bubbleText.clipTop { -webkit-mask-image: linear-gradient(#0000 0, #000 12px); mask-image: linear-gradient(#0000 0, #000 12px); }
+#bubbleText.clipBot { -webkit-mask-image: linear-gradient(#000 calc(100% - 14px), #0000); mask-image: linear-gradient(#000 calc(100% - 14px), #0000); }
+#bubbleText.clipTop.clipBot { -webkit-mask-image: linear-gradient(#0000 0, #000 12px, #000 calc(100% - 14px), #0000); mask-image: linear-gradient(#0000 0, #000 12px, #000 calc(100% - 14px), #0000); }
+.bubble.long::before { content: ''; }

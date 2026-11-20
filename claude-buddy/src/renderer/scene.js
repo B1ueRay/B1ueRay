@@ -754,6 +754,34 @@ export class BuddyScene {
     this.spawnDust();
   }
 
+  // уход на джетпаке: присел, прогрев, свечой вверх с вилянием
+  async jetpackExit() {
+    this.mode = 'flying';
+    this.jetpack.visible = true;
+    await this.animate(0.3, (k) => this.jetpack.scale.setScalar(Math.max(0.001, k)), ease.outBack);
+    this.thrustTarget = 0.45;
+    this.squashT = 0.25;
+    await this.wait(0.45);
+    this.thrustTarget = 1;
+    this.onThrust?.(1.8);
+    const x0 = this.buddy.position.x;
+    const y0 = this.buddy.position.y;
+    const topY = this.stageLocal(this.threadTopY + 2.5);
+    await this.animate(1.2, (k) => {
+      this.buddy.position.y = lerp(y0, topY, k * k * (1.6 - 0.6 * k));
+      this.buddy.position.x = x0 + Math.sin(k * 9) * 0.18 * (1 - k);
+      this.flyBank = Math.sin(k * 9) * 0.25 * (1 - k);
+    });
+    this.thrustTarget = 0;
+    this.thrust = 0;
+    this.flyBank = 0;
+    this.jetpack.visible = false;
+    this.jetpack.scale.setScalar(0.001);
+    this.buddy.visible = false;
+    this.buddy.position.x = x0;
+    this.mode = 'hidden';
+  }
+
   async ascend() {
     this.mode = 'ascending';
     this.threadOn = true;

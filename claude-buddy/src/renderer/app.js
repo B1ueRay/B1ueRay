@@ -166,9 +166,67 @@ function showBubble(text, { micro = false, sticky = false } = {}) {
   clearTimeout(bubbleTimer);
   els.bubble.classList.remove('thinking'); // send() вернёт точки сам, после showBubble
   els.bubbleText.textContent = text;
+  els.bubbleText.scrollTop = 0;
+  karaoke.cur = -1;
+  karaoke.r = null;
+  karaoke.top = -1;
   els.bubble.classList.toggle('micro', micro);
   els.bubble.classList.add('on');
   if (!sticky) bubbleTimer = setTimeout(hideBubble, Math.min(14000, 3500 + text.length * 70));
+}
+// ---- длинный ответ: облачко показывает то, что сейчас звучит ----
+const karaoke = { r: null, cur: -1, top: -1 };
+function renderReplyBubble(r) {
+  clearTimeout(bubbleTimer);
+  els.bubble.classList.remove('thinking', 'micro');
+  els.bubble.classList.add('on');
+  const t = els.bubbleText;
+  const tail = cleanBubble(r.sent);
+  // готовые предложения не перерисовываем — только дописываем; хвост (ещё не досказанное) — последний span
+  if (karaoke.r !== r) { t.textContent = ''; karaoke.r = r; karaoke.cur = -1; karaoke.top = -1; t.scrollTop = 0; }
+  t.querySelector('.tail')?.remove();
+  for (let i = t.children.length; i < r.segs.length; i++) {
+    const sp = document.createElement('span');
+    sp.className = 'seg';
+    sp.textContent = (i ? ' ' : '') + r.segs[i];
+    t.appendChild(sp);
+  }
+  if (tail) {
+    const sp = document.createElement('span');
+    sp.className = 'seg tail';
+    sp.textContent = (r.segs.length ? ' ' : '') + tail;
+    t.appendChild(sp);
+  }
+  markSeg();
+}
+function markSeg() {
+  [...els.bubbleText.children].forEach((sp, i) => {
+    sp.classList.toggle('past', karaoke.cur >= 0 && i < karaoke.cur);
+    sp.classList.toggle('now', i === karaoke.cur);
+  });
+}
+// куда прокрутить: начало текущего предложения (или предыдущего, если влезают оба), с шагом в целую строку
+function karaokeScroll(t) {
+  const lh = parseFloat(getComputedStyle(t).lineHeight) || 20;
+  const box = t.clientHeight;
+  if (t.scrollHeight <= box + 2) { t.scrollTop = 0; t.classList.remove('clipTop', 'clipBot'); return; }
+  let target;
+  if (karaoke.r && karaoke.cur >= 0 && t.children[karaoke.cur]) {
+    const base = t.getBoundingClientRect().top - t.scrollTop;
+    const topOf = (el) => el.getClientRects()[0]?.top - base;
+    const cur = t.children[karaoke.cur];
+    const curTop = topOf(cur);
+    const curBot = cur.getBoundingClientRect().bottom - base;
+    const prev = t.children[karaoke.cur - 1];
+    target = prev && curBot - topOf(prev) <= box ? topOf(prev) : curTop;
+    if (curBot - target > box) target = curTop; // само предложение длиннее окна — с его начала
+  } else {
+    target = karaoke.r ? 0 : t.scrollHeight; // ещё не заговорил — с начала; обычная фраза — как раньше
+  }
+  target = Math.max(0, Math.min(t.scrollHeight - box, Math.floor(target / lh + 0.3) * lh));
+  if (Math.abs(target - karaoke.top) > 1) { karaoke.top = target; t.scrollTo({ top: target, behavior: 'smooth' }); }
+  t.classList.toggle('clipTop', target > 1);
+  t.classList.toggle('clipBot', target + box < t.scrollHeight - 2);
 }
 function hideBubble() {
   els.bubble.classList.remove('on');
@@ -230,6 +288,10 @@ const EMOTE = {
 let lastVoiceEmo = '';
 let lastEmoteAt = 0;
 voice.onSentenceStart = (item) => {
+  if (item.r && item.r === karaoke.r) {
+    karaoke.cur = item.seg;
+    markSeg();
+  }
   if (item.emotion) {
     scene.setEmotion(item.emotion, 6);
     emoFx(item.emotion);
@@ -245,6 +307,11 @@ voice.onNoVoice = () => {
   toast('Нет русского голоса — говорю молча. Добавь: Параметры → Время и язык → Язык → Русский → Речь.', 9000);
 };
 voice.onIdle = () => {
+  if (karaoke.r && karaoke.r.done && karaoke.r === reply) {
+    clearTimeout(bubbleTimer);
+    const last = karaoke.r.segs.at(-1) || '';
+    bubbleTimer = setTimeout(hideBubble, Math.min(6000, 2200 + last.length * 30));
+  }
   if (state.pendingHide) {
     state.pendingHide = false;
     setTimeout(() => whenFree(() => hide()), 300);
@@ -303,6 +370,7 @@ const GREETINGS = [
   'О, снова ты{name}! Ну рассказывай.',
 ];
 const GREET_EMOS = ['happy', 'wink', 'love'];
+const JET_EXIT_POPS = ['вжух!', 'улетаю!', 'пока-пока!'];
 const PEEK_CALLS = ['ку-ку… ты где?', 'ку-ку! есть кто живой?', 'тук-тук… я только гляну…', 'ку-ку… не занят?'];
 const PEEK_SULKS = ['ну и ладно…', 'пф, не очень-то и хотелось', 'ладно, попозже загляну', 'эх, работаешь… не мешаю'];
 const FOUND_LINES = ['Нашёл меня! Ну ладно, остаюсь.', 'О, заметил! Я тут посижу, ладно?', 'Попался! В смысле, я попался.'];
@@ -335,7 +403,15 @@ async function hide() {
     wake();
     scene.setActivity({ thinking: false, looking: false, listening: false });
     scene.setEmotion('wink', 2);
-    await scene.ascend();
+    // иногда улетает на джетпаке, а не по нитке — не чаще раза в минуту, чтобы не приелось
+    const jet = scene.canTrick && Math.random() < 0.4 && performance.now() - (state.lastJetExit ?? -Infinity) > 60000;
+    if (jet) {
+      state.lastJetExit = performance.now();
+      setTimeout(() => pop(pick(JET_EXIT_POPS), 'small'), 700);
+      await scene.jetpackExit();
+    } else {
+      await scene.ascend();
+    }
     await scene.hideIsland();
     state.visible = false;
     setIgnore(true); // курсор мог остаться над пустым местом — отпускаем мышь
@@ -598,7 +674,7 @@ let reply = null;
 function newReply() {
   state.pendingHide = false; // прощание из прошлого ответа не должно сработать на новом
   lastVoiceEmo = '';
-  reply = { id: ++reqId, raw: '', pos: 0, shown: '', sent: '', emotion: 'neutral', gotText: false, done: false };
+  reply = { id: ++reqId, raw: '', pos: 0, shown: '', sent: '', segs: [], emotion: 'neutral', gotText: false, done: false };
   return reply;
 }
 
@@ -670,11 +746,6 @@ function pushText(r, text) {
   if (!text) return;
   r.shown += text;
   r.sent += text;
-  const shown = cleanBubble(r.shown);
-  if (shown) {
-    els.bubble.classList.remove('thinking');
-    showBubble(shown, { sticky: true });
-  }
   // режем на предложения для синтезатора
   let m;
   while ((m = r.sent.match(/^([\s\S]*?[.!?…]+["»)]?)(\s+)([\s\S]*)$/))) {
@@ -689,6 +760,7 @@ function pushText(r, text) {
       r.sent = r.sent.slice(cut + 1);
     }
   }
+  if (r.segs.length || cleanBubble(r.sent)) renderReplyBubble(r);
 }
 
 function flushSentence(r) {
@@ -697,8 +769,11 @@ function flushSentence(r) {
 }
 
 function enqueueSentence(r, text) {
+  const b = cleanBubble(text);
+  if (!b) return;
+  r.segs.push(b);
   const clean = cleanSpeech(text);
-  if (clean) voice.enqueue({ text: clean, emotion: r.emotion });
+  voice.enqueue({ text: clean, emotion: r.emotion, r, seg: r.segs.length - 1 });
 }
 
 api.onChatEvent((ev) => {
@@ -743,15 +818,16 @@ api.onChatEvent((ev) => {
       feed(r, '');
       if (r.pos < r.raw.length) pushText(r, r.raw.slice(r.pos));
       flushSentence(r);
+      if (r.segs.length) renderReplyBubble(r);
       scene.setActivity({ thinking: false, looking: false });
       setStatus('');
       els.bubble.classList.remove('thinking');
       if (!r.shown.trim()) {
         if (ev.stop === 'refusal') say('Не, вот на это я отвечать не буду. Давай что-нибудь другое?', 'embarrassed');
         else hideBubble();
-      } else {
-        showBubble(cleanBubble(r.shown));
-      }
+      } else if (!voice.active) {
+        bubbleTimer = setTimeout(hideBubble, 4000);
+      } // иначе облачко уберёт voice.onIdle, когда договорит
       if (state.pendingHide && !voice.active) voice.onIdle();
       break;
     case 'error':
@@ -1192,7 +1268,10 @@ function positionBubble() {
   // облачко не уезжает за верх экрана: ограничиваем высоту и показываем хвост текста
   const t = els.bubbleText;
   t.style.maxHeight = `${Math.max(40, Math.min(window.innerHeight * 0.46, h.y - 16) - 30)}px`;
-  if (t.scrollHeight > t.clientHeight + 2) t.scrollTop = t.scrollHeight;
+  const lh = parseFloat(getComputedStyle(t).lineHeight) || 20;
+  const avail = Math.max(40, Math.min(window.innerHeight * 0.46, h.y - 16) - 30);
+  t.style.maxHeight = `${Math.max(lh, Math.floor(avail / lh) * lh)}px`; // только целые строки
+  karaokeScroll(t);
   els.bubble.style.setProperty('--tail', `${Math.max(18, Math.min(bw - 18, h.x - left))}px`);
   els.status.style.left = `${h.x}px`;
   els.status.style.top = `${h.y + 6}px`;
