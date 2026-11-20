@@ -87,6 +87,8 @@ function cleanBubble(text) {
 // для синтезатора: ещё и символы, которые он прочитал бы вслух как мусор
 function cleanSpeech(text) {
   return cleanBubble(text)
+    .replace(/&/g, ' и ') // Chromium отдаёт текст в SAPI как XML: & и <> могут сломать фразу
+    .replace(/[<>]/g, ' ')
     .replace(/[\[\]`#~|]/g, '')
     .replace(/(^|\s)[*_]+|[*_]+(?=\s|$)/g, '$1')
     .replace(/\s+/g, ' ')
@@ -209,11 +211,35 @@ function zzz() {
 }
 
 // ---------------- речь ----------------
+// междометие при смене эмоции в речи: «хи-хи», «ах», «хм», «пф»…
+const EMOTE = {
+  laugh: () => sfx.giggle(),
+  surprised: () => sfx.gasp(),
+  scared: () => sfx.gasp(),
+  thinking: () => sfx.hmm(),
+  sad: () => sfx.aww('sad'),
+  love: () => sfx.aww('love'),
+  angry: () => sfx.huff(),
+  embarrassed: () => sfx.eep(),
+  smug: () => sfx.heh(),
+  wink: () => sfx.heh(),
+};
+let lastVoiceEmo = '';
+let lastEmoteAt = 0;
 voice.onSentenceStart = (item) => {
   if (item.emotion) {
     scene.setEmotion(item.emotion, 6);
     emoFx(item.emotion);
+    const now = performance.now();
+    if (!item.micro && item.emotion !== lastVoiceEmo && !cfg.muted && now - lastEmoteAt > 2500 && Math.random() < 0.7) {
+      EMOTE[item.emotion]?.();
+      lastEmoteAt = now;
+    }
+    lastVoiceEmo = item.emotion;
   }
+};
+voice.onNoVoice = () => {
+  toast('Нет русского голоса — говорю молча. Добавь: Параметры → Время и язык → Язык → Русский → Речь.', 9000);
 };
 voice.onIdle = () => {
   if (state.pendingHide) {
@@ -567,6 +593,7 @@ let reply = null;
 
 function newReply() {
   state.pendingHide = false; // прощание из прошлого ответа не должно сработать на новом
+  lastVoiceEmo = '';
   reply = { id: ++reqId, raw: '', pos: 0, shown: '', sent: '', emotion: 'neutral', gotText: false, done: false };
   return reply;
 }
@@ -1152,8 +1179,11 @@ function positionBubble() {
   els.status.style.top = `${h.y + 6}px`;
 }
 
+let lastLoopAt = performance.now();
 function loop() {
-  const lip = voice.update();
+  const nowMs = performance.now();
+  const lip = voice.update(Math.min(0.1, (nowMs - lastLoopAt) / 1000));
+  lastLoopAt = nowMs;
   scene.setLip(lip.open, lip.round);
   scene.setActivity({ speaking: voice.speaking, busy: voice.active || Boolean(reply && !reply.done) || state.chatOpen });
   scene.frame();

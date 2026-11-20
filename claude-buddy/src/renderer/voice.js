@@ -20,6 +20,41 @@ function visemesFor(word) {
   return out;
 }
 
+// ---------- голос под эмоцию ----------
+const WIN = typeof navigator !== 'undefined' && /Windows/.test(navigator.userAgent);
+// p — сдвиг высоты (шаг SAPI = 0.1), r — шаги скорости, v — множитель громкости
+const PROSODY = {
+  neutral: { p: 0, r: 0, v: 1 },
+  happy: { p: 0.1, r: 0, v: 1 },
+  laugh: { p: 0.2, r: 1, v: 1 },
+  surprised: { p: 0.3, r: 0, v: 1 },
+  sad: { p: -0.2, r: -1, v: 0.8 },
+  angry: { p: -0.1, r: 1, v: 1 },
+  thinking: { p: -0.1, r: -1, v: 0.9 },
+  love: { p: 0.1, r: -1, v: 0.85 },
+  smug: { p: -0.1, r: -1, v: 1 },
+  sleepy: { p: -0.3, r: -2, v: 0.6 },
+  scared: { p: 0.3, r: 1, v: 0.9 },
+  embarrassed: { p: 0.1, r: 0, v: 0.7 },
+  wink: { p: 0.1, r: 0, v: 1 },
+};
+// Chromium на Windows квантует скорость SAPI: шаг = trunc(10*log10(rate)). Нейтральная фраза звучит как раньше.
+function stepRate(base, steps) {
+  if (!WIN) return Math.min(2, Math.max(0.5, base * 1.12 ** steps));
+  const st = Math.trunc(10 * Math.log10(base)) + steps;
+  return Math.min(4, Math.max(0.3, 10 ** ((st + Math.sign(st) * 0.05) / 10)));
+}
+// пауза после фразы — по последнему знаку
+function pauseAfter(text, emotion) {
+  const t = text.trim();
+  let ms = 120;
+  if (/(…|\.\.\.)["»)]?$/.test(t)) ms = 420;
+  else if (/\?["»)]?$/.test(t)) ms = 220;
+  else if (/!["»)]?$/.test(t)) ms = 160;
+  else if (/,$/.test(t)) ms = 40;
+  return emotion === 'sleepy' || emotion === 'sad' ? ms * 1.5 : ms;
+}
+
 export class Voice {
   constructor() {
     this.synth = window.speechSynthesis || null;
@@ -51,7 +86,7 @@ export class Voice {
     Object.assign(this.cfg, cfg);
   }
 
-  pickVoice() {
+  pickVoice(text = '') {
     if (!this.voices.length && this.synth) this.voices = this.synth.getVoices();
     const { voiceName, language } = this.cfg;
     if (voiceName) {
@@ -62,7 +97,8 @@ export class Voice {
     return (
       this.voices.find((v) => v.lang.toLowerCase().startsWith(lang) && /natural|neural/i.test(v.name)) ||
       this.voices.find((v) => v.lang.toLowerCase().startsWith(lang)) ||
-      this.voices.find((v) => v.default) ||
+      // английский голос кириллицу коверкает/пропускает — для русского текста лучше немой режим с подсказкой
+      (/[а-яё]/i.test(text) ? null : this.voices.find((v) => v.default)) ||
       null
     );
   }
@@ -84,6 +120,8 @@ export class Voice {
   stop() {
     this.gen += 1;
     clearTimeout(this.nextTimer);
+    clearTimeout(this.startTimer);
+    this.utt = null;
     const pending = this.queue;
     this.queue = [];
     pending.forEach((q) => q.done?.());
@@ -119,6 +157,8 @@ export class Voice {
     const finish = () => {
       if (this.current !== item) return;
       clearTimeout(this.safety);
+      clearTimeout(this.startTimer);
+      this.utt = null;
       this.current = null;
       this.speaking = false;
       this.timeline = [];
@@ -127,11 +167,15 @@ export class Voice {
       const gen = this.gen;
       this.nextTimer = setTimeout(() => {
         if (gen === this.gen) this.next();
-      }, 60);
+      }, item.micro ? 60 : pauseAfter(text, item.emotion));
     };
 
-    const voice = this.pickVoice();
+    const voice = this.pickVoice(text);
     const estimate = 0.4 + text.length * 0.075;
+    if (!voice && this.synth && !this.cfg.muted && text && !this.warnedNoVoice && this.voices.length) {
+      this.warnedNoVoice = true;
+      this.onNoVoice?.();
+    }
     if (this.cfg.muted || !this.synth || !voice || !text) {
       // без звука — рот всё равно шевелится в такт "чтению"
       this.speaking = Boolean(text);
@@ -146,10 +190,18 @@ export class Voice {
     u.voice = voice;
     u.lang = voice.lang;
     const micro = item.micro;
-    u.pitch = micro ? 2 : this.cfg.voicePitch;
-    u.rate = micro ? Math.min(2, this.cfg.voiceRate * 1.25) : this.cfg.voiceRate;
-    u.volume = micro ? Math.min(1, this.cfg.voiceVolume * 0.75) : this.cfg.voiceVolume;
+    const P = PROSODY[item.emotion] || PROSODY.neutral;
+    // лёгкий разброс высоты и чуть выше на вопросах — чтобы не звучать роботом
+    const jit = [-0.1, 0, 0, 0.1][Math.floor(Math.random() * 4)];
+    const q = /\?["»)]?$/.test(text) ? 0.1 : 0;
+    const pitch = Math.min(2, Math.max(0.5, Math.round((this.cfg.voicePitch + P.p + jit + q) * 10) / 10 + 0.005));
+    u.pitch = micro ? 2 : pitch;
+    u.rate = micro ? Math.min(2, this.cfg.voiceRate * 1.25) : stepRate(this.cfg.voiceRate, P.r);
+    u.volume = micro ? Math.min(1, this.cfg.voiceVolume * 0.75) : Math.min(1, this.cfg.voiceVolume * P.v);
+    this.mouthGain = micro ? 1 : P.v; // тихий/сонный голос — и рот открывается меньше
+    this.utt = u; // держим ссылку: иначе сборщик мусора съедает utterance и onend теряется (Chromium)
     u.onstart = () => {
+      clearTimeout(this.startTimer);
       this.speaking = true;
       this.uttStart = performance.now() / 1000;
       this.gotBoundary = false;
@@ -163,17 +215,36 @@ export class Voice {
       const vis = visemesFor(word);
       const now = performance.now() / 1000;
       const per = 0.072 / u.rate;
-      this.timeline = vis.map(([open, round], i) => ({ t: now + i * per, open, round }));
+      const g = 0.55 + 0.45 * (this.mouthGain ?? 1);
+      this.timeline = vis.map(([open, round], i) => ({ t: now + i * per, open: open * g, round }));
       this.timeline.push({ t: now + vis.length * per, open: 0.05, round: 0 });
     };
     u.onend = finish;
     u.onerror = finish;
-    this.safety = setTimeout(finish, (estimate / u.rate) * 1000 * 1.8 + 2500);
+    // движок завис посреди фразы — отменяем и идём дальше, а не ждём следующую в очереди
+    this.safety = setTimeout(() => {
+      u.onend = null;
+      u.onerror = null;
+      this.synth.cancel();
+      finish();
+    }, (estimate / u.rate) * 1000 * 1.8 + 2500);
+    // движок так и не начал говорить — переходим на "немой" рот, чтобы бадди не застыл
+    this.startTimer = setTimeout(() => {
+      if (this.current !== item || this.speaking) return;
+      u.onend = null;
+      u.onerror = null;
+      this.synth.cancel();
+      this.speaking = true;
+      this.uttStart = performance.now() / 1000;
+      this.fakeUntil = this.uttStart + Math.min(12, estimate * 0.85);
+      clearTimeout(this.safety);
+      this.safety = setTimeout(finish, Math.min(12, estimate * 0.85) * 1000);
+    }, 2000);
     this.synth.speak(u);
   }
 
   // вызывается каждый кадр: считаем открытие рта
-  update() {
+  update(dt = 1 / 60) {
     const now = performance.now() / 1000;
     let target = 0;
     let round = 0;
@@ -195,9 +266,11 @@ export class Voice {
         round = Math.max(0, Math.sin(now * 2.3)) * 0.5;
       }
     }
-    const k = target > this.open ? 0.55 : 0.35;
+    // сглаживание не зависит от частоты кадров (60/144/30 Гц выглядят одинаково)
+    const f = Math.min(4, dt * 60);
+    const k = 1 - (1 - (target > this.open ? 0.55 : 0.35)) ** f;
     this.open += (target - this.open) * k;
-    this.round += (round - this.round) * 0.3;
+    this.round += (round - this.round) * (1 - 0.7 ** f);
     return { open: this.open, round: this.round };
   }
 }

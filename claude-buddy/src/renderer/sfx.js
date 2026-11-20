@@ -75,17 +75,75 @@ export class Sfx {
     this.tone('triangle', [[0, f], [0.15, f * 0.99]], 0.18, 0.14);
   }
 
+  // короткий шумовой "выдох" (пф, ах) — тот же кольцевой буфер, что и у джетпака
+  breath(freq, q, dur, peak) {
+    if (!this.ready()) return;
+    const ctx = this.ctx;
+    const t0 = ctx.currentTime;
+    this.ensureNoise();
+    const src = ctx.createBufferSource();
+    src.buffer = this.noise;
+    src.loop = true;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.Q.value = q;
+    bp.frequency.value = freq;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(peak, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(bp).connect(g).connect(this.master);
+    src.start(t0);
+    src.stop(t0 + dur + 0.05);
+  }
+
+  ensureNoise() {
+    if (this.noise) return;
+    this.noise = this.ctx.createBuffer(1, this.ctx.sampleRate, this.ctx.sampleRate);
+    const d = this.noise.getChannelData(0);
+    for (let i = 0; i < d.length; i += 1) d[i] = Math.random() * 2 - 1;
+  }
+
+  // ---- междометия к смене эмоции ----
+  giggle() {
+    [[900, 1150], [1000, 1250], [950, 1200]].forEach(([a, b], i) => {
+      setTimeout(() => this.tone('triangle', [[0, a], [0.07, b]], 0.08, 0.14), i * 110);
+    });
+  }
+
+  gasp() {
+    this.breath(1800, 1.2, 0.16, 0.1);
+    this.tone('sine', [[0, 400], [0.12, 900]], 0.14, 0.06);
+  }
+
+  hmm() {
+    this.tone('sine', [[0, 262], [0.17, 250], [0.35, 238]], 0.38, 0.09);
+  }
+
+  aww(kind) {
+    if (kind === 'love') this.tone('sine', [[0, 660], [0.3, 880]], 0.32, 0.09);
+    else this.tone('sine', [[0, 700], [0.4, 450]], 0.42, 0.09);
+  }
+
+  huff() {
+    this.breath(600, 0.9, 0.14, 0.13);
+  }
+
+  eep() {
+    this.tone('square', [[0, 1200], [0.1, 900]], 0.11, 0.05);
+  }
+
+  heh() {
+    this.tone('triangle', [[0, 700], [0.06, 690]], 0.07, 0.1);
+    setTimeout(() => this.tone('triangle', [[0, 600], [0.06, 590]], 0.07, 0.1), 110);
+  }
+
   // шипение джетпака: шум через полосовой фильтр с "проходом" частоты
   whoosh(sec = 1) {
     if (!this.ready()) return;
     const ctx = this.ctx;
     const t0 = ctx.currentTime;
-    if (!this.noise) {
-      // один секундный буфер шума на всё время, крутится по кругу
-      this.noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
-      const d = this.noise.getChannelData(0);
-      for (let i = 0; i < d.length; i += 1) d[i] = Math.random() * 2 - 1;
-    }
+    this.ensureNoise(); // один секундный буфер шума на всё время, крутится по кругу
     const src = ctx.createBufferSource();
     src.buffer = this.noise;
     src.loop = true;
