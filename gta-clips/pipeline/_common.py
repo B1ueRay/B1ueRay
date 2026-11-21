@@ -213,11 +213,27 @@ def media_info(path: Path) -> dict[str, Any]:
     return info
 
 
+def encoder_args(rc: dict[str, Any]) -> list[str]:
+    codec = str(rc.get("video_codec", "libx264"))
+    crf = str(rc.get("crf", 20))
+    if codec == "libx264":
+        return ["-c:v", "libx264", "-preset", str(rc.get("preset", "medium")), "-crf", crf,
+                "-profile:v", "high", "-level", "4.2"]
+    if codec == "h264_nvenc":
+        return ["-c:v", "h264_nvenc", "-preset", "p5", "-tune", "hq", "-rc", "vbr", "-cq", crf, "-b:v", "0",
+                "-profile:v", "high"]
+    if codec == "h264_qsv":
+        return ["-c:v", "h264_qsv", "-global_quality", crf, "-preset", "slower"]
+    if codec == "h264_amf":
+        return ["-c:v", "h264_amf", "-quality", "quality", "-rc", "cqp", "-qp_i", crf, "-qp_p", crf]
+    return ["-c:v", codec]
+
+
 # ---------------------------------------------------------------------------
 # Шрифты и цвета
 # ---------------------------------------------------------------------------
 
-# (путь, имя семейства для ASS, жирный ли файл сам по себе)
+# (путь к файлу, имя семейства шрифта — нужно для .ass)
 _FONT_CANDIDATES: list[tuple[str, str]] = [
     # Windows
     (r"C:\Windows\Fonts\ariblk.ttf", "Arial Black"),
