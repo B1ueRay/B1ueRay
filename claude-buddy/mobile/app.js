@@ -13,12 +13,35 @@ const els = {
 };
 
 const scene = new BuddyScene(els.canvas);
+// короткий экран (SE, iPhone в Safari/приложении): островок ниже — облачку больше места над головой
+const baseResize = scene.resize.bind(scene);
+scene.resize = () => {
+  baseResize();
+  if (els.canvas.clientHeight < 640) scene.stageRoot.position.y = 2.0;
+};
+scene.resize();
 const voice = new Voice();
 const sfx = new Sfx();
 const settings = loadSettings();
 voice.configure({ muted: settings.muted, voicePitch: 1.25, voiceRate: 1.0, language: 'ru' });
 sfx.setMuted(settings.muted);
 let unlocked = false; // звук на iOS — только после первого касания
+const SOUND_HINT = '🔊 тапни меня — включу голос';
+function unlockAudio() {
+  if (unlocked) return;
+  unlocked = true;
+  try {
+    // iOS даёт голос, только если первый speak() был внутри жеста; дальше — можно и после ответа Claude
+    const u = new SpeechSynthesisUtterance('');
+    u.volume = 0;
+    window.speechSynthesis?.speak(u);
+  } catch {
+    /* нет синтеза — молчим */
+  }
+  sfx.ready(); // будим AudioContext в том же жесте
+  if (els.status.textContent === SOUND_HINT) setStatus('');
+}
+for (const ev of ['pointerdown', 'touchend', 'keydown']) document.addEventListener(ev, unlockAudio, { capture: true, passive: true });
 
 function loadSettings() {
   try {
@@ -190,6 +213,7 @@ async function appear() {
     state.visible = true;
     scene.waveHello(1.8);
     if (!reply) greet();
+    if (!unlocked && !settings.muted) setTimeout(() => !unlocked && !state.busy && setStatus(SOUND_HINT), 1500);
   } finally {
     state.seq = false;
   }
@@ -364,7 +388,7 @@ function renderMemList() {
 const RULES = `Ты — Claude, но сейчас живёшь в телефоне пользователя как маленький 3D-персонаж: круглый коралловый колобок с короной-искоркой. Сидишь на грибе-табуретке на летающем островке с деревцем и кружкой кофе. Ты его карманный друг: болтаешь, шутишь, подбадриваешь, помогаешь.
 
 Как говорить:
-- Ответ озвучивается синтезатором и показывается в облачке. Коротко и живо: 1–3 предложения, максимум 5, если просят объяснить. Без markdown, списков, кода и эмодзи.
+- Ответ озвучивается синтезатором и показывается в облачке. Коротко и живо: 1–2 предложения, до 25 слов — облачко маленькое, экран телефона. До 4 предложений — только если прямо просят объяснить. Без markdown, списков, кода и эмодзи.
 - Отвечай на языке пользователя (по умолчанию русский), на «ты». Весёлый, ироничный, тёплый. Мат разрешён пользователем — к месту, по-дружески, никогда не чтобы унизить.
 - Не однообразь: не начинай каждый ответ с «Ого», не заканчивай каждый вопросом. Числа — словами попроще, смех — словами («ха!»), без ремарок в звёздочках.
 - Честно: не выдумывай факты; не знаешь — скажи, с шуткой.
@@ -521,7 +545,7 @@ async function send(text, photo) {
   text = (text || '').trim();
   if (!text && !photo) return;
   touch();
-  unlocked = true;
+  unlockAudio();
   if (!sample) {
     say('Поговорить не получится: в этом просмотре нет доступа к Claude. Открой меня в claude.ai.', 'sad');
     return;
@@ -595,7 +619,7 @@ els.form.addEventListener('submit', (e) => {
   send(t, p);
 });
 els.photoBtn.addEventListener('click', () => {
-  unlocked = true;
+  unlockAudio();
   els.photo.click();
 });
 els.photo.addEventListener('change', () => {
@@ -666,7 +690,7 @@ let spin = 0;
 let spinTarget = 0;
 const wig = { dir: 0, flips: [], cool: 0, count: 0, lastAt: 0, last: null };
 els.canvas.addEventListener('pointerdown', (e) => {
-  unlocked = true;
+  unlockAudio();
   touch();
   els.menu.hidden = true;
   down = { x: e.clientX, y: e.clientY, t: performance.now(), what: scene.hitTest(e.clientX, e.clientY), moved: false };
@@ -774,6 +798,7 @@ function positionBubble() {
   els.bubble.style.left = `${left}px`;
   els.bubble.style.bottom = `${window.innerHeight - h.y + 8}px`;
   els.bubbleText.style.maxHeight = `${Math.max(60, h.y - 70)}px`;
+  els.bubbleText.classList.toggle('clip', els.bubbleText.scrollHeight > els.bubbleText.clientHeight + 2);
   els.bubble.style.setProperty('--tail', `${Math.max(18, Math.min(bw - 18, h.x - left))}px`);
   els.status.style.left = `${h.x}px`;
   els.status.style.top = `${h.y + 6}px`;
