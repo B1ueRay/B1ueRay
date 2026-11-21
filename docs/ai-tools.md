@@ -6,7 +6,7 @@
 
 ## 1. PAL MCP (бывший Zen MCP): Claude зовёт другие модели на совет
 
-Репо: https://github.com/BeehiveInnovations/pal-mcp-server (зафиксирован тег `v9.8.2`).
+Репо: https://github.com/BeehiveInnovations/pal-mcp-server (зафиксирован коммит `fa78edc` = тег `v9.8.2`; коммит, а не тег, потому что тег могут перевесить).
 
 Уже подключён в этом репозитории через `.mcp.json` (сервер `pal`, запускается через `uvx`).
 
@@ -19,6 +19,8 @@
 
 Инструменты: `chat`, `thinkdeep`, `planner`, `consensus`, `codereview`, `precommit`, `debug`,
 `challenge`, `apilookup`, `clink`, `listmodels`, `version`.
+
+`clink` работает, только если установлен внешний CLI (`gemini`, `codex` и т.п.).
 
 ### Ключи
 

@@ -6,7 +6,7 @@
         "--with",
         "mcp<2",
         "--from",
-        "git+https://github.com/BeehiveInnovations/pal-mcp-server.git@v9.8.2",
+        "git+https://github.com/BeehiveInnovations/pal-mcp-server.git@fa78edca0b6bc04ab00ddf5694d855f1b946b87d",
         "pal-mcp-server"
       ],
       "env": {
