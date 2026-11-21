@@ -760,7 +760,8 @@ function pushText(r, text) {
       r.sent = r.sent.slice(cut + 1);
     }
   }
-  if (r.segs.length || cleanBubble(r.sent)) renderReplyBubble(r);
+  // karaoke.r === r: хвост мог исчезнуть (закрылась *ремарка*) — перерисуем, чтобы не висел обрывок
+  if (r.segs.length || cleanBubble(r.sent) || karaoke.r === r) renderReplyBubble(r);
 }
 
 function flushSentence(r) {
@@ -822,7 +823,8 @@ api.onChatEvent((ev) => {
       scene.setActivity({ thinking: false, looking: false });
       setStatus('');
       els.bubble.classList.remove('thinking');
-      if (!r.shown.trim()) {
+      if (!r.segs.length) {
+        // ни одного предложения (пусто или одни ремарки) — облачко сразу убираем
         if (ev.stop === 'refusal') say('Не, вот на это я отвечать не буду. Давай что-нибудь другое?', 'embarrassed');
         else hideBubble();
       } else if (!voice.active) {
@@ -1267,10 +1269,14 @@ function positionBubble() {
   els.bubble.style.bottom = `${window.innerHeight - h.y + 8}px`;
   // облачко не уезжает за верх экрана: ограничиваем высоту и показываем хвост текста
   const t = els.bubbleText;
-  t.style.maxHeight = `${Math.max(40, Math.min(window.innerHeight * 0.46, h.y - 16) - 30)}px`;
   const lh = parseFloat(getComputedStyle(t).lineHeight) || 20;
   const avail = Math.max(40, Math.min(window.innerHeight * 0.46, h.y - 16) - 30);
-  t.style.maxHeight = `${Math.max(lh, Math.floor(avail / lh) * lh)}px`; // только целые строки
+  // голова качается при речи примерно на строку — берём место по самой высокой точке качания:
+  // сжимаемся сразу, а растём медленно (за несколько секунд), чтобы высота облачка не прыгала
+  // пока облачко скрыто — подстраиваемся мгновенно; медленный рост — только когда оно на экране
+  if (karaoke.availRef == null || avail < karaoke.availRef || !els.bubble.classList.contains('on')) karaoke.availRef = avail;
+  else karaoke.availRef += (avail - karaoke.availRef) * 0.004;
+  t.style.maxHeight = `${Math.max(1, Math.floor(karaoke.availRef / lh)) * lh}px`;
   karaokeScroll(t);
   els.bubble.style.setProperty('--tail', `${Math.max(18, Math.min(bw - 18, h.x - left))}px`);
   els.status.style.left = `${h.x}px`;

@@ -66,6 +66,8 @@ app.commandLine.appendSwitch('enable-transparent-visuals');
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
 let pageReady = false;
+const power = { locked: false, suspended: false };
+const sendPower = () => send('power', { away: power.locked || power.suspended });
 const pendingNotices = [];
 function send(channel, payload) {
   if (!win || win.isDestroyed()) return;
@@ -118,7 +120,10 @@ function createOverlay() {
   win.webContents.on('did-finish-load', () => {
     pageReady = true;
     // даём app.js подписаться на события
-    setTimeout(() => pendingNotices.splice(0).forEach((n) => send('notice', n)), 1500);
+    setTimeout(() => {
+      pendingNotices.splice(0).forEach((n) => send('notice', n));
+      if (power.locked || power.suspended) sendPower(); // после перезапуска рендерера — тоже знать, что никого нет
+    }, 1500);
   });
   lockDown(win);
   // у оверлея нет меню: иначе Ctrl+R перезагружает бадди, Ctrl+-/+ меняют масштаб, Ctrl+Shift+I — devtools
@@ -465,8 +470,7 @@ app.whenReady().then(() => {
   syncLoginItem();
   // экран заблокирован / сон — рисовать некому
   // "нет человека" = экран заблокирован ИЛИ комп спит; пробуждение при залоченном экране — всё ещё нет
-  const power = { locked: false, suspended: false };
-  const sendPower = () => send('power', { away: power.locked || power.suspended });
+  // power — на уровне модуля: перезагруженная страница должна сразу узнать, что экран залочен
   powerMonitor.on('lock-screen', () => { power.locked = true; sendPower(); });
   powerMonitor.on('unlock-screen', () => { power.locked = false; sendPower(); });
   powerMonitor.on('suspend', () => { power.suspended = true; sendPower(); });
