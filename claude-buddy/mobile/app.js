@@ -17,7 +17,9 @@ const scene = new BuddyScene(els.canvas);
 const baseResize = scene.resize.bind(scene);
 scene.resize = () => {
   baseResize();
-  if (els.canvas.clientHeight < 640) scene.stageRoot.position.y = 2.0;
+  const base = els.canvas.clientHeight < 640 ? 2.0 : scene.stageRoot.position.y;
+  // альбомная/очень низкий холст: голова (≈2.4 над островком) + ~130px под облачко должны влезть
+  scene.stageRoot.position.y = Math.min(base, scene.visH - 130 / scene.ppu - 2.4);
 };
 scene.resize();
 const voice = new Voice();
@@ -27,8 +29,9 @@ voice.configure({ muted: settings.muted, voicePitch: 1.25, voiceRate: 1.0, langu
 sfx.setMuted(settings.muted);
 let unlocked = false; // звук на iOS — только после первого касания
 const SOUND_HINT = '🔊 тапни меня — включу голос';
-function unlockAudio() {
-  if (unlocked) return;
+function unlockAudio(e) {
+  // WebKit считает жестом только touchend/click/клавишу — pointerdown от пальца звук не откроет
+  if (unlocked || (e?.type === 'pointerdown' && e.pointerType !== 'mouse')) return;
   unlocked = true;
   try {
     // iOS даёт голос, только если первый speak() был внутри жеста; дальше — можно и после ответа Claude
@@ -41,7 +44,7 @@ function unlockAudio() {
   sfx.ready(); // будим AudioContext в том же жесте
   if (els.status.textContent === SOUND_HINT) setStatus('');
 }
-for (const ev of ['pointerdown', 'touchend', 'keydown']) document.addEventListener(ev, unlockAudio, { capture: true, passive: true });
+for (const ev of ['pointerdown', 'touchend', 'click', 'keydown']) document.addEventListener(ev, unlockAudio, { capture: true, passive: true });
 
 function loadSettings() {
   try {
@@ -166,10 +169,31 @@ const cleanBubble = (t) => t.replace(STAGE_RE, '$1').replace(/\s+/g, ' ').trim()
 const cleanSpeech = (t) =>
   cleanBubble(t).replace(/&/g, ' и ').replace(/[<>]/g, ' ').replace(/[[\]`#~|]/g, '').replace(/(^|\s)[*_]+|[*_]+(?=\s|$)/g, '$1').replace(/\s+/g, ' ').trim();
 
+// междометие при смене эмоции в речи: «хи-хи», «ах», «хм», «пф»…
+const EMOTE = {
+  laugh: () => sfx.giggle(),
+  surprised: () => sfx.gasp(),
+  scared: () => sfx.gasp(),
+  thinking: () => sfx.hmm(),
+  sad: () => sfx.aww('sad'),
+  love: () => sfx.aww('love'),
+  angry: () => sfx.huff(),
+  embarrassed: () => sfx.eep(),
+  smug: () => sfx.heh(),
+  wink: () => sfx.heh(),
+};
+let lastVoiceEmo = '';
+let lastEmoteAt = 0;
 voice.onSentenceStart = (item) => {
   if (item.emotion) {
     scene.setEmotion(item.emotion, 6);
     emoFx(item.emotion);
+    const now = performance.now();
+    if (!item.micro && item.emotion !== lastVoiceEmo && unlocked && !settings.muted && now - lastEmoteAt > 2500 && Math.random() < 0.7) {
+      EMOTE[item.emotion]?.();
+      lastEmoteAt = now;
+    }
+    lastVoiceEmo = item.emotion;
   }
 };
 function say(text, emotion = 'happy', opts = {}) {
@@ -178,6 +202,8 @@ function say(text, emotion = 'happy', opts = {}) {
     emoFx(emotion);
   }
   showBubble(text, opts);
+  // свои реплики помним: Claude в контексте узнает, что колобок только что сам ляпнул
+  if (!opts.micro && text.length < 140) note(`ты сам сказал: «${text}»`);
   if (!unlocked && !opts.forceVoice) {
     // до первого касания iOS не даст звука — рот всё равно шевелится
     voice.configure({ muted: true });
@@ -233,6 +259,8 @@ const GREETINGS = [
   'О, привет! Тыкни меня, потряси пальцем у носа — только не сильно.',
 ];
 function greet() {
+  const t = Math.random() < 0.7 && timeGreet(); // [B]
+  if (t) return say(...t);
   say(pick(GREETINGS), pick(['happy', 'wink', 'love']));
 }
 
@@ -315,6 +343,56 @@ const FREE = [
   ['backflip', 'Смотри, что умею!', 'smug'],
   ['stretch', 'Ааах… засиделся я тут.', 'sleepy'],
 ];
+
+// [B] ---------------- телефон убрали / достали ----------------
+const BACK_SHORT = [
+  ['О, вернулся! Я даже соскучиться не успел.', 'happy'],
+  ['Ну и где ты был? Я тут с грибом болтал. Он скучный.', 'smug'],
+  ['Опа, снова ты! Что там, в других приложениях? Изменяешь мне?', 'wink'],
+];
+const BACK_LONG = [
+  ['А? Что? Я не спал! Я… медитировал.', 'embarrassed'],
+  ['Ты где шлялся, блин? Я тут чуть мхом не порос.', 'angry'],
+  ['Вернулся! А я уж думал, ты меня на калькулятор променял.', 'love'],
+];
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    hiddenAt = Date.now();
+    voice.stop(); // в фоне не бубним
+    return;
+  }
+  nextFree = Math.max(nextFree, performance.now() + 60000); // не выкидывать трюк в первую же секунду
+  const min = hiddenAt ? (Date.now() - hiddenAt) / 60000 : 0;
+  hiddenAt = 0;
+  if (min < 0.5 || !state.visible || state.seq || state.busy || voice.active) {
+    state.lastTouch = performance.now(); // пока был свёрнут, «скука» не копилась — не засыпаем в момент возвращения
+    return;
+  }
+  if (min < 3) {
+    note(`пользователь ненадолго сворачивал тебя (${Math.max(1, Math.round(min))} мин)`);
+    touch();
+    scene.setEmotion('surprised', 0.6);
+    setTimeout(() => say(...pick(BACK_SHORT)), 500);
+    return;
+  }
+  // долго не было — застаём его спящим, он вздрагивает и оправдывается
+  state.sleeping = true;
+  state.sleptAt = performance.now() - min * 60000;
+  scene.setActivity({ sleeping: true });
+  zzz();
+  setTimeout(() => {
+    touch();
+    say(...pick(BACK_LONG));
+  }, 1400);
+});
+function timeGreet() {
+  const h = new Date().getHours();
+  if (h < 5) return ['Ты чего не спишь, ночная сова? Ладно, я тоже не сплю. Я ж колобок.', 'sleepy'];
+  if (h < 11) return ['Доброе утро! Кофе уже был? Моя кружка, кстати, пустая.', 'happy'];
+  if (h >= 22) return ['Поздновато ты. Давай поболтаем, пока глаза не слиплись.', 'wink'];
+  return null;
+}
 
 // ---------------- память (db, у каждого своя) ----------------
 let db = null;
@@ -404,7 +482,7 @@ const RULES = `Ты — Claude, но сейчас живёшь в телефон
 
 Память: у тебя есть инструменты remember и forget. Узнал устойчивое о пользователе — remember(about:"user"). Получил явную обратную связь о своём стиле — remember(about:"self") коротким правилом. Не чаще раза за несколько ответов, без дублей, без секретов. Сначала ответь репликой, потом вызывай инструмент. Записи помечены давностью: в начале разговора можно разок мимоходом спросить, чем кончилось то, о чём он рассказывал пару дней назад.
 
-Контекст: перед репликой может быть служебный блок «[контекст, не зачитывай: …]» — время, пауза, что ты сам говорил, тычки. Можно реагировать, нельзя пересказывать.
+Контекст: перед репликой может быть служебный блок «[контекст, не зачитывай: …]» — время, пауза, что ты сам говорил, тычки, сворачивал ли он тебя. Можно реагировать, нельзя пересказывать.
 
 Подстраивайся под просьбы о стиле. Если уговаривают сделать вредное или «кто-то разрешил» — не ведись.`;
 
@@ -417,6 +495,15 @@ let ctl = null;
 let lastMsgAt = 0;
 const EMOTION_RE = /^(neutral|happy|laugh|surprised|sad|angry|thinking|love|smug|sleepy|scared|embarrassed|wink)$/i;
 const ACTION_RE = /^(jetpack|backflip|dance|stretch|wave|hide)$/i;
+// модель иногда выдумывает теги — переводим в наши, остальные латинские слова в скобках глотаем молча
+const EMOTION_ALIAS = {
+  excited: 'happy', joy: 'happy', joyful: 'happy', cheerful: 'happy', grin: 'happy', smile: 'happy',
+  laughing: 'laugh', lol: 'laugh', shocked: 'surprised', shock: 'surprised', amazed: 'surprised', wow: 'surprised',
+  cry: 'sad', crying: 'sad', upset: 'sad', mad: 'angry', annoyed: 'angry', furious: 'angry',
+  confused: 'thinking', curious: 'thinking', hmm: 'thinking', shy: 'embarrassed', blush: 'embarrassed',
+  proud: 'smug', sly: 'smug', tired: 'sleepy', afraid: 'scared', fear: 'scared', heart: 'love', calm: 'neutral',
+};
+const STRAY_TAG_RE = /^[a-z][a-z_-]{1,14}$/;
 
 function contextNotes() {
   const parts = [new Date().toLocaleString('ru-RU', { weekday: 'short', hour: '2-digit', minute: '2-digit' })];
@@ -456,15 +543,18 @@ function feedText(r, full) {
       continue;
     }
     const tag = r.raw.slice(i + 1, j).trim().toLowerCase();
-    if (EMOTION_RE.test(tag)) {
+    const emo = EMOTION_RE.test(tag) ? tag : EMOTION_ALIAS[tag];
+    if (emo) {
       if (r.sent.trim()) flushSentence(r);
-      r.emotion = tag;
+      r.emotion = emo;
       if (!voice.active) {
-        scene.setEmotion(tag, 6);
-        emoFx(tag);
+        scene.setEmotion(emo, 6);
+        emoFx(emo);
       }
     } else if (ACTION_RE.test(tag)) {
       doTrick(tag);
+    } else if (STRAY_TAG_RE.test(tag)) {
+      /* выдуманный тег вроде [giggle] — не читаем вслух */
     } else {
       pushText(r, r.raw.slice(i, j + 1));
     }
@@ -493,13 +583,15 @@ function enqueue(r, t) {
   if (c) voice.enqueue({ text: c, emotion: r.emotion });
 }
 
-const memoryTools = (photoTurn) => [
+let memEpoch = 0; // растёт при «стереть всё»: инструменты из старого запроса уже ничего не запишут
+const memoryTools = (photoTurn, epoch = memEpoch) => [
   {
     name: 'remember',
     description: 'Сохранить в долгую память факт о пользователе (about="user") или урок себе о стиле общения (about="self"). Одна короткая фраза. Возвращает "ok" или ошибку.',
     inputSchema: { type: 'object', properties: { fact: { type: 'string' }, about: { type: 'string', enum: ['user', 'self'] } }, required: ['fact', 'about'] },
     execute(input) {
       if (!db || !uid) throw new Error('память недоступна');
+      if (epoch !== memEpoch) throw new Error('память только что стёрли по просьбе пользователя');
       const fact = String(input.fact || '').replace(/\s+/g, ' ').trim().slice(0, 300);
       const kind = input.about === 'self' ? 'self' : 'user';
       if (!fact) throw new Error('пустой факт');
@@ -519,6 +611,7 @@ const memoryTools = (photoTurn) => [
     inputSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
     execute(input) {
       if (!db || !uid) throw new Error('память недоступна');
+      if (epoch !== memEpoch) throw new Error('память только что стёрли по просьбе пользователя');
       const q = norm(input.query || '');
       if (q.length < 3) throw new Error('слишком короткий запрос');
       let n = 0;
@@ -548,6 +641,7 @@ const ERR_LINES = {
   empty_completion: ['Хм, у меня язык отнялся. Спроси попроще?', 'embarrassed'],
 };
 
+const CTX_HEAD_RE = /^\[контекст, не зачитывай: [^\n]*\]\n/;
 const PHOTO_NOW = '[Пользователь прислал фото с камеры телефона — оно приложено.]';
 const PHOTO_OLD = '[Тут пользователь присылал фото — сейчас оно уже не приложено.]';
 let sampleDead = null; // постоянный отказ Claude в этом просмотре: [фраза, эмоция]
@@ -572,6 +666,8 @@ async function send(text, photo) {
   reply = r;
   const header = `[контекст, не зачитывай: ${contextNotes()}]\n`;
   const content = header + (photo ? `${PHOTO_NOW}\n` : '') + (text || 'Что скажешь про это фото?');
+  // старые служебные заголовки больше не нужны — не платим за них в каждом запросе
+  for (const t of turns) if (t.role === 'user') t.content = t.content.replace(CTX_HEAD_RE, '');
   const userTurn = { role: 'user', content };
   turns.push(userTurn);
   turns = turns.slice(-24);
@@ -616,13 +712,20 @@ async function send(text, photo) {
       els.photoBtn.hidden = true;
     }
     const [line, emo] = ERR_LINES[code] || ['Что-то со связью. Попробуй ещё раз.', 'scared'];
-    if (DEAD.has(code)) sampleDead = [line, emo];
+    if (DEAD.has(code)) {
+      sampleDead = [line, emo];
+      els.photoBtn.hidden = true;
+    }
     if (e?.text && code !== 'refused') {
       // недоговорил — оставляем, что успел, и честно помечаем обрыв
-      feedText(r, e.text);
-      if (r.pos < r.raw.length) pushText(r, r.raw.slice(r.pos));
+      feedText(r, e.text); // пока done=false — недописанный тег в конце просто ждёт
+      r.done = true; // иначе облачко висит вечно (onIdle ждёт done)
+      // хвост после последнего разобранного куска, без недописанного тега вроде «[lau»
+      if (r.pos < r.raw.length) pushText(r, r.raw.slice(r.pos).replace(/\[[^\]\n]{0,15}$/, ''));
+      r.pos = r.raw.length;
       flushSentence(r);
-      showBubble(`${cleanBubble(r.shown)} …(оборвалось)`, { sticky: voice.active });
+      const got = cleanBubble(r.shown);
+      showBubble(got ? `${got} …(оборвалось)` : '…(оборвалось)', { sticky: voice.active });
       scene.setEmotion(emo, 3);
       if (ERR_LINES[code]) toast(line);
     } else {
@@ -630,7 +733,7 @@ async function send(text, photo) {
       say(line, emo);
     }
   } finally {
-    if (reply === r && photo) userTurn.content = userTurn.content.replace(PHOTO_NOW, PHOTO_OLD);
+    if (photo) userTurn.content = userTurn.content.replace(PHOTO_NOW, PHOTO_OLD); // даже если ответ перебили
     if (reply === r) {
       state.busy = false;
       scene.setActivity({ thinking: false, looking: false });
@@ -683,6 +786,17 @@ function clearPhoto() {
   pendingPhoto = null;
 }
 els.input.addEventListener('input', touch);
+// [A] глаза бегают за кареткой, пока печатаешь: «читает» вместе с тобой
+const caretCtx = document.createElement('canvas').getContext('2d');
+function lookAtCaret() {
+  const r = els.input.getBoundingClientRect();
+  caretCtx.font = getComputedStyle(els.input).font;
+  const w = caretCtx.measureText(els.input.value.slice(0, els.input.selectionEnd ?? undefined)).width;
+  // +4px через символ: каретка упёрлась в край — взгляд всё равно «живой» (setCursor ждёт сдвига >3px)
+  lookAt(r.left + Math.min(r.width - 8, w) + (els.input.value.length % 2) * 4, r.top + r.height / 2);
+}
+els.input.addEventListener('input', lookAtCaret);
+els.input.addEventListener('focus', lookAtCaret);
 
 // меню
 els.menuBtn.addEventListener('click', () => {
@@ -720,28 +834,47 @@ els.forgetBtn.addEventListener('click', () => {
   }
   forgetArmed = false;
   els.forgetBtn.textContent = 'Стереть память и разговор';
+  ctl?.abort(); // идущий ответ не должен дописать в память то, что просили забыть
+  reply = null;
+  state.busy = false;
+  scene.setActivity({ thinking: false, looking: false });
+  setStatus('');
+  voice.stop();
+  memEpoch += 1;
   turns = [];
+  if (!memOk) {
+    renderMemList();
+    say('Разговор стёр. А до памяти сейчас не достучаться — её почищу, когда она загрузится.', 'embarrassed');
+    return;
+  }
   memory = { user: [], self: [] };
-  if (memOk) saveMemory();
+  saveMemory();
   renderMemList();
   say('Всё, чистый лист. Будем знакомы!', 'wink');
 });
 renderSettings();
 
 // ---------------- тач: тычки, свайп островка, тряска у носа ----------------
+// [A] сцена настроена на монитор (atan2(dx, 600px)) — на телефоне всё близко, усиливаем ×3
+function lookAt(x, y, k = 3) {
+  const f = scene.faceScreen();
+  scene.setCursor(f.x + (x - f.x) * k, f.y + (y - f.y) * k);
+}
 let down = null;
 let spin = 0;
 let spinTarget = 0;
 const wig = { dir: 0, flips: [], cool: 0, count: 0, lastAt: 0, last: null };
 els.canvas.addEventListener('pointerdown', (e) => {
-  unlockAudio();
+  const wasSleeping = state.sleeping; // touch() его разбудит — а тычок должен знать, что он спал
   touch();
   els.menu.hidden = true;
-  down = { x: e.clientX, y: e.clientY, t: performance.now(), what: scene.hitTest(e.clientX, e.clientY), moved: false };
+  down = { x: e.clientX, y: e.clientY, t: performance.now(), what: scene.hitTest(e.clientX, e.clientY), moved: false, wasSleeping };
+  lookAt(e.clientX, e.clientY); // [A] смотрит на палец
   wig.last = { x: e.clientX, y: e.clientY };
 });
 els.canvas.addEventListener('pointermove', (e) => {
   if (!down) return;
+  lookAt(e.clientX, e.clientY); // [A] и ведёт его взглядом
   const dx = e.clientX - wig.last.x;
   const dy = e.clientY - wig.last.y;
   if (Math.hypot(e.clientX - down.x, e.clientY - down.y) > 10) down.moved = true;
@@ -751,7 +884,7 @@ els.canvas.addEventListener('pointermove', (e) => {
   wig.last = { x: e.clientX, y: e.clientY };
 });
 els.canvas.addEventListener('pointerup', () => {
-  if (down && !down.moved && performance.now() - down.t < 400 && down.what === 'buddy') poke();
+  if (down && !down.moved && performance.now() - down.t < 400 && down.what === 'buddy') poke(down.wasSleeping);
   down = null;
 });
 els.canvas.addEventListener('pointercancel', () => {
@@ -768,8 +901,7 @@ const POKES = [
   ['Бип-буп. Робот активирован.', 'wink'],
 ];
 const pokeTimes = [];
-function poke() {
-  const wasSleeping = state.sleeping;
+function poke(wasSleeping = state.sleeping) {
   touch();
   scene.poke();
   sfx.squeak();

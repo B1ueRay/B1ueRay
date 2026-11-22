@@ -174,10 +174,11 @@ body {
 
 <script>
 // звёзды на небе — один раз, без анимации
-(function () {
+(function draw() {
   const c = document.getElementById('stars');
   const d = Math.min(window.devicePixelRatio || 1, 2);
-  c.width = innerWidth * d; c.height = innerHeight * d;
+  if (!draw.bound) { draw.bound = true; addEventListener('resize', () => { clearTimeout(draw.t); draw.t = setTimeout(draw, 150); }); }
+  c.width = innerWidth * d; c.height = innerHeight * d; // поворот — перерисовываем, а не растягиваем
   const g = c.getContext('2d');
   let s = 7;
   const rnd = () => ((s = (s * 16807) % 2147483647) / 2147483647);
