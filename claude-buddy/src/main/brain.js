@@ -93,6 +93,22 @@ const MAX_HISTORY = 40;
 // "Тихие" инструменты: если ответ уже содержит реплику, второй запрос к API ради них не делаем.
 const SILENT_TOOLS = new Set(['remember', 'forget']);
 
+// Блоки до последнего fallback: text и парные server-tool оставляем, модельные внутренности — нет.
+const KEEP_BEFORE_FALLBACK = new Set(['text', 'server_tool_use', 'web_search_tool_result', 'web_fetch_tool_result', 'bash_code_execution_tool_result']);
+function afterFallback(content) {
+  let last = -1;
+  content.forEach((b, i) => {
+    if (b.type === 'fallback') last = i;
+  });
+  if (last < 0) return content;
+  const resultIds = new Set(content.filter((b) => b.tool_use_id && b.type !== 'tool_result').map((b) => b.tool_use_id));
+  return content.filter((b, i) => {
+    if (i >= last) return true;
+    if (b.type === 'server_tool_use') return resultIds.has(b.id);
+    return KEEP_BEFORE_FALLBACK.has(b.type);
+  });
+}
+
 class Brain {
   constructor(getConfig) {
     this.getConfig = getConfig;
@@ -107,6 +123,7 @@ class Brain {
     this.abort();
     this.messages = [];
     this.memoryText = null;
+    this.minimal = false; // новый разговор — снова пробуем бета-поля (вдруг аккаунт уже умеет)
   }
 
   // Память поменялась (удалили запись в настройках) — разговор не стираем.
@@ -114,11 +131,21 @@ class Brain {
   // убираем целиком: без них история остаётся валидной.
   invalidateMemory() {
     this.memoryText = null;
+    this.stripThinking();
+  }
+
+  // thinking-блоки привязаны к точному префиксу — после правки истории их честнее убрать
+  stripThinking() {
     this.messages = this.messages.map((m) => {
       if (m.role !== 'assistant' || !Array.isArray(m.content)) return m;
       const content = m.content.filter((b) => b.type !== 'thinking' && b.type !== 'redacted_thinking');
       return { ...m, content: content.length ? content : [{ type: 'text', text: '…' }] };
     });
+  }
+
+  // Модель сменили в настройках: кэш всё равно новый, бета-поля пробуем заново
+  modelChanged() {
+    this.minimal = false;
   }
 
   abort() {
@@ -208,6 +235,8 @@ class Brain {
       this.messages = this.messages.slice(cut);
       // кэш всё равно сбросился — заодно подхватываем уроки, выученные в этой сессии
       this.memoryText = null;
+      // оставшиеся thinking-блоки родились при другом префиксе: без drop_block (minimal) это 400
+      this.stripThinking();
     }
   }
 
@@ -248,15 +277,18 @@ class Brain {
       for (let step = 0; step < 6; step += 1) {
         const msg = await this.streamOnce(client, pending, run, emit);
         if (run.aborted || !msg) return aborted();
-        pending.push({ role: 'assistant', content: msg.content });
+        // mid-output fallback: до последнего блока fallback — отклонённый черновик.
+        // Его thinking/tool_use не выполняем и в историю не возвращаем; сам fallback оставляем на месте.
+        const blocks = afterFallback(msg.content);
+        pending.push({ role: 'assistant', content: blocks });
 
         if (msg.stop_reason === 'refusal') {
-          // частичный вывод отказа выкидываем: в историю он не идёт
-          this.commit(pending.slice(0, -1));
+          // ни отказ, ни вызвавшую его реплику (со скриншотом) в историю не кладём:
+          // иначе проблемный запрос уезжает в каждый следующий ход
           emit({ type: 'done', stop: 'refusal' });
           return;
         }
-        const toolUses = msg.content.filter((b) => b.type === 'tool_use');
+        const toolUses = blocks.filter((b) => b.type === 'tool_use');
         if (toolUses.length > 0 && msg.stop_reason !== 'tool_use') {
           // обрезанный (max_tokens) вызов инструмента не выполняем и в историю без ответа не кладём
           this.commit(pending.slice(0, -1));
@@ -265,13 +297,13 @@ class Brain {
         }
         if (toolUses.length === 0) {
           // пустой ассистент (только thinking или вообще ничего) — невалидная история, не коммитим его
-          const meaningful = msg.content.some((b) => b.type !== 'thinking' && b.type !== 'redacted_thinking');
+          const meaningful = blocks.some((b) => b.type !== 'thinking' && b.type !== 'redacted_thinking' && b.type !== 'fallback');
           this.commit(meaningful ? pending : pending.slice(0, -1));
           emit({ type: 'done', stop: msg.stop_reason });
           return;
         }
 
-        const hasText = msg.content.some((b) => b.type === 'text' && b.text.trim());
+        const hasText = blocks.some((b) => b.type === 'text' && b.text.trim());
         const allSilent = toolUses.every((tu) => SILENT_TOOLS.has(tu.name));
         const results = [];
         for (const tu of toolUses) {

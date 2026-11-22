@@ -264,9 +264,13 @@ function registerHotkeys() {
 }
 
 function applyConfig(patch) {
+  const prev = cfg;
   const prevSize = cfg.size;
   cfg = config.merge(cfg, patch);
   config.save(cfg);
+  // имя и хоткеи живут в блоке памяти system — пересобираем его, разговор не трогаем
+  if (prev.userName !== cfg.userName || JSON.stringify(prev.hotkeys) !== JSON.stringify(cfg.hotkeys)) brain?.invalidateMemory();
+  if (prev.model !== cfg.model) brain?.modelChanged();
   if (cfg.size !== prevSize && win) {
     win.setBounds(overlayBounds(screen.getDisplayMatching(win.getBounds())));
   }

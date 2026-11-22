@@ -314,7 +314,10 @@ voice.onIdle = () => {
   }
   if (state.pendingHide) {
     state.pendingHide = false;
-    setTimeout(() => whenFree(() => hide()), 300);
+    // прощание относится к этому ответу: если за время трюка пришёл новый — не прячемся посреди него
+    const forId = reply?.id;
+    const stillThat = () => (reply?.id ?? 0) === (forId ?? 0) && (!reply || reply.done) && !voice.active;
+    setTimeout(() => whenFree(() => stillThat() && hide()), 300);
   }
 };
 
@@ -735,11 +738,30 @@ function feed(r, delta) {
     } else if (ACTION_RE.test(tag)) {
       if (tag === 'hide') state.pendingHide = true;
       else doTrick(tag); // трюк — сразу, пока он говорит
+    } else if (strayTag(r.raw.slice(i + 1, j), r.raw)) {
+      // ремарка вроде [shrug] / [happy, wink]: из списка берём, что знаем, остальное молча глотаем
+      for (const part of tag.split(/\s*,\s*/)) {
+        const e2 = EMOTION_RE.test(part) ? part : EMOTION_ALIAS[part];
+        if (e2) {
+          if (r.sent.trim()) flushSentence(r);
+          r.emotion = e2;
+          if (!voice.active) {
+            scene.setEmotion(e2, 6);
+            emoFx(e2);
+          }
+        } else if (ACTION_RE.test(part) && part !== 'hide') doTrick(part);
+      }
     } else {
       pushText(r, r.raw.slice(i, j + 1)); // незнакомое в скобках — обычный текст ([Enter], [docs])
     }
     r.pos = j + 1;
   }
+}
+
+// [shrug], [sighs], [happy, wink] — строчная латиница, до трёх слов, а сам ответ по-русски.
+// [Enter], [Ctrl+C], [docs] в английской фразе — это текст, их не трогаем.
+function strayTag(inner, whole) {
+  return /^[a-z][a-z_-]*(?:\s*,\s*[a-z][a-z_-]*|\s[a-z][a-z_-]*){0,2}$/.test(inner.trim()) && /[а-яё]/i.test(whole);
 }
 
 function pushText(r, text) {
@@ -816,6 +838,17 @@ api.onChatEvent((ev) => {
     case 'done':
       r.done = true;
       if (ev.stop === 'aborted') break; // сами отменили — облачко не трогаем
+      if (ev.stop === 'refusal') {
+        // отказ мог прийти посреди ответа: недосказанное не дочитываем, контекст вернём к следующей реплике
+        voice.stop();
+        state.pendingHide = false;
+        restoreNotes(r.ctx?.consumed);
+        scene.setActivity({ thinking: false, looking: false });
+        setStatus('');
+        els.bubble.classList.remove('thinking');
+        say('Не, вот на это я отвечать не буду. Давай что-нибудь другое?', 'embarrassed');
+        break;
+      }
       feed(r, '');
       if (r.pos < r.raw.length) pushText(r, r.raw.slice(r.pos));
       flushSentence(r);
@@ -825,8 +858,7 @@ api.onChatEvent((ev) => {
       els.bubble.classList.remove('thinking');
       if (!r.segs.length) {
         // ни одного предложения (пусто или одни ремарки) — облачко сразу убираем
-        if (ev.stop === 'refusal') say('Не, вот на это я отвечать не буду. Давай что-нибудь другое?', 'embarrassed');
-        else hideBubble();
+        hideBubble();
       } else if (!voice.active) {
         bubbleTimer = setTimeout(hideBubble, 4000);
       } // иначе облачко уберёт voice.onIdle, когда договорит

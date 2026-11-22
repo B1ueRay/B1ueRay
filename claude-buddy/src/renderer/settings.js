@@ -23,6 +23,7 @@ function outputs() {
 }
 
 let savedVoice = '';
+let shown = {}; // что было в форме при открытии: шлём только то, что пользователь реально поменял
 speechSynthesis.addEventListener('voiceschanged', () => fillVoices($('voiceName').value || savedVoice));
 
 async function load() {
@@ -43,6 +44,16 @@ async function load() {
   fillVoices(cfg.voiceName);
   savedVoice = cfg.voiceName;
   outputs();
+  shown = formState();
+}
+
+function formState() {
+  const st = {};
+  CHECKS.forEach((f) => {
+    st[f] = $(f).checked;
+  });
+  st.hotkeys = JSON.stringify([$('hk_talk').value.trim(), $('hk_toggle').value.trim(), $('hk_look').value.trim()]);
+  return st;
 }
 
 async function save() {
@@ -50,13 +61,15 @@ async function save() {
   FIELDS.forEach((f) => {
     patch[f] = $(f).value;
   });
+  // галки и хоткеи — только изменённые: «без звука» могли переключить из трея, пока окно открыто
+  const now = formState();
   CHECKS.forEach((f) => {
-    patch[f] = $(f).checked;
+    if (now[f] !== shown[f]) patch[f] = $(f).checked;
   });
   ['voicePitch', 'voiceRate', 'sleepAfterMin', 'size'].forEach((f) => {
     patch[f] = Number(patch[f]);
   });
-  patch.hotkeys = { talk: $('hk_talk').value.trim(), toggle: $('hk_toggle').value.trim(), look: $('hk_look').value.trim() };
+  if (now.hotkeys !== shown.hotkeys) patch.hotkeys = { talk: $('hk_talk').value.trim(), toggle: $('hk_toggle').value.trim(), look: $('hk_look').value.trim() };
   if ($('apiKey').value.trim()) patch.apiKey = $('apiKey').value.trim();
   if ($('sttApiKey').value.trim()) patch.sttApiKey = $('sttApiKey').value.trim();
   await buddy.setConfig(patch);
