@@ -159,6 +159,18 @@ function createOverlay() {
     win = null;
   });
   startCursorFeed();
+  startPresenceFeed();
+}
+
+// [2] «есть ли человек»: секунды с последнего ввода в системе (клавиатура или мышь).
+// Что именно нажато — не знаем и не хотим: это одно число от ОС, не кейлоггер.
+let presenceTimer = null;
+function startPresenceFeed() {
+  clearInterval(presenceTimer);
+  presenceTimer = setInterval(() => {
+    if (power.locked || power.suspended) return;
+    send('presence', { idle: powerMonitor.getSystemIdleTime() });
+  }, 2000);
 }
 
 // Положение курсора относительно окна — чтобы глаза следили за мышкой по всему экрану.

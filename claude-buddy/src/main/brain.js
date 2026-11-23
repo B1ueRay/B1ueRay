@@ -182,7 +182,8 @@ class Brain {
       max_tokens: 8000,
       // 1) статичный промпт, 2) память — фиксируется на всю сессию разговора, чтобы не ломать кэш
       system: [
-        { type: 'text', text: SYSTEM_PROMPT },
+        // своя точка кэша: правка памяти не заставляет заново писать инструменты и сам промпт
+        { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral', ttl: '1h' } },
         { type: 'text', text: this.memoryBlock(cfg), cache_control: { type: 'ephemeral', ttl: '1h' } },
       ],
       // авто-кэш последнего блока: старые реплики и скриншоты читаются по цене кэша
@@ -350,7 +351,12 @@ class Brain {
         }
       }
       if (run.aborted) return null;
-      return stream.finalMessage();
+      const final = await stream.finalMessage();
+      if (process.env.BUDDY_DEBUG) {
+        const u = final.usage || {};
+        console.log(`[brain] in=${u.input_tokens} cache_read=${u.cache_read_input_tokens} cache_write=${u.cache_creation_input_tokens} out=${u.output_tokens} stop=${final.stop_reason}`);
+      }
+      return final;
     };
 
     try {

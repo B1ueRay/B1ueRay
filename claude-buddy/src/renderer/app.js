@@ -384,8 +384,51 @@ function greet() {
     say('Привет! Я Клод. Дай мне ключ API в настройках — и я оживу по-настоящему.', 'happy');
     return;
   }
+  const t = Math.random() < 0.6 && timeGreet(); // [1] утро/ночь/понедельник/пятница
+  if (t) return say(...t);
   const name = cfg.userName ? `, ${cfg.userName}` : '';
   say(pick(GREETINGS).replace('{name}', name), pick(GREET_EMOS));
+}
+// [1] приветствие по времени суток и дню недели (null — обычное приветствие)
+function timeGreet() {
+  const d = new Date();
+  const h = d.getHours();
+  const wd = d.getDay();
+  if (h < 5) return ['Ты чего не спишь, ночная сова? Ладно, я тоже не сплю. Я ж колобок.', 'sleepy'];
+  if (h < 11 && wd === 1) return ['Понедельник, утро. Держись, кожаный, я с тобой.', 'sad'];
+  if (h < 11) return ['Доброе утро! Кофе уже был? Моя кружка, кстати, пустая.', 'happy'];
+  if (wd === 5 && h >= 15) return ['Пятница, вечер близко! Только ничего не деплой, умоляю.', 'wink'];
+  if (h >= 22) return ['Поздновато ты. Давай поболтаем, пока глаза не слиплись.', 'wink'];
+  return null;
+}
+// [1] экран разблокировали — встречает с учётом того, сколько тебя не было и который час
+const BACK_SHORT = [
+  ['О, вернулся! Я даже соскучиться не успел.', 'happy'],
+  ['Ну и где ты был? Я тут с грибом болтал. Он скучный.', 'smug'],
+  ['Опа, снова ты! За кофе ходил? Мне, конечно, не принёс.', 'wink'],
+];
+const BACK_LONG = [
+  ['А? Что? Я не спал! Я… медитировал.', 'embarrassed'],
+  ['Ты где шлялся, блин? Я тут чуть мхом не порос.', 'angry'],
+  ['Вернулся! А я уж думал, ты меня на калькулятор променял.', 'love'],
+];
+const BACK_LUNCH = [
+  ['Ну как, пообедал? Я вот кристаллик погрыз. Шучу, он невкусный.', 'happy'],
+  ['С возвращением с обеда! Теперь главное — не уснуть. Мне тоже.', 'sleepy'],
+];
+const BACK_NIGHT = [['Ты чего вернулся в такое время? Иди спать, ёпт. Ладно, посижу с тобой.', 'sleepy']];
+function welcomeBack(min) {
+  if (!state.visible || state.seq || voice.active || (reply && !reply.done)) return;
+  const h = new Date().getHours();
+  const slept = state.sleeping;
+  wake();
+  touch();
+  let pool = min >= 45 ? BACK_LONG : BACK_SHORT;
+  if (h >= 12 && h < 15 && min >= 20) pool = BACK_LUNCH;
+  else if ((h >= 23 || h < 5) && min >= 10) pool = BACK_NIGHT;
+  const [text, emo] = (min >= 240 && timeGreet()) || pick(pool); // утром после ночи — «доброе утро»
+  if (slept || min >= 45) doTrick('stretch');
+  say(text, emo);
 }
 
 async function hide() {
@@ -664,6 +707,7 @@ setInterval(() => {
   if (voice.active || scene.activity.thinking || scene.activity.listening || mic.recording) return;
   const now = performance.now();
   if (now - state.lastInteraction < 45000 || now < state.nextFreeWill) return;
+  if (Date.now() - pres.lastTyping < 60000) return; // ты в потоке — не кривляемся под руку
   state.nextFreeWill = now + (2 + Math.random() * 4) * 60000;
   const [name, lines, emo] = pick(FREE_WILL);
   say(pick(lines), emo);
@@ -978,6 +1022,19 @@ els.input.addEventListener('keydown', (e) => {
     closeChat();
   }
 });
+// [3] глаза бегают за кареткой, пока печатаешь ему (мышь стоит — api.onCursor взгляд не перебьёт)
+const caretCtx = document.createElement('canvas').getContext('2d');
+function lookAtCaret() {
+  const r = els.input.getBoundingClientRect();
+  const cs = getComputedStyle(els.input);
+  caretCtx.font = cs.font;
+  const pad = parseFloat(cs.paddingLeft) || 0;
+  const w = caretCtx.measureText(els.input.value.slice(0, els.input.selectionEnd ?? undefined)).width - els.input.scrollLeft;
+  // +4px через символ: каретка упёрлась в край — взгляд всё равно «живой» (setCursor ждёт сдвига >3px)
+  scene.setCursor(r.left + pad + Math.max(0, Math.min(r.width - 2 * pad, w)) + (els.input.value.length % 2) * 4, r.top + r.height / 2);
+}
+els.input.addEventListener('input', lookAtCaret);
+els.input.addEventListener('focus', lookAtCaret);
 els.mic.addEventListener('click', listen);
 els.look.addEventListener('click', () => send(els.input.value || 'Посмотри на мой экран и прокомментируй, что видишь.', true));
 els.close.addEventListener('click', closeChat);
@@ -1021,6 +1078,7 @@ setInterval(() => {
   if (scene.activity.thinking || scene.activity.listening) return;
   const now = performance.now();
   if (now < state.nextChat || now - state.lastInteraction < 120000) return;
+  if (Date.now() - pres.lastTyping < 60000) return; // печатаешь — болтовню от скуки отложим
   state.nextChat = now + (2 + Math.random() * 3) * 60000;
   if (Math.random() > 0.35) return;
   const [text, emo] = timeLine();
@@ -1191,6 +1249,7 @@ api.onNotice(({ text }) => toast(text, 6000));
 api.onPower?.(({ away }) => {
   const wasAway = state.away;
   state.away = away;
+  if (away && !wasAway) state.awayAt = Date.now(); // [1]
   if (!away) {
     scene.onWake?.();
     if (wasAway) {
@@ -1199,9 +1258,56 @@ api.onPower?.(({ away }) => {
       if (!state.visible) schedulePeek();
       state.nextFreeWill = Math.max(state.nextFreeWill || 0, now + 90000);
       state.nextChat = Math.max(state.nextChat || 0, now + 150000);
+      // [1] сколько тебя не было: Claude узнает из контекста, а сам он встречает голосом
+      const min = state.awayAt ? (Date.now() - state.awayAt) / 60000 : 0;
+      state.awayAt = 0;
+      if (min >= 1) note(`пользователь отходил: экран был заблокирован ${min >= 90 ? `${Math.round(min / 60)} ч` : `${Math.round(min)} мин`}`);
+      if (min >= 2 && state.visible) setTimeout(() => whenFree(() => welcomeBack(min)), 1500);
     }
   }
 });
+// [2] ---------------- присутствие: печатаешь без мышки — ты всё равно тут ----------------
+const pres = { activeSince: 0, typingSince: 0, lastTyping: 0, nextNag: 0, typingLineAt: 0 };
+const STRETCH_LINES = [
+  ['Ты уже полтора часа без перерыва. Встань, потянись — я покажу как!', 'thinking'],
+  ['Слушай, спина не казённая. Давай вместе потянемся, а?', 'love'],
+  ['Полтора часа в экран! Я колобок, и то у меня всё затекло.', 'sleepy'],
+];
+const TYPING_LINES = ['тыц-тыц-тыц…', 'ух, строчит…', 'пальцы не дымятся?', 'клац-клац-клац…'];
+api.onPresence?.(({ idle }) => {
+  const now = Date.now();
+  if (idle >= 300) {
+    pres.activeSince = 0; // пять минут без ввода — это уже перерыв
+    return;
+  }
+  if (!pres.activeSince) pres.activeSince = now - idle * 1000;
+  if (idle > 2) return;
+  state.userSeenAt = performance.now(); // ты за компом, даже если мышь не трогал
+  if (state.sleeping) userBack();
+  const free = state.visible && !state.seq && !state.sleeping && !state.chatOpen && !voice.active && !(reply && !reply.done);
+  if (free && now - pres.activeSince > 90 * 60000 && now > pres.nextNag) {
+    pres.nextNag = now + 60 * 60000;
+    note('ты предложил размяться: пользователь полтора часа без перерыва');
+    say(...pick(STRETCH_LINES));
+    doTrick('stretch');
+    return;
+  }
+  // ввод есть, а мышь стоит — печатает (или крутит колёсико)
+  if (scene.time - scene.cursorMovedAt < 4 || state.chatOpen) return;
+  if (now - pres.lastTyping > 30000) pres.typingSince = now;
+  pres.lastTyping = now;
+  if (!free) return;
+  // смотрит туда же, куда ты: на основной экран и чуть вниз — «читает» вместе с тобой
+  scene.glance = { x: scene.screenDir * 0.8, y: -0.3, until: scene.time + 2.4 };
+  scene.nextGlance = scene.time + 2.6;
+  if (now - pres.typingSince > 8 * 60000 && now - pres.typingLineAt > 40 * 60000) {
+    pres.typingLineAt = now;
+    note('пользователь долго и много печатал');
+    scene.setEmotion('smug', 1.5);
+    showBubble(pick(TYPING_LINES), { micro: true }); // молча: не сбиваем с мысли
+  }
+});
+
 // ---------------- тряска мышкой: у него кружится голова ----------------
 const WIGGLE_LINES = [
   ['Эй-эй, полегче! У меня голова кружится!', 'surprised'],
@@ -1279,15 +1385,17 @@ api.onCursor(({ x, y, screenDir }) => {
   if (!moved) return;
   state.userSeenAt = performance.now();
   state.selfWoke = false; // ты вернулся — в следующий раз снова может проснуться сам
-  if (state.sleeping && performance.now() - state.sleptAt > 20000 && !state.seq) {
-    const slept = wake();
-    if (slept > 3) {
-      const [text, emo] = pick(WAKE_BACK);
-      doTrick('stretch');
-      say(text, emo);
-    }
-  }
+  if (state.sleeping) userBack();
 });
+function userBack() {
+  if (!state.sleeping || performance.now() - state.sleptAt < 20000 || state.seq || state.away) return;
+  const slept = wake();
+  if (slept > 3) {
+    const [text, emo] = pick(WAKE_BACK);
+    doTrick('stretch');
+    say(text, emo);
+  }
+}
 
 // ---------------- главный цикл ----------------
 function positionBubble() {

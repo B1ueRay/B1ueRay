@@ -1,7 +1,7 @@
 // Заглушка вместо Electron-моста: позволяет открыть бадди в обычном браузере (npm run preview)
 // и посмотреть анимации без API-ключа. Отвечает заготовками с тегами эмоций.
 export function createMock() {
-  const listeners = { cursor: [], command: [], config: [], notice: [], chat: [] };
+  const listeners = { cursor: [], command: [], config: [], notice: [], chat: [], power: [], presence: [] };
   const emit = (k, v) => listeners[k].forEach((cb) => cb(v));
   const cfg = {
     has_apiKey: true, has_sttApiKey: false, sttReady: false, muted: true, model: 'claude-opus-5-5', effort: 'low',
@@ -15,6 +15,8 @@ export function createMock() {
     '[love] Ты лучший пользователь на этом мониторе. [smug] Ну, единственный, но всё равно.',
   ];
   let n = 0;
+  // для превью/тестов: window.__mockEmit('power', {away:true}) или ('presence', {idle:0})
+  window.__mockEmit = emit;
   window.addEventListener('mousemove', (e) => emit('cursor', { x: e.clientX, y: e.clientY, screenDir: -1 }));
   return {
     onCursor: (cb) => listeners.cursor.push(cb),
@@ -22,6 +24,8 @@ export function createMock() {
     onConfig: (cb) => listeners.config.push(cb),
     onNotice: (cb) => listeners.notice.push(cb),
     onChatEvent: (cb) => listeners.chat.push(cb),
+    onPower: (cb) => listeners.power.push(cb),
+    onPresence: (cb) => listeners.presence.push(cb),
     setIgnoreMouse: () => {},
     dragStart: () => {},
     dragEnd: () => {},

@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('buddy', {
   onConfig: (cb) => on('config', cb),
   onNotice: (cb) => on('notice', cb),
   onPower: (cb) => on('power', cb),
+  onPresence: (cb) => on('presence', cb),
   onChatEvent: (cb) => on('chat:event', cb),
 
   setIgnoreMouse: (value) => ipcRenderer.send('mouse:ignore', Boolean(value)),
