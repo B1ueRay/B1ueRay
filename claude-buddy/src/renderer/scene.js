@@ -135,26 +135,41 @@ function placeOnSurface(obj, yaw, pitch, radius) {
 
 // ---------- эмоции: целевые параметры лица/тела ----------
 const FACES = {
-  neutral: { eye: 1, shape: 'open', pupil: 1, browY: 0, browA: 0, smile: 0.2, open: 0, width: 1, blush: 0.15 },
-  happy: { eye: 0.95, shape: 'open', pupil: 1.05, browY: 0.025, browA: 0.05, smile: 0.85, open: 0.12, width: 1.1, blush: 0.4 },
+  // neutral — маленький спокойный ротик, happy — широкая открытая улыбка: иначе на 150 px они близнецы
+  neutral: { eye: 1, shape: 'open', pupil: 1, browY: 0, browA: 0, smile: 0.12, open: 0, width: 0.72, blush: 0.15 },
+  happy: { eye: 0.92, shape: 'open', pupil: 1.05, browY: 0.04, browA: 0.08, smile: 1, open: 0.34, width: 1.22, blush: 0.5 },
   laugh: { eye: 1, shape: 'arc', pupil: 1, browY: 0.04, browA: 0.1, smile: 1, open: 0.62, width: 1.15, blush: 0.6, bounce: 1 },
   surprised: { eye: 1.25, shape: 'open', pupil: 0.72, browY: 0.07, browA: 0.12, smile: 0, open: 0.55, width: 0.62, blush: 0.1, round: 1 },
-  sad: { eye: 0.8, shape: 'open', pupil: 1.1, browY: 0.0, browA: 0.62, smile: -0.7, open: 0.05, width: 0.85, blush: 0.05, droop: 1 },
+  // sad: брови домиком, дрожащая подкова, взгляд в пол
+  sad: { eye: 0.74, shape: 'open', pupil: 1.12, browY: -0.005, browA: 0.95, smile: -1, open: 0.04, width: 0.86, blush: 0.05, droop: 1, wave: 0.35, look: [0, -0.45] },
   angry: { eye: 0.7, shape: 'open', pupil: 0.85, browY: 0.0, browA: -0.8, smile: -0.7, open: 0.18, width: 0.95, blush: 0.55, shake: 0.4 },
-  thinking: { eye: 0.85, shape: 'open', pupil: 1, browY: 0.02, browA: 0.15, browAsym: 0.06, smile: -0.05, open: 0.02, width: 0.7, blush: 0.1, mouthX: 0.06 },
+  // thinking: одна бровь вверх, рот уехал в кривую ухмылку набок, глаза под потолок
+  thinking: { eye: 0.85, shape: 'open', pupil: 1, browY: 0.0, browA: -0.1, browAsym: 0.1, smile: -0.1, open: 0.03, width: 0.62, blush: 0.1, mouthX: 0.07, tilt: 1, look: [-0.5, 0.6] },
   love: { eye: 1, shape: 'heart', pupil: 1, browY: 0.03, browA: 0.1, smile: 0.8, open: 0.1, width: 1, blush: 0.9 },
   smug: { eye: 0.52, shape: 'open', pupil: 1, browY: 0.01, browA: -0.05, browAsym: 0.07, smile: 0.6, open: 0, width: 1.05, blush: 0.25, mouthX: 0.05 },
   sleepy: { eye: 0.4, shape: 'open', pupil: 1, browY: -0.01, browA: 0.15, smile: 0, open: 0.1, width: 0.6, blush: 0.2, droop: 0.6 },
   sleep: { eye: 0, shape: 'closed', pupil: 1, browY: -0.01, browA: 0.05, smile: 0.1, open: 0.08, width: 0.5, blush: 0.3, droop: 0.4 },
   scared: { eye: 1.22, shape: 'open', pupil: 0.45, browY: 0.06, browA: 0.55, smile: -0.8, open: 0.35, width: 0.7, blush: 0, shake: 1 },
-  embarrassed: { eye: 0.85, shape: 'open', pupil: 1, browY: 0.02, browA: 0.3, smile: 0.35, open: 0.05, width: 0.8, blush: 1.1, lookAway: 1 },
+  // embarrassed: рот-волнушка, щёки горят с штриховкой ///, взгляд в сторону и вниз
+  embarrassed: { eye: 0.85, shape: 'open', pupil: 1, browY: 0.02, browA: 0.45, smile: 0.1, open: 0.06, width: 0.85, blush: 1.6, lookAway: 1, wave: 1 },
   wink: { eye: 1, shape: 'wink', pupil: 1, browY: 0.03, browA: 0.05, smile: 0.8, open: 0.1, width: 1.05, blush: 0.4 },
 };
 
+// поза тела под эмоцию — то, что читается даже краем глаза, когда лицо мелкое:
+// slump — осесть и ссутулиться, hop — пружинить от радости, roll — склонить голову, sway — мяться, arm — руки
+const POSES = {
+  happy: { hop: 1 },
+  sad: { slump: 1, roll: -0.07 },
+  thinking: { roll: 0.14, arm: 'scratch' },
+  embarrassed: { roll: -0.1, sway: 1, arm: 'shy' },
+};
+const POSE_ZERO = { hop: 0, slump: 0, roll: 0, sway: 0 };
+
 // ---------- сама сцена ----------
 // у каждой черты лица своя скорость: глаза быстрые, брови и рот мягче, румянец медленный
-const FACE_RATE = { eye: 14, pupil: 10, browY: 7, browA: 7, browAsym: 7, smile: 8, open: 9, width: 8, mouthX: 6, blush: 3, bounce: 8, shake: 10, droop: 4, round: 8, lookAway: 6 };
-const AFTERGLOW_KEYS = ['eye', 'pupil', 'browY', 'browA', 'browAsym', 'smile', 'open', 'width', 'blush', 'mouthX', 'droop'];
+const FACE_RATE = { eye: 14, pupil: 10, browY: 7, browA: 7, browAsym: 7, smile: 8, open: 9, width: 8, mouthX: 6, tilt: 6, wave: 6, blush: 3, bounce: 8, shake: 10, droop: 4, round: 8, lookAway: 6 };
+const AFTERGLOW_KEYS = ['eye', 'pupil', 'browY', 'browA', 'browAsym', 'smile', 'open', 'width', 'blush', 'mouthX', 'tilt', 'droop'];
+const FACE_DEFAULTS = { browAsym: 0, mouthX: 0, tilt: 0, wave: 0, bounce: 0, shake: 0, droop: 0, round: 0, lookAway: 0 };
 
 export class BuddyScene {
   constructor(canvas) {
@@ -198,7 +213,8 @@ export class BuddyScene {
     this.pokeT = -10;
     this.dizzyUntil = 0;
     this.afterglow = null;
-    this.face = { ...FACES.neutral, browAsym: 0, mouthX: 0, bounce: 0, shake: 0, droop: 0, round: 0, lookAway: 0 };
+    this.pose = { ...POSE_ZERO };
+    this.face = { ...FACES.neutral, ...FACE_DEFAULTS };
     this.mouthKey = '';
     this.threadAttach = null; // мир. точка, куда цепляется нитка (null = нитки нет)
     this.threadTopY = 0;
@@ -399,6 +415,18 @@ export class BuddyScene {
       placeOnSurface(m, side * 0.55, -0.08, R + 0.006);
       m.scale.set(1.15, 0.65, 1);
       this.faceGroup.add(m);
+      // штриховка /// поверх румянца — включается только при сильном смущении (blush > 1)
+      const hatch = new THREE.Group();
+      placeOnSurface(hatch, side * 0.55, -0.08, R + 0.012);
+      const hm = new THREE.MeshBasicMaterial({ color: 0xc8404e, transparent: true, opacity: 0, depthWrite: false });
+      for (let i = -1; i <= 1; i += 1) {
+        const ln = new THREE.Mesh(new THREE.PlaneGeometry(0.016, 0.075), hm);
+        ln.position.x = i * 0.04;
+        ln.rotation.z = -0.5;
+        hatch.add(ln);
+      }
+      this.faceGroup.add(hatch);
+      m.userData = { hatch, hm };
       return m;
     });
 
@@ -607,21 +635,34 @@ export class BuddyScene {
     return geo;
   }
 
-  updateMouth(open, smile, width, offsetX) {
-    const key = `${open.toFixed(3)}|${smile.toFixed(3)}|${width.toFixed(3)}|${offsetX.toFixed(3)}`;
+  // tilt: один уголок вверх, другой вниз (кривая ухмылка); wave: рот-волнушка, ph — её фаза
+  updateMouth(open, smile, width, offsetX, tilt = 0, wave = 0, ph = 0) {
+    if (wave < 0.02) ph = 0;
+    const key = `${open.toFixed(3)}|${smile.toFixed(3)}|${width.toFixed(3)}|${offsetX.toFixed(3)}|${tilt.toFixed(3)}|${wave.toFixed(3)}|${ph.toFixed(2)}`;
     if (key === this.mouthKey) return;
     this.mouthKey = key;
     const w = 0.18 * width;
-    const cy = smile * 0.055;
-    const upper = -smile * 0.012 + open * 0.025;
+    const frown = Math.max(0, -smile); // подкова: уголки ниже, середина выше — чтобы читалась издалека
+    const cy = smile * 0.055 - frown * 0.02;
+    const upper = -smile * 0.012 + frown * 0.03 + open * 0.025;
     let lower = -open * 0.2 - Math.max(0, smile) * 0.07 + Math.min(0, smile) * 0.02;
     lower = Math.min(lower, upper - 0.036);
     const ox = offsetX;
+    const N = 16;
     const mk = (k) => {
+      // та же квадратичная кривая, что раньше (y = cy + (1-u²)(c-cy)/2), плюс наклон и волна
+      const extra = (u) => tilt * u * 0.032 + wave * 0.013 * Math.sin(u * Math.PI * 2.5 + ph) * (1 - 0.4 * u * u);
       const s = new THREE.Shape();
-      s.moveTo(ox - w * k, cy * k);
-      s.quadraticCurveTo(ox, upper * k + (1 - k) * 0.0, ox + w * k, cy * k);
-      s.quadraticCurveTo(ox, lower * k, ox - w * k, cy * k);
+      for (let i = 0; i <= N; i += 1) {
+        const u = -1 + (2 * i) / N;
+        const y = cy + (1 - u * u) * (upper - cy) * 0.5 + extra(u);
+        if (i === 0) s.moveTo(ox + u * w * k, y * k);
+        else s.lineTo(ox + u * w * k, y * k);
+      }
+      for (let i = N - 1; i > 0; i -= 1) {
+        const u = -1 + (2 * i) / N;
+        s.lineTo(ox + u * w * k, (cy + (1 - u * u) * (lower - cy) * 0.5 + extra(u)) * k);
+      }
       return s;
     };
     const old = [this.mouthMesh.geometry, this.tongueMesh.geometry, this.mouthLine.geometry];
@@ -1086,7 +1127,8 @@ export class BuddyScene {
     if (a.sleeping) name = 'sleep';
     else if (a.thinking && name === 'neutral') name = 'thinking';
     else if (this.mode === 'hanging' || this.mode === 'peeking') name = this.emotion === 'neutral' ? 'happy' : this.emotion;
-    const target = { ...FACES.neutral, browAsym: 0, mouthX: 0, bounce: 0, shake: 0, droop: 0, round: 0, lookAway: 0, ...FACES[name] };
+    this.faceName = name;
+    const target = { ...FACES.neutral, ...FACE_DEFAULTS, ...FACES[name] };
     if (this.trick?.name === 'stretch') {
       Object.assign(target, { eye: 0, shape: 'arc', open: 0.8, smile: 0, width: 0.75, browA: 0.2, round: 1 }); // зевок с зажмуренными ^^
     }
@@ -1138,6 +1180,8 @@ export class BuddyScene {
     } else if (this.face.lookAway > 0.5) {
       gx = 0.7;
       gy = -0.4;
+    } else if (FACES[this.faceName]?.look && !a.speaking) {
+      [gx, gy] = FACES[this.faceName].look; // грусть смотрит в пол, раздумье — под потолок
     } else if (this.cursor && t - this.cursorMovedAt < 2.5 && !a.speaking) {
       const fs = this.faceScreen();
       const dx = this.cursor.x - fs.x;
@@ -1260,10 +1304,15 @@ export class BuddyScene {
     const open = clamp(Math.max(f.open, speakingOpen * 0.75 + f.open * 0.4), 0, 1);
     const width = f.width * (1 - this.lip.round * 0.35 * speakingOpen) * (1 - f.round * 0.15);
     const smile = f.smile * (1 - speakingOpen * 0.35);
-    this.updateMouth(open, smile, width, f.mouthX);
+    // фаза волны квантуется (12 шагов/с): геометрия рта не пересобирается каждый кадр
+    this.updateMouth(open, smile, width, f.mouthX, f.tilt * (1 - speakingOpen * 0.5), f.wave, (Math.round(t * 12) / 12) * 5);
 
+    const hot = clamp(f.blush - 1, 0, 1); // сверх 1 — "горят щёки": ярче, крупнее, со штриховкой
     this.blushes.forEach((bl) => {
-      bl.material.opacity = clamp(f.blush, 0, 1) * 0.55;
+      bl.material.opacity = clamp(f.blush, 0, 1) * 0.55 + hot * 0.3;
+      bl.scale.set(1.15 * (1 + hot * 0.35), 0.65 * (1 + hot * 0.35), 1);
+      bl.userData.hm.opacity = clamp(hot * 1.6 - 0.2, 0, 1);
+      bl.userData.hatch.visible = hot > 0.15;
     });
 
     // корона-искорка: пружинит, реагирует на голос и микрофон
@@ -1275,6 +1324,13 @@ export class BuddyScene {
       const s = 1 + this.micLevel * 0.35 + energy * 0.08 + (f.droop ? -0.18 * f.droop : 0);
       p.scale.setScalar(damp(p.scale.x, s, 12, dt));
     });
+
+    // поза эмоции: плавно, медленнее лица — тело тяжелее бровей
+    const P = POSES[this.faceName] || POSE_ZERO;
+    const busyBody = this.trick || this.mode !== 'sitting' || a.sleeping;
+    for (const k of Object.keys(POSE_ZERO)) this.pose[k] = damp(this.pose[k], busyBody ? 0 : P[k] || 0, 4, dt);
+    const pose = this.pose;
+    const hopK = Math.abs(Math.sin(t * 6)) * pose.hop;
 
     // тело: дыхание, позы
     const breathe = Math.sin(t * 2.1) * 0.018 * (a.sleeping ? 2 : 1);
@@ -1292,6 +1348,10 @@ export class BuddyScene {
       sx -= b * 0.5;
     }
     if (a.speaking) sy += energy * 0.03;
+    // грусть: осели, раздались вширь и медленно вздыхаем; радость: мелко пружиним
+    const sigh = pose.slump * (0.5 + 0.5 * Math.sin(t * 1.1)) * 0.02;
+    sy += -0.05 * pose.slump - sigh + hopK * 0.025;
+    sx += 0.03 * pose.slump + sigh * 0.5 - hopK * 0.012 - pose.sway * 0.02;
     this.squash.scale.set(sx, sy, sx);
 
     let leanX = 0;
@@ -1305,6 +1365,9 @@ export class BuddyScene {
     }
     if (f.droop) leanX += 0.08 * f.droop;
     if (a.thinking) rollZ += 0.08;
+    leanX += 0.05 * pose.slump; // голову повесил
+    rollZ += pose.roll + Math.sin(t * 2.3) * 0.04 * pose.sway;
+    turnY += Math.sin(t * 2.3) * 0.2 * pose.sway; // застенчиво мнётся
     rollZ += f.shake * Math.sin(t * 34) * 0.025;
     if (t - this.pokeT < 0.6) rollZ += Math.sin((t - this.pokeT) * 30) * 0.12 * (1 - (t - this.pokeT) / 0.6);
     const hanging = this.mode === 'hanging' || this.mode === 'descending' || this.mode === 'peeking' || this.mode === 'ascending';
@@ -1346,6 +1409,12 @@ export class BuddyScene {
         z = 2.4 + Math.sin(t * 14) * 0.4;
       } else if (a.thinking && s === -1) {
         z = -2.3 + Math.sin(t * 9) * 0.12; // чешет репу
+      } else if (P.arm === 'scratch' && s === -1 && !busyBody) {
+        z = -2.65 + Math.sin(t * 7) * 0.1; // ладонь к виску, почёсывает
+        x = -0.25;
+      } else if (P.arm === 'shy' && !busyBody) {
+        z = s * 0.06; // руки прижал, теребит
+        x = -0.45 + Math.sin(t * 7 + s * 1.7) * 0.18;
       } else if (f.bounce > 0.3) {
         z = s * (0.9 + Math.sin(t * 14) * 0.25);
       } else if (a.speaking) {
@@ -1386,7 +1455,7 @@ export class BuddyScene {
     if (this.mode === 'sitting' && trick === 'dance') {
       this.buddy.position.y = this.seat.y + 0.08 + Math.abs(Math.sin(t * 8)) * 0.14;
     } else if (seated && this.mode === 'sitting' && trick !== 'flip') {
-      this.buddy.position.y = this.seat.y + (f.bounce > 0.1 ? Math.abs(Math.sin(t * 14)) * 0.05 * f.bounce : 0);
+      this.buddy.position.y = this.seat.y + (f.bounce > 0.1 ? Math.abs(Math.sin(t * 14)) * 0.05 * f.bounce : 0) + hopK * 0.03;
     }
 
     // огонь из сопел и дымок
