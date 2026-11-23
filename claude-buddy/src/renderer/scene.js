@@ -668,8 +668,9 @@ export class BuddyScene {
     const old = [this.mouthMesh.geometry, this.tongueMesh.geometry, this.mouthLine.geometry];
     this.mouthLine.geometry = this.wrapShape(mk(1.12), 0.003);
     this.mouthMesh.geometry = this.wrapShape(mk(1), 0.006);
-    if (open > 0.18) {
-      const lowMid = (cy + lower) / 2;
+    // язык не поспевает за кривым/волнистым ртом — при сильном наклоне или волне прячем его
+    if (open > 0.18 && wave < 0.5 && Math.abs(tilt) < 0.5) {
+      const lowMid = (cy + lower) / 2 + wave * 0.013 * Math.sin(ph); // та же волна, что у губ в центре
       const ry = Math.min(0.05, open * 0.07);
       const t = new THREE.Shape();
       t.absellipse(ox, lowMid + ry * 0.75, w * 0.5, ry, 0, TAU, false, 0);
@@ -1180,7 +1181,7 @@ export class BuddyScene {
     } else if (this.face.lookAway > 0.5) {
       gx = 0.7;
       gy = -0.4;
-    } else if (FACES[this.faceName]?.look && !a.speaking) {
+    } else if (FACES[this.faceName]?.look && !a.speaking && !(this.cursor && t - this.cursorMovedAt < 2.5)) {
       [gx, gy] = FACES[this.faceName].look; // грусть смотрит в пол, раздумье — под потолок
     } else if (this.cursor && t - this.cursorMovedAt < 2.5 && !a.speaking) {
       const fs = this.faceScreen();
@@ -1301,11 +1302,14 @@ export class BuddyScene {
     // рот: эмоция + липсинк
     const lipOpen = this.lip.open;
     const speakingOpen = a.speaking ? lipOpen : 0;
-    const open = clamp(Math.max(f.open, speakingOpen * 0.75 + f.open * 0.4), 0, 1);
+    // пока говорит, эмоция лишь приоткрывает рот — иначе у радости губы не смыкаются на м/б/п
+    const baseOpen = a.speaking ? f.open * 0.25 : f.open;
+    const open = clamp(Math.max(baseOpen, speakingOpen * 0.75 + baseOpen * 0.4), 0, 1);
     const width = f.width * (1 - this.lip.round * 0.35 * speakingOpen) * (1 - f.round * 0.15);
     const smile = f.smile * (1 - speakingOpen * 0.35);
-    // фаза волны квантуется (12 шагов/с): геометрия рта не пересобирается каждый кадр
-    this.updateMouth(open, smile, width, f.mouthX, f.tilt * (1 - speakingOpen * 0.5), f.wave, (Math.round(t * 12) / 12) * 5);
+    // фаза волны квантуется (12 шагов/с в речи, 6 в простое): геометрия рта не пересобирается каждый кадр
+    const q = a.speaking ? 12 : 6;
+    this.updateMouth(open, smile, width, f.mouthX, f.tilt * (1 - speakingOpen * 0.5), f.wave, (Math.round(t * q) / q) * 5);
 
     const hot = clamp(f.blush - 1, 0, 1); // сверх 1 — "горят щёки": ярче, крупнее, со штриховкой
     this.blushes.forEach((bl) => {
@@ -1328,7 +1332,11 @@ export class BuddyScene {
     // поза эмоции: плавно, медленнее лица — тело тяжелее бровей
     const P = POSES[this.faceName] || POSE_ZERO;
     const busyBody = this.trick || this.mode !== 'sitting' || a.sleeping;
-    for (const k of Object.keys(POSE_ZERO)) this.pose[k] = damp(this.pose[k], busyBody ? 0 : P[k] || 0, 4, dt);
+    for (const k of Object.keys(POSE_ZERO)) {
+      // пока говорит, не пружиним: облачко над головой должно стоять, его читают
+      const want = busyBody || (k === 'hop' && a.speaking) ? 0 : P[k] || 0;
+      this.pose[k] = damp(this.pose[k], want, 4, dt);
+    }
     const pose = this.pose;
     const hopK = Math.abs(Math.sin(t * 6)) * pose.hop;
 
@@ -1366,7 +1374,7 @@ export class BuddyScene {
     if (f.droop) leanX += 0.08 * f.droop;
     if (a.thinking) rollZ += 0.08;
     leanX += 0.05 * pose.slump; // голову повесил
-    rollZ += pose.roll + Math.sin(t * 2.3) * 0.04 * pose.sway;
+    rollZ += (a.thinking ? 0 : pose.roll) + Math.sin(t * 2.3) * 0.04 * pose.sway; // ждём Claude — наклон уже есть выше
     turnY += Math.sin(t * 2.3) * 0.2 * pose.sway; // застенчиво мнётся
     rollZ += f.shake * Math.sin(t * 34) * 0.025;
     if (t - this.pokeT < 0.6) rollZ += Math.sin((t - this.pokeT) * 30) * 0.12 * (1 - (t - this.pokeT) / 0.6);

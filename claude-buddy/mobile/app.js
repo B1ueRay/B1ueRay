@@ -505,12 +505,13 @@ const EMOTION_ALIAS = {
 };
 // ремарки вместо тегов ([shrug], [sighs]) глотаем по белому списку; [docs], [todo] остаются текстом
 const STAGE_WORDS = new Set(
-  ('shrug shrugs sigh sighs giggle giggles chuckle chuckles laughs grin grins smile smiles nod nods gasp gasps blush blushes ' +
-    'winks cough coughs yawn yawns pause beat facepalm pfft whisper whispers clap claps squeak sniff gulp groan nod').split(' '),
+  ('shrug shrugs sigh sighs sighing giggle giggles giggling chuckle chuckles laughs laughing grin grins grinning smile smiles smiling ' +
+    'nod nods nodding gasp gasps blush blushes blushing winks cough coughs yawn yawns yawning pause beat facepalm pfft ' +
+    'whisper whispers whispering clap claps clapping squeak squeaks sniff sniffs gulp gulps groan groans').split(' '),
 );
 const strayTag = (tag) => {
   const parts = tag.split(/\s*,\s*|\s+/);
-  return parts.length <= 3 && parts.every((x) => STAGE_WORDS.has(x) || EMOTION_RE.test(x) || x in EMOTION_ALIAS);
+  return parts.length <= 3 && parts.every((x) => STAGE_WORDS.has(x) || EMOTION_RE.test(x) || x in EMOTION_ALIAS || ACTION_RE.test(x));
 };
 
 function contextNotes() {
