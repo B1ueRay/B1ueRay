@@ -503,7 +503,15 @@ const EMOTION_ALIAS = {
   confused: 'thinking', curious: 'thinking', hmm: 'thinking', shy: 'embarrassed', blush: 'embarrassed',
   proud: 'smug', sly: 'smug', tired: 'sleepy', afraid: 'scared', fear: 'scared', heart: 'love', calm: 'neutral',
 };
-const STRAY_TAG_RE = /^[a-z][a-z_-]{1,14}$/;
+// ремарки вместо тегов ([shrug], [sighs]) глотаем по белому списку; [docs], [todo] остаются текстом
+const STAGE_WORDS = new Set(
+  ('shrug shrugs sigh sighs giggle giggles chuckle chuckles laughs grin grins smile smiles nod nods gasp gasps blush blushes ' +
+    'winks cough coughs yawn yawns pause beat facepalm pfft whisper whispers clap claps squeak sniff gulp groan nod').split(' '),
+);
+const strayTag = (tag) => {
+  const parts = tag.split(/\s*,\s*|\s+/);
+  return parts.length <= 3 && parts.every((x) => STAGE_WORDS.has(x) || EMOTION_RE.test(x) || x in EMOTION_ALIAS);
+};
 
 function contextNotes() {
   const parts = [new Date().toLocaleString('ru-RU', { weekday: 'short', hour: '2-digit', minute: '2-digit' })];
@@ -553,7 +561,7 @@ function feedText(r, full) {
       }
     } else if (ACTION_RE.test(tag)) {
       doTrick(tag);
-    } else if (STRAY_TAG_RE.test(tag)) {
+    } else if (strayTag(tag)) {
       /* выдуманный тег вроде [giggle] — не читаем вслух */
     } else {
       pushText(r, r.raw.slice(i, j + 1));

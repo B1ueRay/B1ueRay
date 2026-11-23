@@ -626,7 +626,7 @@ setInterval(() => {
 
 setInterval(() => {
   if (state.away) return; // экран заблокирован — никаких "ку-ку" в пустую комнату
-  if (!state.visible && !state.seq && state.peekAt && performance.now() > state.peekAt) {
+  if (!state.visible && !state.seq && state.peekAt && performance.now() > state.peekAt && Date.now() - pres.lastTyping > 60000) {
     state.peekAt = 0;
     peek();
   }
@@ -782,7 +782,7 @@ function feed(r, delta) {
     } else if (ACTION_RE.test(tag)) {
       if (tag === 'hide') state.pendingHide = true;
       else doTrick(tag); // трюк — сразу, пока он говорит
-    } else if (strayTag(r.raw.slice(i + 1, j), r.raw)) {
+    } else if (strayTag(r.raw.slice(i + 1, j))) {
       // ремарка вроде [shrug] / [happy, wink]: из списка берём, что знаем, остальное молча глотаем
       for (const part of tag.split(/\s*,\s*/)) {
         const e2 = EMOTION_RE.test(part) ? part : EMOTION_ALIAS[part];
@@ -802,10 +802,16 @@ function feed(r, delta) {
   }
 }
 
-// [shrug], [sighs], [happy, wink] — строчная латиница, до трёх слов, а сам ответ по-русски.
-// [Enter], [Ctrl+C], [docs] в английской фразе — это текст, их не трогаем.
-function strayTag(inner, whole) {
-  return /^[a-z][a-z_-]*(?:\s*,\s*[a-z][a-z_-]*|\s[a-z][a-z_-]*){0,2}$/.test(inner.trim()) && /[а-яё]/i.test(whole);
+// Ремарки, которые модель ставит в скобках вместо тегов: [shrug], [sighs], [happy, wink].
+// Глотаем ТОЛЬКО их (и наши эмоции/действия) — [docs], [todo], [enter] остаются текстом.
+const STAGE_WORDS = new Set(
+  ('shrug shrugs sigh sighs sighing giggle giggles giggling chuckle chuckles laughs laughing grin grins grinning smile smiles smiling ' +
+    'nod nods nodding gasp gasps blush blushes blushing winks cough coughs yawn yawns yawning pause beat facepalm pfft ' +
+    'whisper whispers whispering clap claps clapping squeak squeaks sniff sniffs gulp gulps groan groans').split(' '),
+);
+function strayTag(inner) {
+  const parts = inner.trim().toLowerCase().split(/\s*,\s*|\s+/);
+  return parts.length <= 3 && parts.every((x) => STAGE_WORDS.has(x) || EMOTION_RE.test(x) || x in EMOTION_ALIAS || ACTION_RE.test(x));
 }
 
 function pushText(r, text) {
@@ -890,7 +896,8 @@ api.onChatEvent((ev) => {
         scene.setActivity({ thinking: false, looking: false });
         setStatus('');
         els.bubble.classList.remove('thinking');
-        say('Не, вот на это я отвечать не буду. Давай что-нибудь другое?', 'embarrassed');
+        say('Не, вот на это я отвечать не буду. Давай что-нибудь другое?', 'embarrassed', { noNote: true });
+        note('на прошлый вопрос ответа не было (отказ) — сам не поднимай эту тему');
         break;
       }
       feed(r, '');
@@ -1262,7 +1269,25 @@ api.onPower?.(({ away }) => {
       const min = state.awayAt ? (Date.now() - state.awayAt) / 60000 : 0;
       state.awayAt = 0;
       if (min >= 1) note(`пользователь отходил: экран был заблокирован ${min >= 90 ? `${Math.round(min / 60)} ч` : `${Math.round(min)} мин`}`);
-      if (min >= 2 && state.visible) setTimeout(() => whenFree(() => welcomeBack(min)), 1500);
+      if (min >= 5) pres.activeSince = 0; // обед/ночь — это перерыв, а не «полтора часа без отдыха»
+      if (min >= 2 && state.visible) {
+        // свой таймер, а не whenFree: тот на один слот и затёр бы «спрячься» с хоткея.
+        // Пока встреча ждёт, общее «проснулся от мыши» молчит — иначе ситуативная фраза не прозвучит.
+        state.welcomePending = true;
+        const until = performance.now() + 15000;
+        const tryWelcome = () => {
+          if (state.away || !state.visible || state.hiding || performance.now() > until) {
+            state.welcomePending = false;
+            if (state.sleeping && !state.away) wake();
+            return;
+          }
+          if (state.seq || voice.active) return setTimeout(tryWelcome, 250);
+          state.welcomePending = false;
+          welcomeBack(min);
+          if (state.sleeping) wake(); // ответ ещё шёл — встречать не стали, но и спать уже нечего
+        };
+        setTimeout(tryWelcome, 1500);
+      }
     }
   }
 });
@@ -1388,7 +1413,7 @@ api.onCursor(({ x, y, screenDir }) => {
   if (state.sleeping) userBack();
 });
 function userBack() {
-  if (!state.sleeping || performance.now() - state.sleptAt < 20000 || state.seq || state.away) return;
+  if (!state.sleeping || performance.now() - state.sleptAt < 20000 || state.seq || state.away || state.welcomePending) return;
   const slept = wake();
   if (slept > 3) {
     const [text, emo] = pick(WAKE_BACK);

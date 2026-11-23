@@ -93,20 +93,25 @@ const MAX_HISTORY = 40;
 // "Тихие" инструменты: если ответ уже содержит реплику, второй запрос к API ради них не делаем.
 const SILENT_TOOLS = new Set(['remember', 'forget']);
 
-// Блоки до последнего fallback: text и парные server-tool оставляем, модельные внутренности — нет.
-const KEEP_BEFORE_FALLBACK = new Set(['text', 'server_tool_use', 'web_search_tool_result', 'web_fetch_tool_result', 'bash_code_execution_tool_result']);
+// Эхо после mid-output fallback: до ПОСЛЕДНЕГО блока fallback выкидываем thinking, redacted_thinking, tool_use,
+// непарные server_tool_use и прочие модельные внутренности. text, все блоки fallback и парные серверные
+// вызовы с их результатами остаются на месте.
 function afterFallback(content) {
   let last = -1;
   content.forEach((b, i) => {
     if (b.type === 'fallback') last = i;
   });
   if (last < 0) return content;
-  const resultIds = new Set(content.filter((b) => b.tool_use_id && b.type !== 'tool_result').map((b) => b.tool_use_id));
-  return content.filter((b, i) => {
-    if (i >= last) return true;
+  const head = content.slice(0, last);
+  const serverIds = new Set(head.filter((b) => b.type === 'server_tool_use').map((b) => b.id));
+  const resultIds = new Set(head.filter((b) => b.tool_use_id && b.type !== 'tool_result').map((b) => b.tool_use_id));
+  const kept = head.filter((b) => {
+    if (b.type === 'text' || b.type === 'fallback') return true;
     if (b.type === 'server_tool_use') return resultIds.has(b.id);
-    return KEEP_BEFORE_FALLBACK.has(b.type);
+    if (b.tool_use_id && b.type !== 'tool_result') return serverIds.has(b.tool_use_id);
+    return false;
   });
+  return [...kept, ...content.slice(last)];
 }
 
 class Brain {
