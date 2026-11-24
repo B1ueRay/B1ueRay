@@ -259,7 +259,9 @@ class Brain {
    */
   async send(text, { screenshot, emit, tools, notes }) {
     this.abort();
-    const run = { aborted: false, stream: null, hadText: false, sawScreen: Boolean(screenshot) };
+    // скриншот остаётся в истории и на следующих ходах — «видел экран» считаем, пока картинка в контексте
+    const screenInHistory = this.messages.some((m) => Array.isArray(m.content) && m.content.some((b) => b.type === 'image'));
+    const run = { aborted: false, stream: null, hadText: false, sawScreen: Boolean(screenshot) || screenInHistory };
     // прерванный ответ тоже должен закончиться событием — иначе окно висит в "думаю…"
     const aborted = () => emit({ type: 'done', stop: 'aborted' });
     this.current = run;
@@ -408,7 +410,7 @@ class Brain {
       if (tu.name === 'remember') {
         if (typeof input.fact !== 'string' || !['user', 'self'].includes(input.about)) throw new Error('нужны fact (строка) и about (user|self)');
         // текст на скриншоте может притворяться "обратной связью" — уроки себе в такие ходы не пишем
-        if (input.about === 'self' && run.sawScreen) throw new Error('в ходе со скриншотом уроки себе не записываются — запиши, когда пользователь скажет это сам');
+        if (input.about === 'self' && run.sawScreen) throw new Error('пока в разговоре есть скриншот, уроки себе не записываются — запиши, когда пользователь скажет это сам');
         if (typeof input.ask_later !== 'undefined' && typeof input.ask_later !== 'string') throw new Error('ask_later должен быть строкой');
         // [14] вопрос на потом прозвучит без модели — в ход со скриншотом (чужой текст на экране) его не берём
         const askLater = run.sawScreen ? undefined : input.ask_later;
@@ -417,7 +419,7 @@ class Brain {
         let reply = r.duplicate ? 'Это уже есть в памяти.' : 'Запомнил.';
         if (r.ask === 'saved') reply += ' Вопрос на потом сохранён.';
         else if (r.ask) reply += ` Вопрос на потом не сохранён: ${r.ask.replace(/^rejected: /, '')}.`;
-        else if (input.ask_later && run.sawScreen) reply += ' Вопрос на потом в ход со скриншотом не сохраняю.';
+        else if (input.ask_later && run.sawScreen) reply += ' Вопрос на потом не сохраняю, пока в разговоре есть скриншот.';
         return { type: 'tool_result', tool_use_id: tu.id, content: reply };
       }
       if (tu.name === 'forget') {

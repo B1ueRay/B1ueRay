@@ -881,6 +881,8 @@ function send(text, withScreen = false) {
   touch();
   ensureShown();
   voice.stop();
+  // предыдущий ответ ещё шёл и будет брошен — его контекст («ты сам спросил…», события) вернём в следующий запрос
+  if (reply && !reply.done && reply.ctx) restoreNotes(reply.ctx.consumed);
   const r = newReply();
   els.input.value = '';
   if (text) showYou(text);
@@ -1338,7 +1340,12 @@ setInterval(async () => {
     };
     const free = () => state.visible && !state.seq && !state.chatOpen && !voice.active && !(reply && !reply.done);
     if (free()) go();
-    else setTimeout(() => (free() ? go() : note(`хотел спросить по памяти «${q}», но не успел`)), 20000);
+    else {
+      // повторная попытка — с теми же условиями, что и первая (экран, сон, ночь, печать), кроме «недавно с ним говорил»
+      const h = () => new Date().getHours();
+      const ok = () => free() && !state.away && !state.sleeping && !mic.recording && h() >= 8 && h() < 23 && Date.now() - pres.lastTyping > 90000;
+      setTimeout(() => (ok() ? go() : note(`хотел спросить по памяти «${q}», но не успел`)), 20000);
+    }
   } catch {
     /* нет моста — нет вопроса */
   } finally {
@@ -1578,7 +1585,12 @@ api.onPresence?.(({ idle }) => {
   const now = Date.now();
   if (idle >= 300) {
     pres.activeSince = 0; // пять минут без ввода — это уже перерыв
+    if (idle >= 4 * 3600) pres.longIdle = true; // ночь/полдня без ввода (даже без блокировки) — потом начнётся новый рабочий день
     return;
+  }
+  if (pres.longIdle && idle <= 2) {
+    pres.longIdle = false;
+    startWorkday(true);
   }
   if (!pres.activeSince) pres.activeSince = now - idle * 1000;
   if (idle > 2) return;

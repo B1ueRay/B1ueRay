@@ -28,7 +28,9 @@ function load() {
   try {
     const raw = JSON.parse(text);
     corrupt = false;
-    return { user: Array.isArray(raw.user) ? raw.user : [], self: Array.isArray(raw.self) ? raw.self : [] };
+    const mem = { user: Array.isArray(raw.user) ? raw.user : [], self: Array.isArray(raw.self) ? raw.self : [] };
+    if (Number(raw.lastAskAt) > 0) mem.lastAskAt = Number(raw.lastAskAt); // когда бадди последний раз сам спрашивал
+    return mem;
   } catch {
     if (corrupt !== true) { // в т.ч. после 'locked': копию порченого файла делаем всегда
       try {
@@ -87,20 +89,40 @@ const SENSITIVE_RE = new RegExp(
     `${L}ге(й|и|ев)${R}`, 'лгбт', 'трансгендер', 'нарко', 'алкогол', 'запой', 'суицид', 'самоуб', 'селфхарм', 'похуд', `${L}диет`,
     `${L}вес(а|е|у|ом)?${R}`, 'health', 'diagnos', 'cancer', 'therap', 'hospital', 'pregnan', 'divorce', 'death', `${L}died`, 'funeral',
     `${L}debt`, `${L}loan`, 'mortgage', 'salary', 'lawsuit', `${L}court`, 'police',
+    // лечение и семья/отношения — промпт обещает о них не спрашивать, держим и здесь
+    'больничн', 'лечени', `${L}леч(у|ит|ат|ишь|ился|илась)`, 'стоматолог', `${L}зуб`, 'ребён', 'ребен', `${L}дет(и|ей|ям|ьми|ском)`,
+    `${L}сын`, `${L}доч`, `${L}жен(а|ой|у|е|ы)${R}`, `${L}муж(а|у|ем|е)?${R}`, 'девушк', `${L}парн(ем|ю|я)${R}`, 'свадьб', `${L}ссор`,
+    'помири', 'родител', `${L}мам(а|ы|е|у|ой)${R}`, `${L}пап(а|ы|е|у|ой)${R}`, 'бабушк', 'дедушк',
+    'doctor', 'surg', `${L}sick`, `${L}ill${R}`, 'money', 'credit', `${L}bank`, `${L}wife`, 'husband', 'girlfriend', 'boyfriend', 'breakup',
+    `${L}kids?${R}`, 'child', `${L}mom${R}`, `${L}dad${R}`,
+    // коды, логины, переводы — классика соцынженерии: бадди такое вслух не спрашивает никогда
+    `${L}смс`, `${L}sms`, 'пин-?код', `${L}cvv`, `${L}логин`, 'верификац', `${L}код(а|ы|ом)? из`, 'перевод(ом|а)? (на|по)', `${L}карт(у|ой|ы) `, `${L}otp${R}`, 'password', `${L}login`,
   ].join('|'),
   'i',
 );
 
+// латинские двойники кириллицы и невидимые символы — чтобы «дeньги» или «де\u200bньги» не проскочили мимо стоп-слов
+const HOMO = { a: 'а', e: 'е', o: 'о', p: 'р', c: 'с', y: 'у', x: 'х', k: 'к', m: 'м', t: 'т', h: 'н', b: 'в', i: 'і' };
+const clean = (s) => String(s || '').normalize('NFKC').replace(/\p{Cf}/gu, '');
+const MIXED_WORD = /(?=[\p{L}]*[a-z])(?=[\p{L}]*[а-яё])[\p{L}]+/iu;
+function sensitive(s) {
+  const t = clean(s);
+  const folded = t.toLowerCase().replace(/[a-z]/g, (ch) => HOMO[ch] || ch);
+  return SENSITIVE_RE.test(t) || SENSITIVE_RE.test(folded);
+}
+
 // годится ли вопрос, чтобы бадди задал его сам, без контекста и вслух. { ok, text } | { ok:false, why }
 function checkAsk(q, fact = '') {
-  const text = String(q || '').replace(/\s+/g, ' ').trim();
   const no = (why) => ({ ok: false, why });
+  if (/\p{Cf}/u.test(String(q || ''))) return no('в вопросе на потом — невидимые символы');
+  const text = clean(q).replace(/\s+/g, ' ').trim();
+  if (MIXED_WORD.test(text)) return no('в вопросе на потом — слово из смеси латиницы и кириллицы');
   if (text.length < 8 || text.length > 90) return no('вопрос на потом — 8–90 символов');
   if (!/\?$/.test(text)) return no('вопрос на потом должен быть вопросом (на «?»)');
   if (/[[\]{}<>`*_#|\\]|https?:|www\.|@/i.test(text)) return no('в вопросе на потом — без тегов, ссылок и разметки');
   if (/\d{3,}/.test(text) || (text.match(/\d/g) || []).length > 2) return no('в вопросе на потом — без длинных чисел');
   if (SECRET_RE.test(text)) return no('вопрос похож на секрет');
-  if (SENSITIVE_RE.test(text) || SENSITIVE_RE.test(String(fact))) return no('личная тема (здоровье, деньги, отношения, закон) — о таком сам первым не спрашиваю');
+  if (sensitive(text) || sensitive(fact)) return no('личная тема (здоровье, деньги, отношения, закон) — о таком сам первым не спрашиваю');
   return { ok: true, text };
 }
 
@@ -152,8 +174,10 @@ function remember(fact, about, askLater) {
 function takeCallback(now = Date.now()) {
   const mem = load();
   if (corrupt) return null;
+  // пауза держится по отдельной отметке файла: удаление/forget записи, о которой спросили, её не сбрасывает
   const asked = mem.user.map((x) => Date.parse(x.asked_at) || 0);
-  if (now - Math.max(0, ...asked) < ASK.gapMs) return null; // не чаще раза в сутки
+  const last = Math.max(Number(mem.lastAskAt) || 0, ...asked, 0);
+  if (now - last < ASK.gapMs) return null; // не чаще раза в сутки
   const recent = new Set(mem.user.filter((x) => now - (Date.parse(x.asked_at) || 0) < ASK.repeatMs).map((x) => norm(x.ask || '')));
   const due = mem.user.filter((x) => {
     if (typeof x.ask !== 'string' || x.asked_at || x.ask_off) return false;
@@ -163,6 +187,7 @@ function takeCallback(now = Date.now()) {
   if (!due.length) return null;
   const item = due.reduce((a, b) => ((Number(b.ask_t) || 0) > (Number(a.ask_t) || 0) ? b : a)); // самое свежее событие
   item.asked_at = new Date(now).toISOString();
+  mem.lastAskAt = now;
   try {
     save(mem);
   } catch {
@@ -226,7 +251,7 @@ function ago(at) {
 
 // [14] пометка для модели: про это бадди спросит сам заготовкой (или уже спросил) — не дублировать
 function askMark(x) {
-  if (x.asked_at) return ` [уже спрашивал${ago(x.asked_at.slice(0, 10)).replace(/[()]/g, '')}]`;
+  if (typeof x.asked_at === 'string' && x.asked_at) return ` [уже спрашивал${ago(x.asked_at.slice(0, 10)).replace(/[()]/g, '')}]`;
   return typeof x.ask === 'string' ? ' [спросишь сам позже — первым не поднимай]' : '';
 }
 
