@@ -99,7 +99,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const hk = (k) => (k || '').replace(/CommandOrControl|CmdOrCtrl/g, 'Ctrl');
 // "мешок" без повторов: фраза не вернётся, пока не прозвучат остальные, и не пойдёт дважды подряд
 const bags = new WeakMap();
-const pick = (arr) => {
+const pick = (arr, quietMs = 0) => {
   if (arr.length < 3) return arr[Math.floor(Math.random() * arr.length)];
   let bag = bags.get(arr);
   if (!bag || !bag.queue.length) {
@@ -108,9 +108,65 @@ const pick = (arr) => {
     bag = { queue, last: bag?.last };
     bags.set(arr, bag);
   }
-  bag.last = bag.queue.shift();
+  // [13] из мешка берём то, что давно не звучало (в том числе из других списков);
+  // quietMs — строго: всё звучало недавно → null, и самодеятельность лучше промолчит, чем повторится
+  let i = bag.queue.findIndex((x) => fresh(keyOf(x), quietMs || 30 * 60000));
+  if (i < 0) {
+    if (quietMs) return null;
+    i = 0;
+  }
+  bag.last = bag.queue.splice(i, 1)[0];
+  saidAt.set(keyOf(bag.last), Date.now());
   return bag.last;
 };
+// [13] когда что звучало (по шаблону фразы, не по подставленному тексту)
+const saidAt = new Map();
+const keyOf = (x) => (Array.isArray(x) ? x[0] : x);
+const fresh = (key, ms) => !saidAt.has(key) || Date.now() - saidAt.get(key) > ms;
+// [13] счётчики дня — для фраз вроде «третий раз за день тыкаешь»; живут до полуночи
+let day = { d: '', pokes: 0, backs: 0, tricks: 0, first: 0 };
+try {
+  day = { ...day, ...JSON.parse(localStorage.getItem('buddy.day') || '{}') };
+} catch {
+  /* нет хранилища — считаем с нуля */
+}
+function dayStat(k, inc = 0) {
+  const d = new Date().toDateString();
+  if (day.d !== d) day = { d, pokes: 0, backs: 0, tricks: 0, first: Date.now() };
+  if (inc) {
+    day[k] += inc;
+    try {
+      localStorage.setItem('buddy.day', JSON.stringify(day));
+    } catch {
+      /* не страшно */
+    }
+  }
+  return day[k];
+}
+const plural = (n, one, few, many) => {
+  const a = n % 10;
+  const b = n % 100;
+  return `${n} ${a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many}`;
+};
+const WEEKDAYS = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
+const clock = (d) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+// [13] слоты в заготовках: имя, время, день недели, счётчики — одна строка звучит по-разному
+function fill(text) {
+  const d = new Date();
+  const first = dayStat('first');
+  return text
+    .replace('{name}', cfg.userName ? `, ${cfg.userName}` : '')
+    .replace('{time}', clock(d))
+    .replace('{wd}', WEEKDAYS[d.getDay()])
+    .replace('{since}', clock(new Date(first)))
+    .replace('{hours}', plural(Math.floor((Date.now() - first) / 3600000), 'час', 'часа', 'часов'))
+    .replace('{backs}', plural(dayStat('backs'), 'раз', 'раза', 'раз'))
+    .replace('{pokes}', plural(dayStat('pokes'), 'раз', 'раза', 'раз'))
+    .replace('{tricks}', plural(dayStat('tricks'), 'трюк', 'трюка', 'трюков'));
+}
+// [13] дуга дня: сонный с утра, голодный перед обедом, осоловевший после, уставший к вечеру
+const dayPart = (h = new Date().getHours()) =>
+  h < 5 ? 'night' : h < 11 ? 'morning' : h < 13 ? 'noon' : h < 16 ? 'afternoon' : h < 19 ? 'late' : 'evening';
 
 // журнал того, что происходило между репликами — уходит в Claude как контекст
 const events = [];
@@ -406,9 +462,12 @@ const BACK_SHORT = [
   ['О, вернулся! Я даже соскучиться не успел.', 'happy'],
   ['Ну и где ты был? Я тут с грибом болтал. Он скучный.', 'smug'],
   ['Опа, снова ты! За кофе ходил? Мне, конечно, не принёс.', 'wink'],
+  ['С возвращением{name}! Я тут ничего не трогал. Почти.', 'embarrassed'],
+  ['Пока тебя не было, тут ничего не случилось. Скукотища, ёпт.', 'sad'],
 ];
+const BACK_COUNT = ['С возвращением! Уже {backs} за день уходишь — ты прям бумеранг.', 'laugh'];
 const BACK_LONG = [
-  ['А? Что? Я не спал! Я… медитировал.', 'embarrassed'],
+  ['Ну наконец-то! Я уж хотел объявление вешать: «Пропал кожаный».', 'embarrassed'],
   ['Ты где шлялся, блин? Я тут чуть мхом не порос.', 'angry'],
   ['Вернулся! А я уж думал, ты меня на калькулятор променял.', 'love'],
 ];
@@ -426,7 +485,12 @@ function welcomeBack(min) {
   let pool = min >= 45 ? BACK_LONG : BACK_SHORT;
   if (h >= 12 && h < 15 && min >= 20) pool = BACK_LUNCH;
   else if ((h >= 23 || h < 5) && min >= 10) pool = BACK_NIGHT;
-  const [text, emo] = (min >= 240 && timeGreet()) || pick(pool); // утром после ночи — «доброе утро»
+  let [text, emo] = (min >= 240 && timeGreet()) || pick(pool); // утром после ночи — «доброе утро»
+  if (pool === BACK_SHORT && dayStat('backs') >= 3 && Math.random() < 0.4 && fresh(BACK_COUNT[0], 3 * 3600000)) {
+    saidAt.set(BACK_COUNT[0], Date.now());
+    [text, emo] = BACK_COUNT;
+  }
+  text = fill(text);
   if (slept || min >= 45) doTrick('stretch');
   say(text, emo);
 }
@@ -671,6 +735,7 @@ async function doTrick(name) {
   if (!scene.canTrick) return;
   wake();
   state.seq = true;
+  if (name !== 'stretch') dayStat('tricks', 1);
   try {
     if (name === 'jetpack') {
       setTimeout(() => pop('ВЖУХ!', 'small'), 900);
@@ -695,12 +760,61 @@ async function doTrick(name) {
   }
 }
 
-const FREE_WILL = [
-  ['jetpack', ['Пойду проветрюсь!', 'Тест-драйв джетпака, не пугайся!', 'Уиии, я лечу-у-у!'], 'laugh'],
-  ['dance', ['Ла-ла-ла, никто не смотрит — танцую!', 'Музыка в голове заиграла.'], 'happy'],
-  ['backflip', ['Смотри, что умею!', 'Сальто для разминки!'], 'smug'],
-  ['stretch', ['Ааах… засиделся я тут.', 'Потянусь-ка.'], 'sleepy'],
-];
+// [13] трюки: реплик больше, по дуге дня — разные трюки, часть трюков молча, иногда комбо
+const FREE_WILL = {
+  jetpack: ['laugh', [
+    'Пойду проветрюсь!',
+    'Тест-драйв джетпака, не пугайся!',
+    'Уиии, я лечу-у-у!',
+    'Кружок над рабочим столом — и обратно. Никому не говори.',
+    'Топливо есть, мозгов нет — летим!',
+    'Диспетчер, это колобок, прошу взлёт. Сам себе разрешаю.',
+  ]],
+  dance: ['happy', [
+    'Ла-ла-ла, никто не смотрит — танцую!',
+    'Музыка в голове заиграла.',
+    'Это не танец, это зарядка с ритмом.',
+    'Под шум твоего кулера, кстати, вполне танцуется.',
+    'Гриб, держи ритм!',
+  ]],
+  backflip: ['smug', [
+    'Смотри, что умею!',
+    'Сальто для разминки!',
+    'Оценка жюри? Только честно. Десять, я знаю.',
+    'Спорим, ты так не можешь? Ну, на стуле — точно.',
+    'Сальто! Потому что могу, ёпт.',
+  ]],
+  stretch: ['sleepy', [
+    'Ааах… засиделся я тут.',
+    'Потянусь-ка.',
+    'Хрусть. Это не я, это гриб.',
+    'Тянемся, тянемся… Ты тоже, кстати, можешь.',
+  ]],
+};
+// своё для времени суток — добавляется к общим репликам трюка
+const FW_DAY = {
+  morning: { stretch: ['Утренняя разминка. Без неё я просто шарик.', 'Потягушки! Мозг, загружайся, ну.'] },
+  afternoon: { jetpack: ['После обеда — только на реактивной тяге!'], dance: ['Обед переварился — можно и сплясать!'] },
+  late: { stretch: ['К вечеру всё затекло. Даже то, чего у меня нет.'] },
+  evening: { stretch: ['Вечерняя растяжка. Колобкам тоже нужен фитнес.'] },
+  night: { stretch: ['Ночная зарядка, чтобы не уснуть. Ну, мне.'] },
+};
+// утром разминается, после обеда носится, к вечеру выдыхается
+const FW_PLAN = {
+  night: ['stretch', 'stretch', 'dance'],
+  morning: ['stretch', 'stretch', 'dance', 'backflip', 'jetpack'],
+  noon: ['jetpack', 'dance', 'backflip', 'stretch'],
+  afternoon: ['jetpack', 'jetpack', 'dance', 'dance', 'backflip', 'backflip', 'stretch'],
+  late: ['stretch', 'stretch', 'dance', 'backflip', 'jetpack'],
+  evening: ['stretch', 'stretch', 'dance', 'backflip'],
+};
+const FW_PACE = { night: 2, morning: 1.3, noon: 1, afternoon: 0.8, late: 1.3, evening: 1.6 };
+const fwLines = new Map(); // одни и те же массивы — чтобы у мешка была память
+function freeWillLines(name, part) {
+  const k = `${name}:${part}`;
+  if (!fwLines.has(k)) fwLines.set(k, [...FREE_WILL[name][1], ...(FW_DAY[part]?.[name] || [])]);
+  return fwLines.get(k);
+}
 state.nextFreeWill = performance.now() + 90000;
 setInterval(() => {
   if (state.away || !cfg.freeWill || !state.visible || state.seq || state.sleeping || state.chatOpen) return;
@@ -708,11 +822,25 @@ setInterval(() => {
   const now = performance.now();
   if (now - state.lastInteraction < 45000 || now < state.nextFreeWill) return;
   if (Date.now() - pres.lastTyping < 60000) return; // ты в потоке — не кривляемся под руку
-  state.nextFreeWill = now + (2 + Math.random() * 4) * 60000;
-  const [name, lines, emo] = pick(FREE_WILL);
-  say(pick(lines), emo);
-  doTrick(name);
+  const part = dayPart();
+  state.nextFreeWill = now + (2 + Math.random() * 4) * 60000 * FW_PACE[part];
+  const name = pick(FW_PLAN[part]);
+  // реплика — не к каждому трюку, и не та, что была за последние 2 часа: молча тоже смешно
+  const line = Math.random() < 0.6 && pick(freeWillLines(name, part), 2 * 3600000);
+  if (line) say(fill(line), FREE_WILL[name][0]);
+  (async () => {
+    await doTrick(name);
+    // изредка комбо: прилетел — и сразу сальто
+    if (name !== 'stretch' && name !== 'backflip' && Math.random() < 0.15 && !voice.active && state.visible) {
+      await sleep(300);
+      if (!state.seq && !state.chatOpen && !(reply && !reply.done)) {
+        pop(pick(COMBO_POPS), 'small');
+        await doTrick('backflip');
+      }
+    }
+  })();
 }, 5000);
+const COMBO_POPS = ['и ещё!', 'комбо!', 'бонус!'];
 
 // ---------------- чат с Claude ----------------
 let reqId = 0;
@@ -1065,19 +1193,80 @@ const POKES = [
 
 // сам заговаривает, если долго тихо (без API — бесплатно)
 const IDLE_LINES = [
-  ['Эй, ты там живой? Моргни, если да.', 'thinking'],
+  ['Эй{name}, ты там живой? Моргни, если да.', 'thinking'],
   ['Скучно, бл… блин. Давай что-нибудь сломаем? В смысле, починим.', 'smug'],
   ['Я тут сижу, гриб грею. Если что — зови.', 'happy'],
   ['Ты так сосредоточенно смотришь в экран. Уважаю. Пойду тоже сосредоточусь… на кружке кофе.', 'wink'],
   ['Напоминаю: попить воды — это тоже продуктивность.', 'neutral'],
   ['Слушай, а ты сегодня вставал из-за компа? Разомнись, я подожду.', 'thinking'],
+  ['Сижу, считаю пиксели. Дошёл до ста сорока тысяч и сбился.', 'thinking'],
+  ['Знаешь, чем хорош гриб? Он никогда не спрашивает про дедлайн.', 'happy'],
+  ['Я тут подумал… А нет, показалось.', 'thinking'],
+  ['Если что-то не работает — делай вид, что так и задумано. Проверено.', 'wink'],
+  ['Дерево на острове выросло на миллиметр. Событие дня, блин.', 'surprised'],
+  ['Кристалл светится — значит, всё хорошо. Наверное. Инструкцию я не читал.', 'smug'],
+  ['Хочешь анекдот? Нет? Правильно, я его ещё не придумал.', 'laugh'],
+  ['Ты моргаешь вообще? Моргни. Глаза не казённые.', 'love'],
+];
+const DAY_LINES = {
+  night: [
+    ['Уже ночь, ёпта. Может, спать? Я-то колобок, мне норм.', 'sleepy'],
+    ['{time}. Это уже не вечер, это почти утро. Просто говорю.', 'sleepy'],
+    ['Ночью код пишется легко. А утром читается с ужасом.', 'smug'],
+    ['Тихо так… Только ты, я и вентилятор.', 'love'],
+  ],
+  morning: [
+    ['Утро{name}. Я проснулся, но мозг ещё грузится. Сорок процентов.', 'sleepy'],
+    ['Кружка пустая, а утро ещё нет. Несправедливо, блин.', 'sad'],
+    ['{time}. Официально заявляю: я бодр. Почти. Ну, местами.', 'sleepy'],
+    ['Сегодня {wd}. Начнём с чего-нибудь лёгкого? С кофе, например.', 'happy'],
+    ['Ты уже работаешь, а я ещё зеваю. Кто из нас тут бот?', 'smug'],
+  ],
+  noon: [
+    ['Уже {time}… Ты обедать собираешься? Спрашиваю за себя. Хотя я не ем.', 'thinking'],
+    ['Это у тебя живот урчит или мой кристалл гудит?', 'surprised'],
+    ['Скоро обед. Только не бери то же, что вчера. Будь как я — разнообразным.', 'wink'],
+    ['До обеда держимся. Я в тебя верю. Гриб — не очень.', 'happy'],
+  ],
+  afternoon: [
+    ['Послеобеденная кома, фаза первая: смотрим в экран и делаем вид, что думаем.', 'sleepy'],
+    ['Энергия после обеда: девяносто процентов. Ладно, сорок. Ладно, кофе.', 'laugh'],
+    ['{time}. Самое время для второго дыхания. Или третьего кофе.', 'happy'],
+    ['Пообедал — и сразу в бой? Уважаю. Я бы лёг.', 'smug'],
+  ],
+  late: [
+    ['Финишная прямая! Главное — ничего нового не начинать. Особенно рефакторинг.', 'wink'],
+    ['Я устал. Хотя весь день просто сидел на грибе. Это тоже работа, между прочим.', 'sleepy'],
+    ['Уже {time}. Рабочий день не резиновый — но ты, похоже, проверяешь.', 'smug'],
+    ['К вечеру я как пельмень: мягкий и немного помятый.', 'sleepy'],
+  ],
+  evening: [
+    ['Вечереет. Если работаешь — ты красавчик. Если залипаешь — тоже.', 'smug'],
+    ['Уже {time}. Нормальные люди сериал смотрят, а мы тут… ну, тоже нормальные.', 'wink'],
+    ['Вечер, тишина, только мы и баги. Романтика, блин.', 'love'],
+    ['Может, закругляемся? Завтра ты всё равно это перепишешь.', 'sleepy'],
+  ],
+};
+// [13] со счётчиками дня — только когда есть что посчитать
+const COUNT_LINES = [
+  ['Ты за компом с {since}. Это {hours}, между прочим. Встать — не преступление.', 'thinking', () => Date.now() - dayStat('first') > 3 * 3600000 && dayPart() !== 'night'],
+  ['Ты сегодня уже {backs} уходил и возвращался. Я веду учёт. Шучу. Или нет.', 'smug', () => dayStat('backs') >= 2],
+  ['Я сегодня сделал уже {tricks}, а ты ни одного. Ну хоть потянись.', 'smug', () => dayStat('tricks') >= 6],
+  ['Ты меня сегодня тыкнул {pokes}. Я всё помню, кожаный.', 'wink', () => dayStat('pokes') >= 3],
 ];
 function timeLine() {
-  const h = new Date().getHours();
-  if (h >= 0 && h < 5) return ['Уже ночь, ёпта. Может, спать? Я-то колобок, мне норм.', 'sleepy'];
-  if (h < 11) return ['Доброе утро! Кофе уже был? У меня вот кружка пустая.', 'happy'];
-  if (h >= 18 && h < 24 && Math.random() < 0.5) return ['Вечереет. Если работаешь — ты красавчик. Если залипаешь — тоже.', 'smug'];
-  return pick(IDLE_LINES);
+  const r = Math.random();
+  if (r < 0.2) {
+    const ok = COUNT_LINES.filter(([t, , cond]) => cond() && fresh(t, 4 * 3600000));
+    if (ok.length) {
+      const [t, emo] = ok[Math.floor(Math.random() * ok.length)];
+      saidAt.set(t, Date.now());
+      return [fill(t), emo];
+    }
+  }
+  // своё для времени суток — чаще; общее — остальное; всё уже звучало за 2 часа — молчим
+  const line = (r < 0.6 && pick(DAY_LINES[dayPart()], 2 * 3600000)) || pick(IDLE_LINES, 2 * 3600000);
+  return line && [fill(line[0]), line[1]];
 }
 state.nextChat = performance.now() + 150000;
 setInterval(() => {
@@ -1088,8 +1277,8 @@ setInterval(() => {
   if (Date.now() - pres.lastTyping < 60000) return; // печатаешь — болтовню от скуки отложим
   state.nextChat = now + (2 + Math.random() * 3) * 60000;
   if (Math.random() > 0.35) return;
-  const [text, emo] = timeLine();
-  say(text, emo);
+  const line = timeLine();
+  if (line) say(...line);
 }, 15000);
 const pokeTimes = [];
 function poke() {
@@ -1097,6 +1286,7 @@ function poke() {
   touch();
   scene.poke();
   pokesSinceChat += 1;
+  const nth = dayStat('pokes', 1);
   sfx.squeak();
   if (wasSleeping) {
     const [text, emo] = pick(WAKE_POKE);
@@ -1112,9 +1302,16 @@ function poke() {
     pokeTimes.length = 0;
     return;
   }
+  if (POKE_MILESTONES[nth]) return say(...POKE_MILESTONES[nth]); // [13] юбилейные тычки
   const [text, emo] = pick(POKES);
   say(text, emo);
 }
+const POKE_MILESTONES = {
+  3: ['Третий тык за день. Я начинаю что-то подозревать.', 'thinking'],
+  10: ['Десятый тык за сегодня! Юбилей. Где торт, блин?', 'happy'],
+  25: ['Двадцать пятый раз за день! Я тебе что, эспандер?', 'angry'],
+  50: ['Пятьдесят тыков. Всё, ты мой лучший друг. Или маньяк.', 'love'],
+};
 
 // ---------------- мышь: клик-сквозь, тычки, перетаскивание ----------------
 let down = null;
@@ -1270,6 +1467,7 @@ api.onPower?.(({ away }) => {
       state.awayAt = 0;
       if (min >= 1) note(`пользователь отходил: экран был заблокирован ${min >= 90 ? `${Math.round(min / 60)} ч` : `${Math.round(min)} мин`}`);
       if (min >= 5) pres.activeSince = 0; // обед/ночь — это перерыв, а не «полтора часа без отдыха»
+      if (min >= 2) dayStat('backs', 1);
       if (min >= 2 && state.visible) {
         // свой таймер, а не whenFree: тот на один слот и затёр бы «спрячься» с хоткея.
         // Пока встреча ждёт, общее «проснулся от мыши» молчит — иначе ситуативная фраза не прозвучит.
@@ -1308,6 +1506,7 @@ api.onPresence?.(({ idle }) => {
   if (!pres.activeSince) pres.activeSince = now - idle * 1000;
   if (idle > 2) return;
   state.userSeenAt = performance.now(); // ты за компом, даже если мышь не трогал
+  dayStat('first'); // [13] первая активность за день — отсюда «ты за компом с 9:12»
   if (state.sleeping) userBack();
   const free = state.visible && !state.seq && !state.sleeping && !state.chatOpen && !voice.active && !(reply && !reply.done);
   if (free && now - pres.activeSince > 90 * 60000 && now > pres.nextNag) {
