@@ -452,7 +452,7 @@ controls.panSpeed = 1.1;
 controls.rotateSpeed = 0.7;
 controls.zoomSpeed = 1.2;
 controls.maxPolarAngle = Math.PI * 0.47;
-controls.minDistance = 6;
+controls.minDistance = 9;
 controls.maxDistance = 260;
 controls.autoRotate = !reduceMotion;
 controls.autoRotateSpeed = 0.3;
@@ -1556,10 +1556,20 @@ function pickAt(x, y) {
   return hit ? { id: hit.object.userData.id } : null;
 }
 // capture phase: runs before the controls see the press, so a press always stops a running flight
-renderer.domElement.addEventListener('pointerdown', (e) => { downAt = { x: e.clientX, y: e.clientY }; cancelFly(); }, { capture: true });
+// a tap is one finger / left button that barely moved; pinches and right/middle clicks never count
+const downPtrs = new Set();
+let multiTouch = false;
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  downPtrs.add(e.pointerId);
+  if (downPtrs.size === 1) { multiTouch = false; downAt = e.button === 0 ? { x: e.clientX, y: e.clientY } : null; }
+  else { multiTouch = true; downAt = null; lastTap.t = 0; }
+  cancelFly();
+}, { capture: true });
+renderer.domElement.addEventListener('pointercancel', (e) => { downPtrs.delete(e.pointerId); downAt = null; });
 renderer.domElement.addEventListener('wheel', cancelFly, { capture: true, passive: true });
 renderer.domElement.addEventListener('pointerup', (e) => {
-  if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 8) return;
+  downPtrs.delete(e.pointerId);
+  if (multiTouch || e.button !== 0 || !downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 8) { if (!downPtrs.size) downAt = null; return; }
   const now = performance.now();
   const hit = pickAt(e.clientX, e.clientY);
   if (hit) { focusBuilding(hit.id); lastTap.t = 0; return; }
@@ -1572,6 +1582,8 @@ renderer.domElement.addEventListener('pointerup', (e) => {
       pt.x = THREE.MathUtils.clamp(pt.x, -70, 70); pt.z = THREE.MathUtils.clamp(pt.z, -70, 70);
       const offset = camera.position.clone().sub(controls.target).multiplyScalar(0.7);
       if (offset.length() < 14) offset.setLength(14);
+      if (selected) unfocus(false);
+      pt.y = 2;
       flyTo(pt.clone().add(offset), pt);
     }
     lastTap.t = 0;
