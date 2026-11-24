@@ -15,6 +15,8 @@ export function createMock() {
     '[love] Ты лучший пользователь на этом мониторе. [smug] Ну, единственный, но всё равно.',
   ];
   let n = 0;
+  // [14] вопросы «на потом»: каждый отдаётся один раз (как takeCallback в main); window.__mockCallbacks — для тестов
+  const callbacks = (window.__mockCallbacks = window.__mockCallbacks || { queue: ['Слушай, как там твоя игра на Rust?'], taken: 0, calls: 0 });
   // для превью/тестов: window.__mockEmit('power', {away:true}) или ('presence', {idle:0})
   window.__mockEmit = emit;
   window.addEventListener('mousemove', (e) => emit('cursor', { x: e.clientX, y: e.clientY, screenDir: -1 }));
@@ -41,8 +43,16 @@ export function createMock() {
     clearMemory: async () => true,
     listMemory: async () => ({ user: [], self: [] }),
     removeMemory: async () => true,
+    removeAsk: async () => true,
+    takeCallback: async () => {
+      callbacks.calls += 1;
+      const q = callbacks.queue.shift() || null;
+      if (q) callbacks.taken += 1;
+      return q;
+    },
     transcribe: async () => ({ ok: false, code: 'stt_not_configured', message: 'превью' }),
-    chat: (id, _text, withScreen) => {
+    chat: (id, _text, withScreen, notes) => {
+      window.__mockLastNotes = notes; // для тестов: что ушло в [контекст, не зачитывай: …]
       const text = withScreen ? '[surprised] Ого, сколько окон! [laugh] Вкладок больше, чем у меня мыслей.' : replies[n++ % replies.length];
       const chunks = text.match(/.{1,6}/gs);
       let i = 0;

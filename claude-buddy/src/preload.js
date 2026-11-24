@@ -35,5 +35,7 @@ contextBridge.exposeInMainWorld('buddy', {
   clearMemory: () => ipcRenderer.invoke('memory:clear'),
   listMemory: () => ipcRenderer.invoke('memory:list'),
   removeMemory: (kind, index, text) => ipcRenderer.invoke('memory:remove', kind, index, text),
+  removeAsk: (kind, index, text) => ipcRenderer.invoke('memory:unask', kind, index, text),
+  takeCallback: () => ipcRenderer.invoke('memory:callback'),
   transcribe: (arrayBuffer, mime) => ipcRenderer.invoke('stt:transcribe', arrayBuffer, mime),
 });

@@ -98,6 +98,29 @@ async function memStats() {
       tag.textContent = kind === 'user' ? 'о тебе' : 'урок';
       const text = document.createElement('span');
       text.textContent = item.text; // textContent: запись из памяти — данные, не HTML
+      // [14] вопрос, который бадди задаст сам; видно и можно убрать, сам факт остаётся
+      if (kind === 'user' && typeof item.ask === 'string' && item.ask) {
+        const ask = document.createElement('small');
+        ask.className = 'ask';
+        const q = document.createElement('i');
+        const when = item.asked_at ? `спросил ${new Date(item.asked_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}` : 'спросит сам';
+        q.textContent = `${when}: «${item.ask}»`;
+        const off = document.createElement('button');
+        off.type = 'button';
+        off.textContent = item.asked_at ? 'убрать' : 'не спрашивать';
+        off.addEventListener('click', async () => {
+          off.disabled = true;
+          try {
+            await buddy.removeAsk(kind, index, item.text);
+          } catch (err) {
+            alert(`Не получилось: ${err.message}`);
+          } finally {
+            memStats();
+          }
+        });
+        ask.append(q, off);
+        text.append(ask);
+      }
       const del = document.createElement('button');
       del.type = 'button';
       del.textContent = 'удалить';

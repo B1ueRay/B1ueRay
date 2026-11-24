@@ -408,6 +408,21 @@ function setupIpc() {
     if (ok) brain.invalidateMemory(); // разговор не трогаем, просто память без этой записи
     return ok;
   });
+  // [14] окну бадди — только один готовый вопрос «на потом» (строка или null), а не сами записи памяти
+  ipcMain.handle('memory:callback', (e) => {
+    if (!trusted(e, 'index.html')) return null;
+    try {
+      return require('./memory').takeCallback();
+    } catch {
+      return null;
+    }
+  });
+  ipcMain.handle('memory:unask', (e, kind, index, text) => {
+    if (!trusted(e, 'settings.html')) return false;
+    const ok = require('./memory').removeAsk(kind, Number(index), text);
+    if (ok) brain.invalidateMemory();
+    return ok;
+  });
   ipcMain.handle('memory:clear', (e) => {
     if (!trusted(e, 'settings.html')) return false;
     require('./memory').clear();

@@ -124,7 +124,7 @@ const saidAt = new Map();
 const keyOf = (x) => (Array.isArray(x) ? x[0] : x);
 const fresh = (key, ms) => !saidAt.has(key) || Date.now() - saidAt.get(key) > ms;
 // [13] счётчики дня — для фраз вроде «третий раз за день тыкаешь»; живут до полуночи
-let day = { d: '', pokes: 0, backs: 0, tricks: 0, first: 0 };
+let day = { d: '', pokes: 0, backs: 0, tricks: 0, first: 0, cb: 0 };
 try {
   day = { ...day, ...JSON.parse(localStorage.getItem('buddy.day') || '{}') };
 } catch {
@@ -132,7 +132,8 @@ try {
 }
 function dayStat(k, inc = 0) {
   const d = new Date().toDateString();
-  if (day.d !== d) day = { d, pokes: 0, backs: 0, tricks: 0, first: Date.now() };
+  if (day.d !== d) day = { d, pokes: 0, backs: 0, tricks: 0, first: Date.now(), cb: 0 };
+  if (typeof day[k] !== 'number') day[k] = 0; // счётчик из новой версии в старом localStorage
   if (inc) {
     day[k] += inc;
     try {
@@ -170,6 +171,8 @@ const dayPart = (h = new Date().getHours()) =>
 
 // журнал того, что происходило между репликами — уходит в Claude как контекст
 const events = [];
+// [14] вопрос из памяти: since — с какого момента считать 10 минут, asked — заданный вопрос ждёт ответа
+const cb = { since: Date.now(), busy: false, asked: null, nextTry: 0 };
 let pokesSinceChat = 0;
 let lastUserMessageAt = 0;
 function note(text) {
@@ -186,10 +189,14 @@ function contextNotes() {
     parts.push('первое сообщение после запуска');
   }
   if (pokesSinceChat) parts.push(`тебя тыкнули ${pokesSinceChat} раз`);
+  // [14] не в общий журнал: десяток фраз от скуки вытеснил бы его, а ответ «да, взяли!» без него непонятен
+  const asked = cb.asked && Date.now() - cb.asked.at < 3 * 3600000 ? cb.asked : null;
+  if (asked) parts.push(`${Math.round((Date.now() - asked.at) / 60000)} мин назад ты сам спросил по памяти: «${asked.q}» — если он отвечает, это про это`);
   parts.push(...events);
   // забираем журнал, но если запрос не дойдёт (нет сети, нет ключа) — вернём его обратно
-  const consumed = { events: events.splice(0), pokes: pokesSinceChat };
+  const consumed = { events: events.splice(0), pokes: pokesSinceChat, asked };
   pokesSinceChat = 0;
+  cb.asked = null;
   lastUserMessageAt = Date.now();
   return { text: parts.join('; '), consumed };
 }
@@ -198,6 +205,7 @@ function restoreNotes(ctx) {
   events.unshift(...ctx.events);
   while (events.length > 10) events.shift();
   pokesSinceChat += ctx.pokes;
+  if (ctx.asked && !cb.asked) cb.asked = ctx.asked;
 }
 
 const state = {
@@ -1280,6 +1288,49 @@ setInterval(() => {
   const line = timeLine();
   if (line) say(...line);
 }, 15000);
+// [14] вопрос «на потом» из памяти: сам вспомнил, что ты рассказывал («ну что, собеседование прошло?»).
+// Текст написала модель ещё тогда, в remember; сейчас — заготовка, без запроса к API. Main отдаёт один вопрос и сразу
+// помечает его заданным; раз в сутки держит и он, и счётчик дня здесь.
+const CB_LEADS = ['', '', 'О, вспомнил! ', 'Так, стоп. ', 'Я тут сидел, думал… '];
+const CB_EMOS = ['happy', 'love', 'thinking', 'wink'];
+function callbackReady() {
+  if (state.away || !state.visible || state.seq || state.sleeping || state.chatOpen || state.welcomePending) return false;
+  if (voice.active || mic.recording || (reply && !reply.done) || scene.activity.thinking || scene.activity.listening) return false;
+  const h = new Date().getHours();
+  if (h < 8 || h >= 23) return false; // ночью и рано утром с расспросами не лезем
+  if (Date.now() - cb.since < 10 * 60000) return false; // первые 10 минут после запуска/разблокировки — дай втянуться
+  if (Date.now() - pres.lastTyping < 90000) return false; // печатаешь — не сбиваем
+  const now = performance.now();
+  return now - state.userSeenAt < 60000 && now - state.lastInteraction > 60000; // ты тут, но не занят им прямо сейчас
+}
+setInterval(async () => {
+  if (!api.takeCallback || cb.busy || dayStat('cb') || Date.now() < cb.nextTry || !callbackReady() || Math.random() > 0.3) return;
+  cb.busy = true;
+  try {
+    const q = await api.takeCallback();
+    if (typeof q !== 'string' || !q) {
+      cb.nextTry = Date.now() + 15 * 60000; // спрашивать пока не о чем — не дёргаем main каждые полминуты
+      return;
+    }
+    dayStat('cb', 1);
+    // пока main отвечал, ты мог открыть чат — вопрос уже помечен заданным, так что чуть ждём, а нет — молчим
+    const go = () => {
+      cb.asked = { q, at: Date.now() };
+      say(`${pick(CB_LEADS)}${q}`, pick(CB_EMOS), { noNote: true });
+      // вопрос задан — даём на него ответить: болтовня от скуки и трюки пока молчат
+      const now = performance.now();
+      state.nextChat = Math.max(state.nextChat || 0, now + 8 * 60000);
+      state.nextFreeWill = Math.max(state.nextFreeWill || 0, now + 5 * 60000);
+    };
+    const free = () => state.visible && !state.seq && !state.chatOpen && !voice.active && !(reply && !reply.done);
+    if (free()) go();
+    else setTimeout(() => (free() ? go() : note(`хотел спросить по памяти «${q}», но не успел`)), 20000);
+  } catch {
+    /* нет моста — нет вопроса */
+  } finally {
+    cb.busy = false;
+  }
+}, 30000);
 const pokeTimes = [];
 function poke() {
   const wasSleeping = state.sleeping;
@@ -1459,6 +1510,7 @@ api.onPower?.(({ away }) => {
     if (wasAway) {
       // разблокировали — не вываливаем сразу всё, что "накопилось" за ночь
       const now = performance.now();
+      cb.since = Date.now(); // [14] вопрос из памяти — не раньше чем через 10 минут
       if (!state.visible) schedulePeek();
       state.nextFreeWill = Math.max(state.nextFreeWill || 0, now + 90000);
       state.nextChat = Math.max(state.nextChat || 0, now + 150000);
@@ -1699,4 +1751,4 @@ requestAnimationFrame(loop);
 setTimeout(() => appear({ kuku: true }), 600);
 
 // для отладки и превью
-window.__buddy = { scene, voice, say, send, hide, appear, peek, toggle, state, doTrick, wiggle: onWiggle };
+window.__buddy = { scene, voice, say, send, hide, appear, peek, toggle, state, doTrick, wiggle: onWiggle, cb };
