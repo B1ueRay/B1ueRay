@@ -1509,14 +1509,14 @@ function focusBuilding(id) {
   hoverEl?.classList.remove('is-hover'); hoverEl = null;
   setHelp(false);
 }
-function unfocus() {
+function unfocus(glide = true) {
   if (selected) setCutaway(selected, false);
   allLabels().forEach((el) => el.classList.remove('is-focus'));
   selected = null;
   document.body.classList.remove('has-panel');
   panel.hidden = true;
   applyViewOffset();
-  flyTo(HOME.pos, HOME.target);
+  if (glide) flyTo(HOME.pos, HOME.target);
   lastLabel?.focus?.({ preventScroll: true });
   lastLabel = null;
 }
@@ -1684,7 +1684,7 @@ function setQuality(level) {
 }
 $('b-fx').onclick = () => { autoQuality = false; setQuality(fxOn ? 2 : 0); };
 // drop quality when the device can't keep up (ignores load hitches and background tabs)
-let perfT = 0, perfN = 0, perfMax = 0, perfLevel = 0, perfWarm = 4;
+let perfT = 0, perfN = 0, perfMax = 0, perfLevel = 0, perfWarm = 2;
 function watchPerf(raw) {
   if (!autoQuality || perfLevel >= 2) return;
   if (perfWarm > 0) { perfWarm -= raw; return; }
@@ -1694,6 +1694,8 @@ function watchPerf(raw) {
   if (perfMax < 0.5 && fps < 40) { perfLevel++; setQuality(perfLevel); perfWarm = 2; }
   perfT = 0; perfN = 0; perfMax = 0;
 }
+// phones start one step down (lower resolution, glow kept) so the first seconds are smooth
+if (isMobile) { perfLevel = 1; setQuality(1); }
 $('b-feed').onclick = () => {
   const c = feedEl.classList.toggle('collapsed');
   $('b-feed').setAttribute('aria-pressed', String(!c));
@@ -1833,6 +1835,11 @@ function animate() {
   }
   controls.update();
   clampToCity();
+  // flew away from the building you were inside: quietly leave it
+  if (selected && !fly) {
+    const bp = selected === 'boss' ? boss.group.position : buildings[selected].group.position;
+    if (Math.hypot(controls.target.x - bp.x, controls.target.z - bp.z) > 25) unfocus(false);
+  }
 
   if (fxOn) composer.render(); else renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
