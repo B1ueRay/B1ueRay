@@ -132,17 +132,28 @@ try {
 }
 function dayStat(k, inc = 0) {
   const d = new Date().toDateString();
-  if (day.d !== d) day = { d, pokes: 0, backs: 0, tricks: 0, first: Date.now(), cb: 0 };
-  if (typeof day[k] !== 'number') day[k] = 0; // счётчик из новой версии в старом localStorage
+  // first — начало рабочего дня: ставится по первому вводу (presence), а не в полночь, когда ты ещё «за вчера»
+  if (day.d !== d) day = { d, pokes: 0, backs: 0, tricks: 0, first: 0, cb: 0, ms: [] };
+  if (typeof day[k] !== 'number') day[k] = 0; // счётчик из новой версии в старом (или испорченном) localStorage
   if (inc) {
     day[k] += inc;
-    try {
-      localStorage.setItem('buddy.day', JSON.stringify(day));
-    } catch {
-      /* не страшно */
-    }
+    saveDay();
   }
   return day[k];
+}
+function saveDay() {
+  try {
+    localStorage.setItem('buddy.day', JSON.stringify(day));
+  } catch {
+    /* не страшно */
+  }
+}
+// рабочий день начался заново: первый ввод за сутки или вернулся после ночи/долгого отсутствия
+function startWorkday(force = false) {
+  const was = dayStat('first'); // заодно переводит счётчики на сегодняшний день
+  if (!force && was) return;
+  day.first = Date.now();
+  saveDay();
 }
 const plural = (n, one, few, many) => {
   const a = n % 10;
@@ -154,16 +165,19 @@ const clock = (d) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}
 // [13] слоты в заготовках: имя, время, день недели, счётчики — одна строка звучит по-разному
 function fill(text) {
   const d = new Date();
-  const first = dayStat('first');
-  return text
-    .replace('{name}', cfg.userName ? `, ${cfg.userName}` : '')
-    .replace('{time}', clock(d))
-    .replace('{wd}', WEEKDAYS[d.getDay()])
-    .replace('{since}', clock(new Date(first)))
-    .replace('{hours}', plural(Math.floor((Date.now() - first) / 3600000), 'час', 'часа', 'часов'))
-    .replace('{backs}', plural(dayStat('backs'), 'раз', 'раза', 'раз'))
-    .replace('{pokes}', plural(dayStat('pokes'), 'раз', 'раза', 'раз'))
-    .replace('{tricks}', plural(dayStat('tricks'), 'трюк', 'трюка', 'трюков'));
+  const first = dayStat('first') || Date.now();
+  const slots = {
+    name: () => (cfg.userName ? `, ${cfg.userName}` : ''),
+    time: () => clock(d),
+    wd: () => WEEKDAYS[d.getDay()],
+    since: () => clock(new Date(first)),
+    hours: () => plural(Math.floor((Date.now() - first) / 3600000), 'час', 'часа', 'часов'),
+    backs: () => plural(dayStat('backs'), 'раз', 'раза', 'раз'),
+    pokes: () => plural(dayStat('pokes'), 'раз', 'раза', 'раз'),
+    tricks: () => plural(dayStat('tricks'), 'трюк', 'трюка', 'трюков'),
+  };
+  // один проход с функцией: «$&» в имени не раскрывается, а «{time}» внутри имени не подменяется
+  return text.replace(/\{(\w+)\}/g, (m, k) => (slots[k] ? slots[k]() : m));
 }
 // [13] дуга дня: сонный с утра, голодный перед обедом, осоловевший после, уставший к вечеру
 const dayPart = (h = new Date().getHours()) =>
@@ -451,7 +465,7 @@ function greet() {
   const t = Math.random() < 0.6 && timeGreet(); // [1] утро/ночь/понедельник/пятница
   if (t) return say(...t);
   const name = cfg.userName ? `, ${cfg.userName}` : '';
-  say(pick(GREETINGS).replace('{name}', name), pick(GREET_EMOS));
+  say(pick(GREETINGS).replace('{name}', () => name), pick(GREET_EMOS));
 }
 // [1] приветствие по времени суток и дню недели (null — обычное приветствие)
 function timeGreet() {
@@ -1257,7 +1271,7 @@ const DAY_LINES = {
 };
 // [13] со счётчиками дня — только когда есть что посчитать
 const COUNT_LINES = [
-  ['Ты за компом с {since}. Это {hours}, между прочим. Встать — не преступление.', 'thinking', () => Date.now() - dayStat('first') > 3 * 3600000 && dayPart() !== 'night'],
+  ['Ты за компом с {since}. Это {hours}, между прочим. Встать — не преступление.', 'thinking', () => dayStat('first') > 0 && Date.now() - dayStat('first') > 3 * 3600000 && dayPart() !== 'night'],
   ['Ты сегодня уже {backs} уходил и возвращался. Я веду учёт. Шучу. Или нет.', 'smug', () => dayStat('backs') >= 2],
   ['Я сегодня сделал уже {tricks}, а ты ни одного. Ну хоть потянись.', 'smug', () => dayStat('tricks') >= 6],
   ['Ты меня сегодня тыкнул {pokes}. Я всё помню, кожаный.', 'wink', () => dayStat('pokes') >= 3],
@@ -1348,12 +1362,20 @@ function poke() {
   pokeTimes.push(now);
   while (pokeTimes.length && now - pokeTimes[0] > 4000) pokeTimes.shift();
   if (voice.active && reply && !reply.done) return;
+  // [13] юбилей — раньше «хватит тыкать» и не теряется: прозвучит на ближайшем свободном тычке
+  if (!Array.isArray(day.ms)) day.ms = [];
+  const due = Object.keys(POKE_MILESTONES).map(Number).filter((m) => nth >= m && !day.ms.includes(m)).pop();
+  if (due) {
+    day.ms.push(...Object.keys(POKE_MILESTONES).map(Number).filter((m) => m <= due && !day.ms.includes(m)));
+    saveDay();
+    pokeTimes.length = 0;
+    return say(...POKE_MILESTONES[due]);
+  }
   if (pokeTimes.length >= 5) {
     say('Да хватит уже тыкать, блин! Я живой вообще-то.', 'angry');
     pokeTimes.length = 0;
     return;
   }
-  if (POKE_MILESTONES[nth]) return say(...POKE_MILESTONES[nth]); // [13] юбилейные тычки
   const [text, emo] = pick(POKES);
   say(text, emo);
 }
@@ -1515,11 +1537,14 @@ api.onPower?.(({ away }) => {
       state.nextFreeWill = Math.max(state.nextFreeWill || 0, now + 90000);
       state.nextChat = Math.max(state.nextChat || 0, now + 150000);
       // [1] сколько тебя не было: Claude узнает из контекста, а сам он встречает голосом
-      const min = state.awayAt ? (Date.now() - state.awayAt) / 60000 : 0;
+      const awayFrom = state.awayAt;
+      const min = awayFrom ? (Date.now() - awayFrom) / 60000 : 0;
       state.awayAt = 0;
       if (min >= 1) note(`пользователь отходил: экран был заблокирован ${min >= 90 ? `${Math.round(min / 60)} ч` : `${Math.round(min)} мин`}`);
       if (min >= 5) pres.activeSince = 0; // обед/ночь — это перерыв, а не «полтора часа без отдыха»
-      if (min >= 2) dayStat('backs', 1);
+      // вернулся после ночи или 4+ часов — это начало рабочего дня, а не очередная отлучка
+      if (min >= 240 || (awayFrom && new Date(awayFrom).toDateString() !== new Date().toDateString())) startWorkday(true);
+      else if (min >= 2) dayStat('backs', 1);
       if (min >= 2 && state.visible) {
         // свой таймер, а не whenFree: тот на один слот и затёр бы «спрячься» с хоткея.
         // Пока встреча ждёт, общее «проснулся от мыши» молчит — иначе ситуативная фраза не прозвучит.
@@ -1558,7 +1583,7 @@ api.onPresence?.(({ idle }) => {
   if (!pres.activeSince) pres.activeSince = now - idle * 1000;
   if (idle > 2) return;
   state.userSeenAt = performance.now(); // ты за компом, даже если мышь не трогал
-  dayStat('first'); // [13] первая активность за день — отсюда «ты за компом с 9:12»
+  startWorkday(); // [13] первая активность за день — отсюда «ты за компом с 9:12»
   if (state.sleeping) userBack();
   const free = state.visible && !state.seq && !state.sleeping && !state.chatOpen && !voice.active && !(reply && !reply.done);
   if (free && now - pres.activeSince > 90 * 60000 && now > pres.nextNag) {
