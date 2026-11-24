@@ -12,7 +12,7 @@
 /* Layout: full-bleed 3D night city; glass HUD pinned to the edges — brand + metrics on top, task feed bottom-left, team panel on the right, command bar along the bottom. */
 :root {
   --ink: #070b1a;
-  --glass: rgba(10, 16, 36, 0.78);
+  --glass: rgba(10, 16, 36, 0.88);
   --glass-hi: rgba(16, 25, 56, 0.92);
   --line: rgba(124, 156, 236, 0.22);
   --fg: #e7edff;
@@ -29,7 +29,7 @@
   --r: 12px;
   color-scheme: dark;
 }
-html, body { height: 100%; margin: 0; }
+html, body { height: 100%; margin: 0; overscroll-behavior: none; }
 [hidden] { display: none !important; }
 body {
   background: var(--ink);
@@ -51,8 +51,8 @@ button { cursor: pointer; }
 /* ---------- building labels ---------- */
 .lbl {
   --c: var(--ray);
-  pointer-events: auto;
-  cursor: pointer;
+  pointer-events: none;
+  will-change: transform;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -70,7 +70,7 @@ button { cursor: pointer; }
   user-select: none;
   transition: transform 0.2s ease, background 0.2s ease;
 }
-.lbl:hover, .lbl.is-focus { background: rgba(16, 26, 60, 0.95); }
+.lbl.is-hover, .lbl.is-focus, .lbl:focus-visible { background: rgba(16, 26, 60, 0.95); }
 .lbl i { font-style: normal; font-family: var(--f-mono); font-size: 9.5px; min-width: 16px; height: 16px; border-radius: 50%; display: grid; place-items: center; background: color-mix(in srgb, var(--c) 30%, transparent); color: var(--fg); }
 .lbl.boss { --c: #ffd36b; font-size: 12px; padding: 6px 12px 6px 9px; box-shadow: 0 0 26px rgba(255, 211, 107, 0.45); }
 .stamp-wrap { pointer-events: none; }
@@ -109,8 +109,6 @@ button { cursor: pointer; }
   background: var(--glass);
   border: 1px solid var(--line);
   border-radius: var(--r);
-  backdrop-filter: blur(14px) saturate(1.3);
-  -webkit-backdrop-filter: blur(14px) saturate(1.3);
 }
 
 /* top bar */
@@ -137,8 +135,6 @@ button { cursor: pointer; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 .btn:hover { background: var(--glass-hi); border-color: rgba(154, 216, 255, 0.45); }
@@ -214,10 +210,13 @@ button { cursor: pointer; }
 .go:hover { filter: brightness(1.08); }
 .suggest { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
 .suggest::-webkit-scrollbar { display: none; }
-.sg { flex: 0 0 auto; border: 1px solid var(--line); background: var(--glass); border-radius: 999px; padding: 6px 11px; font-size: 12px; color: #c9d3f2; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.sg { flex: 0 0 auto; border: 1px solid var(--line); background: var(--glass); border-radius: 999px; padding: 6px 11px; font-size: 12px; color: #c9d3f2; }
 .sg:hover { color: var(--fg); border-color: rgba(154, 216, 255, 0.45); }
 
-.hint { grid-column: 2; grid-row: 2; align-self: start; justify-self: center; padding: 8px 14px; font-size: 12px; color: #c9d3f2; transition: opacity 0.4s ease; }
+.hint { grid-column: 2; grid-row: 2; align-self: start; justify-self: center; padding: 10px 14px; font-size: 12px; color: #c9d3f2; transition: opacity 0.4s ease; max-width: 560px; }
+.hint ul { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; }
+.hint li { display: contents; }
+.hint kbd { font-family: var(--f-mono); font-size: 11px; color: var(--ray-hi); white-space: nowrap; }
 .hint.gone { opacity: 0; pointer-events: none; }
 
 .toast { box-sizing: border-box; position: fixed; left: 50%; top: calc(max(16px, env(safe-area-inset-top, 0px)) + 64px); transform: translate(-50%, -10px); opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease; padding: 10px 16px; display: flex; gap: 10px; align-items: center; pointer-events: none; max-width: calc(100vw - 32px); z-index: 5; }
@@ -229,7 +228,7 @@ button { cursor: pointer; }
 
 .mobile-only { display: none; }
 
-@media (max-width: 1340px) {
+@media (max-width: 1520px) {
   .controls .lbl-txt { display: none; }
 }
 @media (max-width: 760px) {
@@ -285,6 +284,7 @@ button { cursor: pointer; }
       <div class="metric glass"><b id="m-agents">0/21</b><span>заняты</span></div>
     </div>
     <div class="controls">
+      <button class="btn" id="b-help" type="button" aria-pressed="false" title="Как летать">? <span class="lbl-txt">Управление</span></button>
       <button class="btn" id="b-home" type="button" title="Вернуть камеру">◎ <span class="lbl-txt">Обзор</span></button>
       <button class="btn" id="b-speed" type="button" title="Скорость времени"><span class="k">×1</span> <span class="lbl-txt">Скорость</span></button>
       <button class="btn" id="b-auto" type="button" aria-pressed="true" title="Агенты сами берут демо-задачи">⟳ <span class="lbl-txt">Автопилот</span></button>
@@ -294,7 +294,7 @@ button { cursor: pointer; }
     </div>
   </div>
 
-  <div class="hint glass" id="hint">Нажми на здание: камера залетит внутрь и покажет агентов</div>
+  <div class="hint glass" id="hint" role="note"></div>
 
   <section class="feed collapsed" id="feed" aria-label="Лента задач">
     <div class="feed-head"><h2>Лента задач</h2><span id="feed-count"></span></div>
@@ -321,7 +321,7 @@ button { cursor: pointer; }
 </script>
 <script type="module">
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { MapControls } from 'three/addons/controls/MapControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -411,12 +411,13 @@ const hex = (n) => '#' + n.toString(16).padStart(6, '0');
 
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ antialias: !isMobile, powerPreference: 'high-performance' });
+  renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
 } catch (e) {
   document.body.insertAdjacentHTML('beforeend', '<div class="fallback">Браузер не дал WebGL, поэтому город не нарисовался. Открой страницу в свежем Chrome, Safari или Firefox.</div>');
   throw e;
 }
-let pixelRatio = Math.min(devicePixelRatio || 1, isMobile ? 1.5 : 2);
+const fullRatio = Math.min(devicePixelRatio || 1, isMobile ? 1.5 : 1.75);
+let pixelRatio = fullRatio;
 renderer.setPixelRatio(pixelRatio);
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -439,17 +440,24 @@ const HOME = {
 };
 camera.position.copy(HOME.pos);
 
-const controls = new OrbitControls(camera, renderer.domElement);
+// Map-style flight: drag moves over the city, right-drag / Shift+drag / two fingers turn,
+// wheel or pinch zooms toward the cursor, WASD / arrows fly, Q/E turn, R/F up/down.
+const controls = new MapControls(camera, renderer.domElement);
 controls.target.copy(HOME.target);
 controls.enableDamping = true;
-controls.dampingFactor = 0.08;
-controls.maxPolarAngle = Math.PI * 0.45;
-controls.minDistance = 8;
+controls.dampingFactor = 0.1;
+controls.screenSpacePanning = false;
+controls.zoomToCursor = true;
+controls.panSpeed = 1.1;
+controls.rotateSpeed = 0.7;
+controls.zoomSpeed = 1.2;
+controls.maxPolarAngle = Math.PI * 0.47;
+controls.minDistance = 6;
 controls.maxDistance = 260;
 controls.autoRotate = !reduceMotion;
 controls.autoRotateSpeed = 0.3;
-let idleFor = 0;
-controls.addEventListener('start', () => { controls.autoRotate = false; idleFor = 0; fly = null; controls.enabled = true; });
+function stopAuto() { controls.autoRotate = false; }
+controls.addEventListener('start', stopAuto);
 
 const composer = new EffectComposer(renderer);
 composer.setPixelRatio(pixelRatio);
@@ -636,6 +644,7 @@ scene.add(trees);
    ================================================================ */
 const buildings = {};
 const hitTargets = [];
+const labelTargets = [];
 const spinners = [];
 
 function bodyMat(color, rep = 4) {
@@ -662,9 +671,8 @@ function makeLabel(id, team, isProject = false) {
     ? `${team.name}<small>${team.note}</small>`
     : `<span class="dot"></span><i>${team.step}</i>${team.name}<small id="lbl-${id}">${team.agents.length} аг.</small>`;
   const go = () => focusBuilding(isProject ? 'dev' : id);
-  el.addEventListener('click', (e) => { e.stopPropagation(); go(); });
   el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
-  el.addEventListener('pointerdown', (e) => e.stopPropagation());
+  labelTargets.push({ el, id: isProject ? 'dev' : id });
   return { obj: new CSS2DObject(el), el };
 }
 
@@ -1000,9 +1008,8 @@ const boss = { delivered: 0, trophies: [], group: new THREE.Group(), flash: 0 };
   el.setAttribute('role', 'button');
   el.tabIndex = 0;
   el.innerHTML = '<span class="dot"></span>Дом босса<small id="lbl-boss">доставлено 0</small>';
-  el.addEventListener('click', (e) => { e.stopPropagation(); focusBuilding('boss'); });
   el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); focusBuilding('boss'); } });
-  el.addEventListener('pointerdown', (e) => e.stopPropagation());
+  labelTargets.push({ el, id: 'boss' });
   boss.label = { el, obj: new CSS2DObject(el) };
   boss.label.obj.position.set(0, 20.5, 0);
   g.add(boss.label.obj);
@@ -1451,8 +1458,10 @@ function renderTeamPanel() {
    CAMERA FOCUS
    ================================================================ */
 let fly = null;
-function flyTo(pos, target, dur = 1.5) {
-  fly = { fromP: camera.position.clone(), toP: pos.clone(), fromT: controls.target.clone(), toT: target.clone(), t: 0, dur: reduceMotion ? 0.01 : dur };
+function flyTo(pos, target, dur) {
+  const len = camera.position.distanceTo(pos) + controls.target.distanceTo(target) * 0.5;
+  const d = dur ?? THREE.MathUtils.clamp(0.8 + len * 0.011, 0.9, 2);
+  fly = { fromP: camera.position.clone(), toP: pos.clone(), fromT: controls.target.clone(), toT: target.clone(), t: 0, dur: reduceMotion ? 0.01 : d, bump: Math.min(22, len * 0.18) };
   controls.enabled = false;
 }
 const roomLight = new THREE.PointLight(0xfff1d6, 0, 16, 1.4);
@@ -1497,7 +1506,8 @@ function focusBuilding(id) {
   applyViewOffset();
   renderPanel();
   if (lastLabel) $('p-close')?.focus({ preventScroll: true });
-  $('hint').classList.add('gone');
+  hoverEl?.classList.remove('is-hover'); hoverEl = null;
+  setHelp(false);
 }
 function unfocus() {
   if (selected) setCutaway(selected, false);
@@ -1506,7 +1516,7 @@ function unfocus() {
   document.body.classList.remove('has-panel');
   panel.hidden = true;
   applyViewOffset();
-  flyTo(HOME.pos, HOME.target, 1.6);
+  flyTo(HOME.pos, HOME.target);
   lastLabel?.focus?.({ preventScroll: true });
   lastLabel = null;
 }
@@ -1522,21 +1532,114 @@ function flash(id) {
 const raycaster = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
 let downAt = null;
-renderer.domElement.addEventListener('pointerdown', (e) => { downAt = { x: e.clientX, y: e.clientY }; });
-renderer.domElement.addEventListener('pointerup', (e) => {
-  if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) return;
-  ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+let lastTap = { t: 0, x: 0, y: 0 };
+const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+function cancelFly() { if (fly) { fly = null; controls.enabled = true; } stopAuto(); }
+function labelAt(x, y) {
+  let best = null, bestZ = -Infinity;
+  for (const lt of labelTargets) {
+    if (lt.el.style.display === 'none') continue;
+    const r = lt.el.getBoundingClientRect();
+    if (x >= r.left - 4 && x <= r.right + 4 && y >= r.top - 4 && y <= r.bottom + 4) {
+      const z = Number(lt.el.style.zIndex) || 0;
+      if (z > bestZ) { bestZ = z; best = lt; }
+    }
+  }
+  return best;
+}
+function pickAt(x, y) {
+  const lt = labelAt(x, y);
+  if (lt) return { id: lt.id, el: lt.el };
+  ndc.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1);
   raycaster.setFromCamera(ndc, camera);
   const hit = raycaster.intersectObjects(hitTargets, false)[0];
-  if (hit) focusBuilding(hit.object.userData.id);
+  return hit ? { id: hit.object.userData.id } : null;
+}
+// capture phase: runs before the controls see the press, so a press always stops a running flight
+renderer.domElement.addEventListener('pointerdown', (e) => { downAt = { x: e.clientX, y: e.clientY }; cancelFly(); }, { capture: true });
+renderer.domElement.addEventListener('wheel', cancelFly, { capture: true, passive: true });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 8) return;
+  const now = performance.now();
+  const hit = pickAt(e.clientX, e.clientY);
+  if (hit) { focusBuilding(hit.id); lastTap.t = 0; return; }
+  // double tap / double click on empty ground: glide there
+  if (now - lastTap.t < 350 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 30) {
+    ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+    raycaster.setFromCamera(ndc, camera);
+    const pt = new THREE.Vector3();
+    if (raycaster.ray.intersectPlane(groundPlane, pt)) {
+      pt.x = THREE.MathUtils.clamp(pt.x, -70, 70); pt.z = THREE.MathUtils.clamp(pt.z, -70, 70);
+      const offset = camera.position.clone().sub(controls.target).multiplyScalar(0.7);
+      if (offset.length() < 14) offset.setLength(14);
+      flyTo(pt.clone().add(offset), pt);
+    }
+    lastTap.t = 0;
+    return;
+  }
+  lastTap = { t: now, x: e.clientX, y: e.clientY };
 });
+let hoverEl = null;
 renderer.domElement.addEventListener('pointermove', (e) => {
   if (e.pointerType !== 'mouse' || e.buttons) return;
-  ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
-  raycaster.setFromCamera(ndc, camera);
-  renderer.domElement.style.cursor = raycaster.intersectObjects(hitTargets, false).length ? 'pointer' : '';
+  const hit = pickAt(e.clientX, e.clientY);
+  renderer.domElement.style.cursor = hit ? 'pointer' : '';
+  const el = hit?.el ?? null;
+  if (el !== hoverEl) { hoverEl?.classList.remove('is-hover'); el?.classList.add('is-hover'); hoverEl = el; }
 });
-addEventListener('keydown', (e) => { if (e.key === 'Escape' && selected) unfocus(); });
+
+// keyboard flight (layout-independent: uses e.code, so it works on the Russian layout too)
+const FLY_CODES = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'KeyR', 'KeyF', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Equal', 'Minus', 'NumpadAdd', 'NumpadSubtract']);
+const keys = new Set();
+let shiftHeld = false;
+addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && selected) { unfocus(); return; }
+  if (e.target.closest?.('input, textarea, [contenteditable]')) return;
+  shiftHeld = e.shiftKey;
+  if (!FLY_CODES.has(e.code) || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.code.startsWith('Arrow') && e.target.closest?.('.feed, .panel, .suggest')) return;
+  e.preventDefault();
+  keys.add(e.code);
+  cancelFly();
+});
+addEventListener('keyup', (e) => { keys.delete(e.code); shiftHeld = e.shiftKey; });
+addEventListener('blur', () => keys.clear());
+const _fwd = new THREE.Vector3(), _right = new THREE.Vector3(), _move = new THREE.Vector3(), _off = new THREE.Vector3();
+const UP = new THREE.Vector3(0, 1, 0);
+function keyFlight(dt) {
+  if (!keys.size) return;
+  const has = (c) => keys.has(c);
+  const fast = shiftHeld ? 2.6 : 1;
+  _off.subVectors(camera.position, controls.target);
+  const dist = _off.length();
+  _fwd.copy(_off).negate(); _fwd.y = 0;
+  if (_fwd.lengthSq() < 1e-6) _fwd.set(0, 0, -1);
+  _fwd.normalize();
+  _right.set(-_fwd.z, 0, _fwd.x);
+  const sp = (6 + dist * 0.45) * fast * dt;
+  _move.set(0, 0, 0);
+  if (has('KeyW') || has('ArrowUp')) _move.add(_fwd);
+  if (has('KeyS') || has('ArrowDown')) _move.sub(_fwd);
+  if (has('KeyD') || has('ArrowRight')) _move.add(_right);
+  if (has('KeyA') || has('ArrowLeft')) _move.sub(_right);
+  if (_move.lengthSq()) { _move.normalize().multiplyScalar(sp); camera.position.add(_move); controls.target.add(_move); }
+  const turn = ((has('KeyQ') ? 1 : 0) - (has('KeyE') ? 1 : 0)) * 1.3 * fast * dt;
+  if (turn) { _off.applyAxisAngle(UP, turn); camera.position.copy(controls.target).add(_off); }
+  const zoom = ((has('KeyF') || has('Minus') || has('NumpadSubtract')) ? 1 : 0) - ((has('KeyR') || has('Equal') || has('NumpadAdd')) ? 1 : 0);
+  if (zoom) {
+    _off.subVectors(camera.position, controls.target);
+    const nd = THREE.MathUtils.clamp(_off.length() * (1 + zoom * 1.4 * fast * dt), controls.minDistance, controls.maxDistance);
+    _off.setLength(nd);
+    camera.position.copy(controls.target).add(_off);
+  }
+}
+// keep the view over the model city
+function clampToCity() {
+  const tx = THREE.MathUtils.clamp(controls.target.x, -72, 72) - controls.target.x;
+  const tz = THREE.MathUtils.clamp(controls.target.z, -72, 72) - controls.target.z;
+  if (tx || tz) { controls.target.x += tx; controls.target.z += tz; camera.position.x += tx; camera.position.z += tz; }
+  if (controls.target.y !== 2 && !fly && !selected) controls.target.y += (2 - controls.target.y) * 0.1;
+}
 
 $('cmd-form').addEventListener('submit', (e) => {
   e.preventDefault();
@@ -1554,7 +1657,8 @@ SAMPLES.slice(0, 6).forEach((s) => {
   sg.appendChild(b);
 });
 
-$('b-home').onclick = () => (selected ? unfocus() : flyTo(HOME.pos, HOME.target, 1.4));
+$('b-help').onclick = () => setHelp($('hint').classList.contains('gone'));
+$('b-home').onclick = () => (selected ? unfocus() : flyTo(HOME.pos, HOME.target));
 const SPEEDS = [1, 2, 4];
 $('b-speed').onclick = () => {
   speed = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length];
@@ -1568,18 +1672,44 @@ $('b-day').onclick = () => {
   $('b-day').setAttribute('aria-pressed', String(!night));
   $('b-day').innerHTML = night ? '☾ <span class="lbl-txt">Ночь</span>' : '☀ <span class="lbl-txt">День</span>';
 };
-$('b-fx').onclick = () => {
-  fxOn = !fxOn;
-  $('b-fx').setAttribute('aria-pressed', String(fxOn));
-  pixelRatio = fxOn ? Math.min(devicePixelRatio || 1, isMobile ? 1.5 : 2) : 1;
+let autoQuality = true;
+function setQuality(level) {
+  // 0: full · 1: lower resolution · 2: no glow, lower resolution
+  fxOn = level < 2;
+  pixelRatio = level === 0 ? fullRatio : 1;
   renderer.setPixelRatio(pixelRatio);
   composer.setPixelRatio(pixelRatio);
+  $('b-fx').setAttribute('aria-pressed', String(fxOn));
   onResize();
-};
+}
+$('b-fx').onclick = () => { autoQuality = false; setQuality(fxOn ? 2 : 0); };
+// drop quality when the device can't keep up (ignores load hitches and background tabs)
+let perfT = 0, perfN = 0, perfMax = 0, perfLevel = 0, perfWarm = 4;
+function watchPerf(raw) {
+  if (!autoQuality || perfLevel >= 2) return;
+  if (perfWarm > 0) { perfWarm -= raw; return; }
+  perfT += raw; perfN++; perfMax = Math.max(perfMax, raw);
+  if (perfT < 2.5) return;
+  const fps = perfN / perfT;
+  if (perfMax < 0.5 && fps < 40) { perfLevel++; setQuality(perfLevel); perfWarm = 2; }
+  perfT = 0; perfN = 0; perfMax = 0;
+}
 $('b-feed').onclick = () => {
   const c = feedEl.classList.toggle('collapsed');
   $('b-feed').setAttribute('aria-pressed', String(!c));
 };
+
+const coarse = matchMedia('(pointer: coarse)').matches;
+const HELP = coarse
+  ? [['1 палец', 'лететь над городом'], ['2 пальца', 'щипок — ближе/дальше, сдвиг — наклон и поворот'], ['тап по зданию', 'залететь внутрь'], ['двойной тап', 'перелететь в точку']]
+  : [['тянуть мышью', 'лететь над городом'], ['правая кнопка / Shift', 'повернуть и наклонить'], ['колесо', 'ближе к курсору'], ['WASD / стрелки', 'полёт, Shift — быстрее'], ['Q / E · R / F', 'поворот · ближе / дальше'], ['клик / двойной клик', 'в здание / перелёт в точку']];
+$('hint').innerHTML = '<ul>' + HELP.map(([k, v]) => `<li><kbd>${k}</kbd><span>${v}</span></li>`).join('') + '</ul>';
+let hintTimer = setTimeout(() => setHelp(false), 14000);
+function setHelp(on) {
+  $('hint').classList.toggle('gone', !on);
+  $('b-help').setAttribute('aria-pressed', String(on));
+  clearTimeout(hintTimer);
+}
 
 function onResize() {
   camera.aspect = innerWidth / innerHeight;
@@ -1599,12 +1729,16 @@ const clk = new THREE.Clock();
 let dayMix = 0; // 0 night → 1 day
 let insideMix = 0;
 let bbTimer = 0, bbIdx = 0, autoTimer = 6;
+let warmFrames = 0; // first frame renders every interior once so the first fly-in doesn't stutter on shader compiles
 const tmpCol = new THREE.Color();
 
 function animate() {
   requestAnimationFrame(animate);
-  const dt = Math.min(clk.getDelta(), 0.1);
+  const raw = clk.getDelta();
+  const dt = Math.min(raw, 0.1);
   const t = clk.elapsedTime;
+  watchPerf(raw);
+  if (warmFrames < 2) { for (const b of Object.values(buildings)) b.interior.group.visible = warmFrames === 0 || b.id === selected; warmFrames++; }
 
   // sim waits
   const sdt = dt * 1000 * speed;
@@ -1691,13 +1825,14 @@ function animate() {
     fly.t = Math.min(1, fly.t + dt / fly.dur);
     const k = fly.t < 0.5 ? 4 * fly.t ** 3 : 1 - Math.pow(-2 * fly.t + 2, 3) / 2;
     camera.position.lerpVectors(fly.fromP, fly.toP, k);
+    camera.position.y += Math.sin(Math.PI * k) * fly.bump;
     controls.target.lerpVectors(fly.fromT, fly.toT, k);
     if (fly.t >= 1) { fly = null; controls.enabled = true; }
-  } else if (!selected && !controls.autoRotate && !reduceMotion) {
-    idleFor += dt;
-    if (idleFor > 25) controls.autoRotate = true;
+  } else {
+    keyFlight(dt);
   }
   controls.update();
+  clampToCity();
 
   if (fxOn) composer.render(); else renderer.render(scene, camera);
   labelRenderer.render(scene, camera);
@@ -1714,6 +1849,7 @@ runTask('Сделай лендинг для БухМета', { demo: true });
 setTimeout(() => runTask('Рилс про VELORA в инсту', { demo: true }), 2600);
 
 window.__city = { runTask, focusBuilding, unfocus, buildings, tasks, boss };
+window.__nav = { camera, controls, flying: () => !!fly };
 </script>
 </body>
 </html>
