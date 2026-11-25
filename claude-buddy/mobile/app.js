@@ -696,7 +696,7 @@ document.addEventListener('visibilitychange', () => {
   if (min >= 0.5) {
     newOpen();
     nextChat = Math.max(nextChat, now + 40000 + Math.random() * 30000);
-    if (min >= 10) refreshMemory(); // [15] пока лежал в фоне, память могли поправить с другого устройства
+    refreshMemory(); // пока лежал в фоне, память могли поправить с другого устройства (или он задал вопрос там)
   }
   if (min < 0.5 || !state.visible || state.seq || state.busy || voice.active) {
     state.lastTouch = performance.now(); // пока был свёрнут, «скука» не копилась — не засыпаем в момент возвращения
@@ -793,11 +793,19 @@ function readMemDoc(d) {
   if (Number(d?.lastAskAt) > 0) m.lastAskAt = Number(d.lastAskAt);
   return m;
 }
+// memGen растёт на каждой локальной правке: прочитанное из db, которое разминулось с правкой, выбрасываем
+let memGen = 0;
+let pendingWipe = false; // «стереть всё», пока память не загрузилась, — выполним, как только загрузится
 async function loadMemory() {
   try {
     const snap = await memRef().get();
     memory = readMemDoc(snap.exists ? snap.data() : null);
     memOk = true;
+    if (pendingWipe) {
+      pendingWipe = false;
+      memory = { user: [], self: [], ...(memory.lastAskAt > 0 ? { lastAskAt: memory.lastAskAt } : {}) };
+      saveMemory();
+    }
   } catch {
     /* память недоступна — болтаем без неё и НЕ трогаем сохранённое */
   }
@@ -806,6 +814,7 @@ async function loadMemory() {
 let memWrite = Promise.resolve(true);
 function saveMemory() {
   if (!memOk) return Promise.resolve(false); // не прочитали — не затираем
+  memGen += 1;
   // одна запись за раз: следующая ждёт предыдущую. Итог — true/false: вопросу из памяти важно, записалось ли
   memWrite = memWrite
     .then(() => memRef().set({ user: memory.user, self: memory.self, ...(memory.lastAskAt > 0 ? { lastAskAt: memory.lastAskAt } : {}) }))
@@ -822,12 +831,14 @@ function saveMemory() {
 // [15] телефон мог сутки пролежать со страницей в фоне, а память правили с другого устройства — перечитываем
 // в той же очереди, что и запись; пока идёт разговор, не трогаем: его инструменты пишут в текущую копию
 function refreshMemory() {
+  if (db && uid && !memOk) return loadMemory(); // при старте не загрузилась — пробуем снова
   if (!db || !uid || !memOk || state.busy) return memWrite;
   memWrite = memWrite.then(async () => {
     try {
+      const gen = memGen;
       const snap = await memRef().get();
       const d = snap.exists ? snap.data() : null;
-      if (state.busy) return true;
+      if (state.busy || gen !== memGen) return true; // пока читали, ты что-то удалил/стёр или он запомнил — не затираем
       memory = readMemDoc(d);
       renderMemList();
     } catch {
@@ -1274,16 +1285,33 @@ function callbackReady() {
 }
 setInterval(async () => {
   if (cb.busy || dayStat('cb') || !callbackReady()) return;
-  const item = dueAsk();
-  if (!item) return;
-  const q = checkAsk(item.ask, item.text).text;
+  if (!dueAsk()) return;
   cb.busy = true;
+  const epoch = memEpoch;
   try {
+    // свежий документ из db → решаем по нему → помечаем заданным: другое устройство могло уже спросить
+    await refreshMemory();
+    const item = dueAsk();
+    if (!item || epoch !== memEpoch) return;
+    const q = checkAsk(item.ask, item.text).text;
+    const prevLast = memory.lastAskAt;
     item.asked_at = new Date().toISOString();
     memory.lastAskAt = Date.now();
     dayStat('cb', 1);
-    if (!(await saveMemory())) return; // не записалось — молчим: пометка уйдёт со следующей записью
+    if (!(await saveMemory())) {
+      // не записалось — молчим и откатываем пометку, иначе вопрос «сгорит», ни разу не прозвучав
+      delete item.asked_at;
+      if (prevLast > 0) memory.lastAskAt = prevLast;
+      else delete memory.lastAskAt;
+      return;
+    }
+    const stillOk = () => epoch === memEpoch && memory.user.includes(item) && item.ask;
     const go = () => {
+      if (!stillOk()) return; // пока ждали — всё стёрли или убрали этот вопрос
+      clearTimeout(cb.phTimer);
+      cb.phTimer = setTimeout(() => {
+        if (!els.input.value.trim()) els.input.placeholder = PLACEHOLDER; // не ответил — подсказку убираем
+      }, 3 * 60000);
       cb.asked = { q, at: Date.now() };
       say(`${rnd(CB_LEADS)}${q}`, rnd(CB_EMOS), { noNote: true });
       clearTimeout(bubbleTimer);
@@ -1300,7 +1328,7 @@ setInterval(async () => {
     const h = () => new Date().getHours();
     const ok = () => cbFree() && !state.sleeping && h() >= 8 && h() < 23;
     if (ok()) go();
-    else setTimeout(() => (ok() ? go() : note(`хотел спросить по памяти «${q}», но не успел`)), 20000);
+    else setTimeout(() => (ok() ? go() : stillOk() && note(`хотел спросить по памяти «${q}», но не успел`)), 20000);
   } finally {
     cb.busy = false;
   }
@@ -1401,12 +1429,19 @@ els.forgetBtn.addEventListener('click', () => {
   voice.stop();
   memEpoch += 1;
   turns = [];
+  // вопрос из памяти и всё, что о нём знает контекст, — тоже стираем
+  cb.asked = cb.sent = null;
+  clearTimeout(cb.phTimer);
+  state.events = [];
+  els.input.placeholder = PLACEHOLDER;
   if (!memOk) {
+    pendingWipe = true;
     renderMemList();
     say('Разговор стёр. А до памяти сейчас не достучаться — её почищу, когда она загрузится.', 'embarrassed');
     return;
   }
-  memory = { user: [], self: [] };
+  // пауза «раз в 20 ч» — не память о тебе, её оставляем (иначе стирание = способ получить вопрос раньше)
+  memory = { user: [], self: [], ...(memory.lastAskAt > 0 ? { lastAskAt: memory.lastAskAt } : {}) };
   saveMemory();
   renderMemList();
   say('Всё, чистый лист. Будем знакомы!', 'wink');

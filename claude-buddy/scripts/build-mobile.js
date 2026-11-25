@@ -22,7 +22,13 @@ const sceneFix = (s) => s.replace(/window\.innerWidth/g, 'this.canvas.clientWidt
 // [15] проверки вопроса «на потом» (SECRET_RE, SENSITIVE_RE, clean/sensitive, checkAsk) скопированы в mobile/app.js
 // дословно из src/main/memory.js — не даём им разъехаться
 const shared = read('mobile/app.js').match(/\/\/ >>> из src\/main\/memory\.js[^\n]*\n([\s\S]*?)\n\/\/ <<< /);
-if (!shared || !read('src/main/memory.js').includes(shared[1])) {
+// сравниваем ЦЕЛИКОМ с тем же участком memory.js: от «// похоже на секрет» до конца checkAsk (срез или пустой блок не пройдут)
+const memSrc = read('src/main/memory.js');
+const from = memSrc.indexOf('// похоже на секрет');
+const endMark = 'return { ok: true, text };\n}';
+const to = memSrc.indexOf(endMark, memSrc.indexOf('function checkAsk'));
+const canon = from >= 0 && to > from ? memSrc.slice(from, to + endMark.length) : null;
+if (!shared || !canon || shared[1].trim() !== canon.trim()) {
   console.error('mobile/app.js: блок из src/main/memory.js разъехался с оригиналом — скопируй его заново');
   process.exit(1);
 }
