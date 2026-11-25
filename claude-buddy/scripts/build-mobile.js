@@ -19,6 +19,14 @@ function asModule(src, names, transform = (x) => x) {
 // на телефоне холст не во весь экран (снизу строка чата) — размеры берём у холста, а не у окна
 const sceneFix = (s) => s.replace(/window\.innerWidth/g, 'this.canvas.clientWidth').replace(/window\.innerHeight/g, 'this.canvas.clientHeight');
 
+// [15] проверки вопроса «на потом» (SECRET_RE, SENSITIVE_RE, clean/sensitive, checkAsk) скопированы в mobile/app.js
+// дословно из src/main/memory.js — не даём им разъехаться
+const shared = read('mobile/app.js').match(/\/\/ >>> из src\/main\/memory\.js[^\n]*\n([\s\S]*?)\n\/\/ <<< /);
+if (!shared || !read('src/main/memory.js').includes(shared[1])) {
+  console.error('mobile/app.js: блок из src/main/memory.js разъехался с оригиналом — скопируй его заново');
+  process.exit(1);
+}
+
 const js = [
   `import * as THREE from '${THREE_URL}';`,
   asModule(read('src/renderer/scene.js'), ['BuddyScene'], sceneFix),
