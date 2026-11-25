@@ -117,7 +117,16 @@ function pick(arr, quietMs = 0) {
 // [15] счётчики дня. Сутки телефона начинаются в 4 утра: открыл в полвторого ночи — это ещё «сегодня»
 const dayKey = () => new Date(Date.now() - 4 * 3600000).toDateString();
 const freshDay = () => ({ d: dayKey(), opens: 0, pokes: 0, tricks: 0, first: 0, cb: 0, ms: [] });
-let day = { ...freshDay(), ...lsGet('buddy.day', {}) };
+// чужое/битое из localStorage: берём только поля нужного типа, остальное — по умолчанию
+let day = (() => {
+  const base = freshDay();
+  const raw = lsGet('buddy.day', {});
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return base;
+  for (const k of Object.keys(base)) {
+    if (typeof raw[k] === typeof base[k] && (k !== 'ms' || Array.isArray(raw[k]))) base[k] = raw[k];
+  }
+  return base;
+})();
 function dayStat(k, inc = 0) {
   if (day.d !== dayKey()) day = freshDay();
   if (typeof day[k] !== 'number') day[k] = 0; // счётчик из новой версии в старом (или испорченном) localStorage
