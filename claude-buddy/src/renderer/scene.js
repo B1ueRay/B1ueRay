@@ -212,6 +212,12 @@ export class BuddyScene {
     this.wave = 0;
     this.pokeT = -10;
     this.dizzyUntil = 0;
+    this.crownT = -10; // [16] ткнули в корону — лучики пружинят
+    this.treeShakeT = 9; // [16] ткнули в дерево — качается
+    this.treeHits = false; // крона ловит клики (телефон) или пропускает их насквозь (оверлей на компе)
+    this.deadUntil = 0; // [16] «умер» от тычков: лежит на боку
+    this.deadSide = 1;
+    this.hopeAt = null; // [16] ждёт ответа: куда смотреть (css px; null — прямо на тебя)
     this.afterglow = null;
     this.pose = { ...POSE_ZERO };
     this.face = { ...FACES.neutral, ...FACE_DEFAULTS };
@@ -928,9 +934,36 @@ export class BuddyScene {
     this.pokeT = this.time;
   }
 
-  poke() {
+  // [16] куда ткнули: в пузо — проминается глубже, в корону — лучики пружинят, в лицо — жмурится
+  poke(part = 'face') {
     this.pokeT = this.time;
-    this.squashT = 0.15;
+    this.squashT = part === 'belly' ? 0.02 : 0.15;
+    if (part === 'crown') this.crownT = this.time;
+    if (part === 'face' && this.blinkT < 0) this.blinkT = 0;
+  }
+
+  // [16] затыкали: заваливается набок и не дышит; тычок продлевает, revive() — встаёт
+  playDead(sec = 6) {
+    if (!this.dead) this.deadSide = Math.random() < 0.5 ? -1 : 1;
+    this.deadUntil = this.time + sec;
+  }
+
+  revive() {
+    if (!this.dead) return;
+    this.deadUntil = 0;
+    this.squashT = 0.1;
+  }
+
+  get dead() {
+    return this.time < this.deadUntil;
+  }
+
+  shakeTree() {
+    this.treeShakeT = 0;
+  }
+
+  bumpIsland() {
+    this.stageBumpT = 0;
   }
 
   waveHello(sec = 1.6) {
@@ -938,7 +971,7 @@ export class BuddyScene {
   }
 
   get canTrick() {
-    return this.mode === 'sitting' && !this.trick;
+    return this.mode === 'sitting' && !this.trick && !this.dead; // [16] «мёртвый» сальто не крутит
   }
 
   // ---------- трюки ----------
@@ -1027,8 +1060,25 @@ export class BuddyScene {
     const ndc = new THREE.Vector2((clientX / w) * 2 - 1, -(clientY / h) * 2 + 1);
     this.raycaster.setFromCamera(ndc, this.camera);
     if (this.buddy.visible && this.raycaster.intersectObject(this.buddyHit, false).length) return 'buddy';
-    if (this.islandGroup.scale.x > 0.5 && this.raycaster.intersectObject(this.islandHit, false).length) return 'island';
+    // [16] крона дерева торчит над хитбоксом островка — по ней тоже можно попасть
+    // крона дерева торчит над островком: на компе клик по ней уходит насквозь на рабочий стол (treeHits=false),
+    // на телефоне сквозных кликов нет — там по дереву можно тыкать
+    if (this.islandGroup.scale.x > 0.5 && (this.raycaster.intersectObject(this.islandHit, false).length || (this.treeHits && this.raycaster.intersectObject(this.tree, true).length))) return 'island';
     return null;
+  }
+
+  // [16] то же, но подробнее: макушка/корона, лицо, пузо; на островке — дерево, кружка или сам остров
+  hitPart(clientX, clientY) {
+    const what = this.hitTest(clientX, clientY); // заодно настроил луч
+    if (what === 'buddy') {
+      const p = this.raycaster.intersectObject(this.buddyHit, false)[0].point.clone();
+      this.bodyGroup.worldToLocal(p);
+      return p.y > R * 0.72 ? 'crown' : p.y < -R * 0.3 ? 'belly' : 'face';
+    }
+    if (what !== 'island') return null;
+    if (this.raycaster.intersectObject(this.tree, true).length) return 'tree';
+    if (this.raycaster.intersectObject(this.mug, true).length) return 'mug';
+    return 'island';
   }
 
   // где голова на экране (css px) — для облачка
@@ -1059,7 +1109,7 @@ export class BuddyScene {
   // само что-то быстро движется — нужен полный кадр
   get lively() {
     const t = this.time;
-    return Boolean(this.anims.length || this.trick || this.mode !== 'sitting' || t < this.dizzyUntil || this.wave > 0 || t - this.pokeT < 1.2 || (this.squashT ?? 9) < 0.9 || this.face.shake > 0.1 || this.face.bounce > 0.1);
+    return Boolean(this.anims.length || this.trick || this.mode !== 'sitting' || t < this.dizzyUntil || t - this.crownT < 0.8 || this.treeShakeT < 1.6 || this.wave > 0 || t - this.pokeT < 1.2 || (this.squashT ?? 9) < 0.9 || this.face.shake > 0.1 || this.face.bounce > 0.1);
   }
 
   frame(dtIn) {
@@ -1100,7 +1150,12 @@ export class BuddyScene {
     this.glow.material.opacity = 0.4 + Math.sin(t * 1.7) * 0.12;
     this.crystal.position.set(Math.cos(t * 0.7) * 1.9, 0.9 + Math.sin(t * 1.3) * 0.15, Math.sin(t * 0.7) * 0.9);
     this.crystal.rotation.y = t * 1.5;
-    this.tree.rotation.z = Math.sin(t * 1.1) * 0.025;
+    let shake = 0;
+    if (this.treeShakeT < 1.6) {
+      this.treeShakeT += dt;
+      shake = Math.exp(-this.treeShakeT * 3) * Math.sin(this.treeShakeT * 22) * 0.22;
+    }
+    this.tree.rotation.z = Math.sin(t * 1.1) * 0.025 + shake;
     for (const f of this.flowers) f.rotation.z = Math.sin(t * 1.8 + f.userData.phase) * 0.12;
     // пар над кружкой — кофе горячий
     if (this.islandGroup.scale.x > 0.5 && t > this.steamT) {
@@ -1135,6 +1190,13 @@ export class BuddyScene {
     }
     if (this.mode === 'flying' || this.trick?.name === 'flip') {
       Object.assign(target, { shape: this.mode === 'flying' ? 'open' : 'arc', smile: 1, open: 0.45, eye: 1.1, blush: 0.5 });
+    }
+    if (a.hopeful && !a.speaking && name !== 'sleep') {
+      // [16] ждёт ответа: глаза пошире, брови домиком, полуулыбка — «ну? ну?»
+      Object.assign(target, { eye: Math.max(target.eye, 1.1), pupil: 1.12, browY: target.browY + 0.03, browA: 0.3, smile: Math.max(target.smile, 0.35), lookAway: 0 });
+    }
+    if (this.dead) {
+      Object.assign(target, { eye: 0, shape: 'closed', pupil: 1, browA: 0.3, browAsym: 0, smile: -0.35, open: 0.2, width: 0.55, wave: 0.7, blush: 0, round: 0, bounce: 0, shake: 0, droop: 1, lookAway: 0, mouthX: 0.04, tilt: 0 });
     }
     if (this.time < this.dizzyUntil) {
       Object.assign(target, { shape: 'open', eye: 1.08, pupil: 0.75, browA: 0.35, browAsym: 0.05, smile: -0.15, open: 0.3, width: 0.7, round: 1, blush: 0.2 });
@@ -1181,6 +1243,16 @@ export class BuddyScene {
     } else if (this.face.lookAway > 0.5) {
       gx = 0.7;
       gy = -0.4;
+    } else if (a.hopeful && !(this.cursor && t - this.cursorMovedAt < 2.5)) {
+      // [16] ждёт ответа на свой вопрос — смотрит на поле ввода (или прямо на тебя)
+      if (this.hopeAt) {
+        const fs = this.faceScreen();
+        gx = clamp(Math.atan2(this.hopeAt.x - fs.x, 600) / 0.9, -1, 1);
+        gy = clamp(-Math.atan2(this.hopeAt.y - fs.y, 600) / 0.9, -1, 1);
+      } else {
+        gx = 0;
+        gy = -0.05;
+      }
     } else if (FACES[this.faceName]?.look && !a.speaking && !(this.cursor && t - this.cursorMovedAt < 2.5)) {
       [gx, gy] = FACES[this.faceName].look; // грусть смотрит в пол, раздумье — под потолок
     } else if (this.cursor && t - this.cursorMovedAt < 2.5 && !a.speaking) {
@@ -1212,7 +1284,7 @@ export class BuddyScene {
       this.glance = { x: (Math.random() - 0.5) * 1.6, y: (Math.random() - 0.3) * 0.8, until: t + 0.8 + Math.random() * 1.2 };
       this.nextGlance = t + 3 + Math.random() * 6;
     }
-    if (a.sleeping) {
+    if (a.sleeping || this.dead) {
       gx = 0;
       gy = -0.3;
     }
@@ -1224,7 +1296,7 @@ export class BuddyScene {
     const a = this.activity;
     // busy: идёт ответ, очередь речи или открыт чат — бытовые мелочи не перебивают разговор
     const held = this.emotionUntil && t < this.emotionUntil && !this.emotionIsIdle;
-    const free = this.mode === 'sitting' && !this.trick && !a.listening && !a.thinking && !a.speaking && !a.busy && !a.looking && !a.sleeping && !held;
+    const free = this.mode === 'sitting' && !this.trick && !a.listening && !a.thinking && !a.speaking && !a.busy && !a.looking && !a.sleeping && !a.hopeful && !this.dead && !held;
     if (this.idleAct && (t > this.idleAct.until || !free)) this.idleAct = null;
     if (!free) this.nextIdleAct = Math.max(this.nextIdleAct, t + 4);
     if (!free || this.idleAct || t < this.nextIdleAct) return;
@@ -1324,14 +1396,15 @@ export class BuddyScene {
     this.rays.forEach((p, i) => {
       const u = p.userData;
       const wob = Math.sin(t * 2.2 + u.phase) * 0.05 + (f.bounce ? Math.sin(t * 18 + i) * 0.08 : 0);
-      p.rotation.z = u.base * (1 + this.micLevel * 0.25 + energy * 0.06) + wob;
+      const ck = t - this.crownT < 0.8 ? Math.sin((t - this.crownT) * 26) * 0.35 * (1 - (t - this.crownT) / 0.8) * (i % 2 ? 1 : -1) : 0;
+      p.rotation.z = u.base * (1 + this.micLevel * 0.25 + energy * 0.06) + wob + ck;
       const s = 1 + this.micLevel * 0.35 + energy * 0.08 + (f.droop ? -0.18 * f.droop : 0);
       p.scale.setScalar(damp(p.scale.x, s, 12, dt));
     });
 
     // поза эмоции: плавно, медленнее лица — тело тяжелее бровей
     const P = POSES[this.faceName] || POSE_ZERO;
-    const busyBody = this.trick || this.mode !== 'sitting' || a.sleeping;
+    const busyBody = this.trick || this.mode !== 'sitting' || a.sleeping || this.dead;
     for (const k of Object.keys(POSE_ZERO)) {
       // пока говорит, не пружиним: облачко над головой должно стоять, его читают
       const want = busyBody || (k === 'hop' && a.speaking) ? 0 : P[k] || 0;
@@ -1397,6 +1470,13 @@ export class BuddyScene {
       rollZ += Math.sin(t * 6) * 0.16 * w;
       leanX += Math.cos(t * 6) * 0.08 * w;
     }
+    if (a.hopeful && !a.speaking) rollZ += 0.13; // склонил голову набок: «ну?»
+    if (this.dead) {
+      // лёг на бок поперёк гриба, руки раскинул, ножка подёргивается
+      rollZ = this.deadSide * 1.2;
+      leanX = 0.1;
+      turnY = 0;
+    }
     this.squash.rotation.y = flying ? this.flySpin : 0;
     this.squash.rotation.x = trick === 'flip' ? this.flipAngle || 0 : 0;
     this.tilt.rotation.x = damp(this.tilt.rotation.x, leanX, 6, dt);
@@ -1434,6 +1514,10 @@ export class BuddyScene {
       } else if (f.droop > 0.5) {
         z = s * 0.15;
       }
+      if (this.dead) {
+        z = s * 1.5;
+        x = 0;
+      }
       if (this.mode === 'dropping') z = s * 2.6;
       if (flying) z = s * (1.35 + Math.sin(t * 6 + s) * 0.15);
       if (trick === 'dance') z = s * (1.8 + Math.sin(t * 8 + (s > 0 ? 0 : Math.PI)) * 0.9);
@@ -1450,6 +1534,7 @@ export class BuddyScene {
       let x = 0;
       if (trick === 'dance') x = Math.max(0, Math.sin(t * 8 + (s > 0 ? 0 : Math.PI))) * -0.7;
       else if (trick === 'flip') x = -0.6;
+      else if (this.dead) x = -0.3 + (s === this.deadSide && Math.sin(t * 1.9) > 0.93 ? -0.7 : 0);
       else if (seated) {
         const fidget = this.idleAct?.name === 'fidget';
         x = -1.35 + Math.sin(t * (fidget ? 6 : 2.6) + (s > 0 ? 0 : Math.PI)) * (a.sleeping ? 0.03 : fidget ? 0.45 : 0.22);

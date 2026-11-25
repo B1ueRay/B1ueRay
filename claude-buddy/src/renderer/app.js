@@ -160,6 +160,55 @@ const plural = (n, one, few, many) => {
   const b = n % 100;
   return `${n} ${a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many}`;
 };
+// [16] когда ты был тут в последний раз — переживает перезапуск: «тебя три дня не было!»
+let lastSeenAt = (() => {
+  try {
+    return Number(localStorage.getItem('buddy.seen')) || 0;
+  } catch {
+    return 0;
+  }
+})();
+function markSeen() {
+  try {
+    localStorage.setItem('buddy.seen', String(Date.now()));
+  } catch {
+    /* не запомнили — не страшно */
+  }
+}
+// сколько суток прошло по календарю
+const dayStart = (t) => new Date(t).setHours(0, 0, 0, 0);
+const daysApart = (then, now = Date.now()) => (then > 0 && then <= now ? Math.round((dayStart(now) - dayStart(then)) / 86400000) : 0);
+const REUNION = [
+  ['Тебя {days} не было! Я уж думал, ты нашёл себе другого колобка.', 'surprised'],
+  ['{days}, блин! Я тут зарубки на грибе ставил.', 'love'],
+  ['Опа, пропажа нашлась! Тебя {days} не было, я чуть не одичал.', 'happy'],
+  ['Тебя {days} не было! Я уже начал разговаривать с деревом. Оно не отвечает, зараза.', 'smug'],
+];
+const REUNION_WEEKEND = [
+  ['О, выходные кончились! Я тут два дня с грибом в гляделки играл. Он победил.', 'happy'],
+  ['С понедельником! Я все выходные тебя ждал. Ну и спал немного.', 'love'],
+  ['Выходные прошли, а ты меня даже не открыл. Ладно, я тоже отдыхал.', 'smug'],
+];
+const REUNION_WEEK = [
+  ['Неделя, блин! Я тут с грибом чуть не подружился.', 'surprised'],
+  ['Целую неделю тебя не было! Я уж хотел в розыск подавать.', 'love'],
+  ['Неделя без тебя! Кофе в кружке покрылся плесенью. Шучу. Наверное.', 'smug'],
+];
+const REUNION_LONG = [
+  ['{weeks} тебя не было! Я тут мхом оброс. Буквально, посмотри.', 'surprised'],
+  ['Ты где пропадал {weeks}?! Я уже забыл, как ты выглядишь. А, вот так.', 'love'],
+  ['{weeks}! Дерево выросло, гриб постарел, а я всё жду. Как Хатико, только круглый.', 'sad'],
+];
+function reunionLine(days) {
+  if (days < 2) return null;
+  let pool = REUNION;
+  if (days >= 14) pool = REUNION_LONG;
+  else if (days >= 7) pool = REUNION_WEEK;
+  else if (new Date().getDay() === 1 && days <= 3) pool = REUNION_WEEKEND;
+  const [t, e] = pick(pool);
+  const slots = { days: plural(days, 'день', 'дня', 'дней'), weeks: plural(Math.floor(days / 7), 'неделю', 'недели', 'недель') };
+  return [t.replace(/\{(days|weeks)\}/g, (m, k) => slots[k]), e];
+}
 const WEEKDAYS = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
 const clock = (d) => `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
 // [13] слоты в заготовках: имя, время, день недели, счётчики — одна строка звучит по-разному
@@ -462,10 +511,22 @@ function greet() {
     say('Привет! Я Клод. Дай мне ключ API в настройках — и я оживу по-настоящему.', 'happy');
     return;
   }
+  const gapDays = daysApart(lastSeenAt);
+  lastSeenAt = 0; // встречаем один раз за запуск: дальше прятки-появления — как обычно
+  if (reunion(gapDays)) return;
   const t = Math.random() < 0.6 && timeGreet(); // [1] утро/ночь/понедельник/пятница
   if (t) return say(...t);
   const name = cfg.userName ? `, ${cfg.userName}` : '';
   say(pick(GREETINGS).replace('{name}', () => name), pick(GREET_EMOS));
+}
+// [16] не виделись несколько дней: встреча, заметка для Claude, а через неделю — ещё и сальто на радостях
+function reunion(days) {
+  const re = reunionLine(days);
+  if (!re) return false;
+  note(`не виделись ${plural(days, 'день', 'дня', 'дней')}`);
+  say(...re);
+  setTimeout(() => (days >= 7 ? doTrick('backflip') : scene.waveHello(2.5)), 2200);
+  return true;
 }
 // [1] приветствие по времени суток и дню недели (null — обычное приветствие)
 function timeGreet() {
@@ -504,6 +565,7 @@ function welcomeBack(min) {
   const slept = state.sleeping;
   wake();
   touch();
+  if (min >= 36 * 60 && reunion(daysApart(Date.now() - min * 60000))) return; // [16] экран был заблокирован несколько дней
   let pool = min >= 45 ? BACK_LONG : BACK_SHORT;
   if (h >= 12 && h < 15 && min >= 20) pool = BACK_LUNCH;
   else if ((h >= 23 || h < 5) && min >= 10) pool = BACK_NIGHT;
@@ -878,6 +940,7 @@ function newReply() {
 function send(text, withScreen = false) {
   text = (text || '').trim();
   if (!text && !withScreen) return;
+  endWait();
   touch();
   ensureShown();
   voice.stop();
@@ -1159,6 +1222,7 @@ async function listen() {
 function openChat() {
   ensureShown();
   state.chatOpen = true;
+  answerStarts(); // [16] спросил по памяти — открыл чат: «о!»
   els.chat.classList.add('on');
   api.requestFocus();
   setTimeout(() => els.input.focus(), 30);
@@ -1197,23 +1261,6 @@ els.input.addEventListener('focus', lookAtCaret);
 els.mic.addEventListener('click', listen);
 els.look.addEventListener('click', () => send(els.input.value || 'Посмотри на мой экран и прокомментируй, что видишь.', true));
 els.close.addEventListener('click', closeChat);
-
-// ---------------- тычки ----------------
-const POKES = [
-  ['Ай! Щекотно!', 'laugh'],
-  ['Эй, я тебе не кнопка!', 'angry'],
-  ['Чего тыкаешь, кожаный? Говори уже.', 'smug'],
-  ['Хи-хи. Ещё раз — и я укушу. Нежно.', 'wink'],
-  ['Ой! Ну чего?', 'surprised'],
-  ['Я тут, я тут, не дави.', 'embarrassed'],
-  ['Пиу!', 'happy'],
-  ['Ну ёпт, я ж чуть с гриба не свалился!', 'scared'],
-  ['Тыкнул — плати. Шутка. Или нет.', 'smug'],
-  ['Ещё раз тыкнешь — включу капслок тебе навсегда.', 'angry'],
-  ['О, внимание! Обожаю внимание.', 'love'],
-  ['Бип-буп. Робот активирован. Ну чего, кожаный?', 'wink'],
-  ['Щекотно, блин! Я ж колобок, у меня везде бока.', 'laugh'],
-];
 
 // сам заговаривает, если долго тихо (без API — бесплатно)
 const IDLE_LINES = [
@@ -1333,6 +1380,7 @@ setInterval(async () => {
     const go = () => {
       cb.asked = { q, at: Date.now() };
       say(`${pick(CB_LEADS)}${q}`, pick(CB_EMOS), { noNote: true });
+      waitAnswer();
       // вопрос задан — даём на него ответить: болтовня от скуки и трюки пока молчат
       const now = performance.now();
       state.nextChat = Math.max(state.nextChat || 0, now + 8 * 60000);
@@ -1352,46 +1400,274 @@ setInterval(async () => {
     cb.busy = false;
   }
 }, 30000);
-const pokeTimes = [];
-function poke() {
-  const wasSleeping = state.sleeping;
-  touch();
-  scene.poke();
-  pokesSinceChat += 1;
-  const nth = dayStat('pokes', 1);
-  sfx.squeak();
-  if (wasSleeping) {
-    const [text, emo] = pick(WAKE_POKE);
-    say(text, emo);
-    return;
-  }
-  const now = performance.now();
-  pokeTimes.push(now);
-  while (pokeTimes.length && now - pokeTimes[0] > 4000) pokeTimes.shift();
-  if (voice.active && reply && !reply.done) return;
-  // [13] юбилей — раньше «хватит тыкать» и не теряется: прозвучит на ближайшем свободном тычке
-  if (!Array.isArray(day.ms)) day.ms = [];
-  const due = Object.keys(POKE_MILESTONES).map(Number).filter((m) => nth >= m && !day.ms.includes(m)).pop();
-  if (due) {
-    day.ms.push(...Object.keys(POKE_MILESTONES).map(Number).filter((m) => m <= due && !day.ms.includes(m)));
-    saveDay();
-    pokeTimes.length = 0;
-    return say(...POKE_MILESTONES[due]);
-  }
-  if (pokeTimes.length >= 5) {
-    say('Да хватит уже тыкать, блин! Я живой вообще-то.', 'angry');
-    pokeTimes.length = 0;
-    return;
-  }
-  const [text, emo] = pick(POKES);
-  say(text, emo);
+// [16] задал вопрос — ждёт ответа: ~20 с смотрит на тебя (и на место, где выезжает чат) с надеждой.
+// Открыл чат или начал печатать — «о!»; молчишь — «ну ладно, потом расскажешь» (молча, в облачке: не дави)
+const cbWait = { on: false, timer: 0 };
+const CB_SHRUG = ['ну ладно, потом расскажешь', 'ладно, не горит… потом расскажешь', 'молчишь? значит, секрет. уважаю', 'ок, в другой раз спрошу', 'эх… ну, потом так потом'];
+const CB_OH = ['о!', 'о! слушаю!', 'о-о, рассказывай!', 'ну-ну?'];
+function waitAnswer() {
+  cbWait.on = true;
+  scene.setActivity({ hopeful: true });
+  scene.hopeAt = { x: window.innerWidth / 2, y: window.innerHeight - 30 }; // туда, где выезжает строка чата
+  clearTimeout(cbWait.timer);
+  cbWait.timer = setTimeout(() => {
+    if (!cbWait.on) return;
+    endWait();
+    if (state.away || !state.visible || state.seq || voice.active || (reply && !reply.done) || els.input.value.trim()) return;
+    showBubble(pick(CB_SHRUG), { micro: true });
+    scene.setEmotion('sad', 1.6);
+  }, 22000);
 }
+function endWait() {
+  if (!cbWait.on) return false;
+  cbWait.on = false;
+  clearTimeout(cbWait.timer);
+  scene.setActivity({ hopeful: false });
+  scene.hopeAt = null;
+  return true;
+}
+function answerStarts() {
+  if (!endWait()) return;
+  showBubble(pick(CB_OH), { micro: true });
+  scene.setEmotion('happy', 2);
+  scene.waveHello(0.8);
+}
+els.input.addEventListener('input', () => els.input.value.trim() && answerStarts());
+// ---------------- тычки ----------------
+// [16] тычки. Первый тычок серии — по тому, куда попал (корона, лицо, пузо) и по настроению
+// (только что болтали / сонный), дальше лесенка: 3-й — раздражён, 5-й — злой, 8-й — валится «мёртвым»,
+// 12-й — «ладно, ты победил», потом минута перемирия. Между ступеньками — без слов: пищит, морщится, пыхтит.
+const POKES = [
+  ['Ай! Щекотно!', 'laugh'],
+  ['Чего тыкаешь, кожаный? Говори уже.', 'smug'],
+  ['Хи-хи. Ещё раз — и я укушу. Нежно.', 'wink'],
+  ['Ой! Ну чего?', 'surprised'],
+  ['Я тут, я тут, не дави.', 'embarrassed'],
+  ['Пиу!', 'happy'],
+  ['Ну ёпт, я ж чуть с гриба не свалился!', 'scared'],
+  ['Тыкнул — плати. Шутка. Или нет.', 'smug'],
+  ['О, внимание! Обожаю внимание.', 'love'],
+  ['Бип-буп. Робот активирован. Ну чего, кожаный?', 'wink'],
+  ['Клик засчитан. На сотом — ничего не будет.', 'smug'],
+];
+const POKE_AT = {
+  crown: [
+    ['Ой-ой, только не в корону!', 'scared'],
+    ['Это антенна, а не кнопка звонка! Динь-дон, блин.', 'smug'],
+    ['Эй, причёску помнёшь! Я её всё утро укладывал.', 'embarrassed'],
+    ['Ай, по макушке! Теперь я на сантиметр ниже.', 'surprised'],
+    ['Корона — не джойстик. Хотя… вверх, вверх, вниз, вниз?', 'wink'],
+  ],
+  face: [
+    ['Эй, отпечатки на лице! Я теперь улика.', 'surprised'],
+    ['Не в лоб! Там мысли лежат. Ну, одна.', 'thinking'],
+    ['Ай, в глаз-то зачем, кожаный?', 'angry'],
+    ['Ты всем так в лицо тыкаешь или только мне везёт?', 'smug'],
+    ['Ой! Прямо в нос. Ну, туда, где был бы нос.', 'surprised'],
+    ['Лицо — это лицо, а не кнопка «ОК»!', 'angry'],
+    ['Пальцем в лицо — невежливо. Но тепло. Продолжай. Нет, стой.', 'embarrassed'],
+  ],
+  belly: [
+    ['Хи-хи-хи! Пузо — запретная зона!', 'laugh'],
+    ['Ай, щекотно! Я ж колобок, у меня везде бока.', 'laugh'],
+    ['Не дави на пузо, я кофе пил!', 'embarrassed'],
+    ['Пузико не трогать! Там стратегические запасы.', 'smug'],
+    ['Ой, это было пузо. Ты нашёл мою кнопку смеха, гад.', 'laugh'],
+  ],
+};
+// только что поговорили — тычок как «спасибо за беседу»
+const POKE_AFTER_CHAT = [
+  ['Поговорили — и сразу тыкать? Ладно, засчитаю как обнимашку.', 'love'],
+  ['Это ты так говоришь «спасибо за беседу»? Пожалуйста, блин.', 'wink'],
+  ['Тык после разговора — как точка в конце. Только в меня.', 'smug'],
+  ['Хорошо же болтали! Зачем тыкать? Ладно, мне приятно.', 'embarrassed'],
+];
+// только что разбудил тычком или глубокая ночь
+const POKE_SLEEPY = [
+  ['Не тыкай, я ещё не проснулся… Загрузка сорок процентов.', 'sleepy'],
+  ['Ммм… ещё раз — и я усну прямо на тебе.', 'sleepy'],
+  ['Тык принят. Обработка займёт… хр-р… минуточку.', 'sleepy'],
+  ['Я сонный, а ты тыкаешь. Это пытка, между прочим. Мягкая.', 'sad'],
+];
+const POKE_ANNOYED = [
+  ['Третий раз! Я веду счёт, и он не в твою пользу.', 'smug'],
+  ['Так, давай договоримся: ты не тыкаешь, я не кусаюсь.', 'thinking'],
+  ['Ай! Ну ты настырный. Уважаю, но ай.', 'embarrassed'],
+  ['Эй, я тебе не кнопка!', 'angry'],
+  ['Тык, тык, тык… Ты дятел, что ли?', 'smug'],
+  ['Ну хватит, а? Я тут вообще-то думаю.', 'thinking'],
+  ['Ещё раз тыкнешь — включу капслок тебе навсегда.', 'angry'],
+  ['Мышка не устала? А я — да.', 'smug'],
+];
+const POKE_ANGRY = [
+  ['Всё, я обиделся. На три секунды. Две. Ладно, уже нет.', 'sad'],
+  ['Да хватит уже тыкать, блин! Я живой вообще-то.', 'angry'],
+  ['Эй! Я не кликер, ёпт! У меня от тебя синяки.', 'angry'],
+  ['Всё, я злой. Видишь брови? Это злые брови.', 'angry'],
+  ['Пять тыков подряд! Я позову гриб. Он страшен в гневе.', 'angry'],
+  ['Ты мышкой или отбойным молотком?! Полегче, блин!', 'angry'],
+];
+const POKE_FLOP = [
+  ['Всё… ты меня убил. Я умер. Не тыкай труп.', 'sad'],
+  ['Ах! Смертельный тык. Прощай, жестокий мир…', 'sad'],
+  ['Притворяюсь мёртвым. Хищники мёртвых не трогают. Ты же не хищник?', 'scared'],
+  ['Бззт. Колобок выключен. Обращайтесь в сервис.', 'sad'],
+];
+const POKE_FLOP_SLEEPY = [
+  ['Всё. Я сплю. Меня нет. Хр-р.', 'sleepy'],
+  ['Ты меня утыкал до отключки. Спокойной ночи, ёпт.', 'sleepy'],
+  ['Притворяюсь спящим. Ты меня не видишь.', 'sleepy'],
+];
+// пока «мёртвый» — шепчет в облачке, вслух не говорит
+const POKE_DEAD = ['…', 'я умер, отстань', 'мёртвые не отвечают', 'не дышу. совсем.', 'тут никого нет', 'пи-и-и-и…'];
+const POKE_REVIVE = ['ладно, я живой', 'фух, воскрес', 'а, я ж бессмертный', 'ну вот, ожил. не благодари'];
+const POKE_GIVEUP = [
+  ['Ладно, ты победил! Я сдаюсь. Доволен, кожаный?', 'embarrassed'],
+  ['Ладно-ладно, ты победил. Воскресаю. Но я всё запомнил.', 'smug'],
+  ['Ты победил. Официально. Медаль сам себе нарисуй.', 'wink'],
+  ['Всё, ладно, ты победил! Перемирие? Я даже руку протяну. Ну, ручку.', 'love'],
+];
+const POKE_TRUCE = ['перемирие же!', 'мы же договорились…', 'тс-с, перемирие', 'я в домике'];
+// без слов между ступеньками: всплывашка и рожица
+const POKE_QUIET = { 2: [['хи', 'laugh'], ['ай', 'surprised'], ['ой', 'embarrassed']], 4: [['💢', 'angry'], ['ну!', 'angry']], 6: [['💢', 'angry'], ['р-р', 'angry']], 7: [['!!', 'angry'], ['💢', 'angry']] };
+// [15] юбилейные тычки за день
 const POKE_MILESTONES = {
   3: ['Третий тык за день. Я начинаю что-то подозревать.', 'thinking'],
   10: ['Десятый тык за сегодня! Юбилей. Где торт, блин?', 'happy'],
   25: ['Двадцать пятый раз за день! Я тебе что, эспандер?', 'angry'],
   50: ['Пятьдесят тыков. Всё, ты мой лучший друг. Или маньяк.', 'love'],
 };
+const streak = { n: 0, at: 0, truceUntil: 0, truceSaid: false, deadTimer: 0 };
+const STREAK_GAP = 8000; // дольше 8 с без тычков — серия закончилась
+const sleepyMood = () => performance.now() - (state.wokeAt || -1e9) < 120000 || new Date().getHours() < 6;
+function firstPoke(part) {
+  if (Date.now() - lastUserMessageAt < 3 * 60000 && Math.random() < 0.6) {
+    const l = pick(POKE_AFTER_CHAT, 2 * 3600000);
+    if (l) return l;
+  }
+  if (sleepyMood() && Math.random() < 0.6) {
+    const l = pick(POKE_SLEEPY, 2 * 3600000);
+    if (l) return l;
+  }
+  return (POKE_AT[part] && Math.random() < 0.55 && pick(POKE_AT[part], 2 * 3600000)) || pick(POKES);
+}
+function poke(part = 'face') {
+  const wasSleeping = state.sleeping;
+  touch();
+  scene.poke(part);
+  pokesSinceChat += 1;
+  const nth = dayStat('pokes', 1);
+  sfx.squeak();
+  if (wasSleeping) {
+    state.wokeAt = performance.now(); // [16] разбудил тычком — следующие тычки встречает сонно
+    const [text, emo] = pick(WAKE_POKE);
+    say(text, emo);
+    return;
+  }
+  if (voice.active && reply && !reply.done) return;
+  // [16] спросил по памяти и ждёт — клик по нему открывает чат: это ответ, а не тычок (openChat скажет «о!»)
+  if (cbWait.on) return;
+  const now = performance.now();
+  if (now < streak.truceUntil) {
+    // перемирие после «ты победил»: пищит и сплющивается, раз шепнёт — и всё
+    scene.setEmotion('smug', 1);
+    if (!streak.truceSaid) {
+      streak.truceSaid = true;
+      showBubble(pick(POKE_TRUCE), { micro: true });
+    }
+    return;
+  }
+  const n = (streak.n = now - streak.at < STREAK_GAP ? streak.n + 1 : 1);
+  streak.at = now;
+  if (n >= 12) {
+    clearTimeout(streak.deadTimer);
+    scene.revive();
+    streak.n = 0;
+    streak.truceUntil = now + 60000;
+    streak.truceSaid = false;
+    note('тебя затыкали до капитуляции: ты сдался и объявил перемирие');
+    setTimeout(() => scene.waveHello(1.4), 500);
+    return say(...pick(POKE_GIVEUP));
+  }
+  if (scene.dead) {
+    scene.playDead(5);
+    armRevive();
+    return showBubble(pick(POKE_DEAD), { micro: true });
+  }
+  if (n === 8) {
+    scene.playDead(6);
+    armRevive();
+    sfx.boing();
+    note('тебя затыкали — ты притворился мёртвым');
+    return say(...pick(sleepyMood() ? POKE_FLOP_SLEEPY : POKE_FLOP));
+  }
+  if (n === 3) return say(...pick(POKE_ANNOYED));
+  if (n === 5) return say(...pick(POKE_ANGRY));
+  // [15] юбилей не теряется: прозвучит на ближайшем тычке без своей реплики
+  if (!Array.isArray(day.ms)) day.ms = [];
+  const marks = Object.keys(POKE_MILESTONES).map(Number);
+  const due = marks.filter((m) => nth >= m && !day.ms.includes(m)).pop();
+  if (due) {
+    day.ms.push(...marks.filter((m) => m <= due && !day.ms.includes(m)));
+    saveDay();
+    return say(...POKE_MILESTONES[due]);
+  }
+  if (n === 1) return say(...firstPoke(part));
+  const q = POKE_QUIET[n] || POKE_QUIET[7];
+  const [t, emo] = q[Math.floor(Math.random() * q.length)];
+  scene.setEmotion(emo, 1.4);
+  pop(t, 'small');
+  if (emo === 'angry') sfx.huff();
+}
+// не тыкаешь — сам «оживает» и бурчит
+function armRevive() {
+  clearTimeout(streak.deadTimer);
+  streak.deadTimer = setTimeout(() => {
+    if (scene.dead || !state.visible) return;
+    streak.n = 0;
+    showBubble(pick(POKE_REVIVE), { micro: true });
+    scene.setEmotion('embarrassed', 1.5);
+  }, 6300);
+}
+// [16] клик по дереву или кружке: дерево качается; реплика — не чаще раза в 15 с (клик по острову — как раньше, чат)
+const TAP_AT = {
+  tree: [
+    ['Не тряси дерево! Оно у меня одно.', 'scared'],
+    ['Яблок нет. И не будет. Это декоративное дерево, кожаный.', 'smug'],
+    ['Эй, это моё дерево! Я с ним по вечерам разговариваю.', 'angry'],
+    ['Тише, там птичка живёт. Воображаемая.', 'love'],
+  ],
+  mug: [
+    ['Кружку не трогай! Там последний кофе. Ну, был.', 'sad'],
+    ['Это моя кружка! Видишь надпись? Нет? Потому что её нет. Но кружка моя.', 'smug'],
+    ['Хочешь кофе? Я бы налил, но у меня лапки.', 'embarrassed'],
+  ],
+  island: [
+    ['Эй, не раскачивай остров! Я тут вообще-то сижу.', 'scared'],
+    ['Тук-тук. Кто там? Земля. Смешно же, ну.', 'laugh'],
+    ['Землетрясение! А, это ты. Фух.', 'surprised'],
+    ['Осторожно, остров летает на честном слове.', 'thinking'],
+  ],
+};
+const islandTap = { at: -1e9 };
+function tapIsland(part = 'island') {
+  if (!state.visible || state.seq) return;
+  if (part === 'tree') {
+    scene.shakeTree();
+    sfx.tink();
+  } else if (part === 'island') {
+    scene.bumpIsland();
+    sfx.boing();
+  } else sfx.tink();
+  const now = performance.now();
+  if (voice.active || (reply && !reply.done) || scene.dead || now - islandTap.at < 15000) {
+    scene.setEmotion('surprised', 0.8);
+    return;
+  }
+  islandTap.at = now;
+  say(...pick(TAP_AT[part] || TAP_AT.island));
+}
+
 
 // ---------------- мышь: клик-сквозь, тычки, перетаскивание ----------------
 let down = null;
@@ -1429,7 +1705,7 @@ window.addEventListener('mousedown', (e) => {
   hideMenu();
   const what = scene.hitTest(e.clientX, e.clientY);
   if (!what) return;
-  down = { what, x: e.screenX, y: e.screenY, dragging: false };
+  down = { what, part: scene.hitPart(e.clientX, e.clientY), x: e.screenX, y: e.screenY, dragging: false }; // [16] корона / лицо / пузо, дерево / кружка
 });
 window.addEventListener('mouseup', (e) => {
   if (!down) return;
@@ -1448,8 +1724,10 @@ window.addEventListener('mouseup', (e) => {
   }
   if (!state.visible || state.seq) return;
   if (d.what === 'buddy') {
-    poke();
+    poke(d.part);
     if (!state.chatOpen) openChat();
+  } else if (d.part === 'tree' || d.part === 'mug') {
+    tapIsland(d.part);
   } else if (d.what === 'island') {
     if (state.chatOpen) closeChat();
     else openChat();
@@ -1533,7 +1811,11 @@ api.onNotice(({ text }) => toast(text, 6000));
 api.onPower?.(({ away }) => {
   const wasAway = state.away;
   state.away = away;
-  if (away && !wasAway) state.awayAt = Date.now(); // [1]
+  if (away && !wasAway) {
+    state.awayAt = Date.now(); // [1]
+    markSeen(); // [16]
+    endWait();
+  }
   if (!away) {
     scene.onWake?.();
     if (wasAway) {
@@ -1572,6 +1854,13 @@ api.onPower?.(({ away }) => {
       }
     }
   }
+});
+// [16] ты тут (мышь/клавиатура за последние 2 минуты) — отмечаем, когда виделись
+setInterval(() => {
+  if (!state.away && performance.now() - state.userSeenAt < 120000) markSeen();
+}, 60000);
+window.addEventListener('beforeunload', () => {
+  if (!state.away && performance.now() - state.userSeenAt < 120000) markSeen();
 });
 // [2] ---------------- присутствие: печатаешь без мышки — ты всё равно тут ----------------
 const pres = { activeSince: 0, typingSince: 0, lastTyping: 0, nextNag: 0, typingLineAt: 0 };
