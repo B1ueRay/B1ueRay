@@ -4,6 +4,8 @@ A runnable, production-oriented **development MVP** for premium fictional adult 
 
 The previous profile README is preserved in `docs/original-profile.md`; the previous standalone demo remains in `index.html`.
 
+**Город агентов B1ueRay** — отдельный 3D-визуализатор команды ИИ-агентов, лежит в [`agent-city/`](agent-city/README.md) (один HTML-файл, без сборки).
+
 ## Quick start — Docker
 
 **Windows:** follow the [step-by-step Russian guide](docs/windows.md). The PowerShell launcher creates local secrets and starts the complete application without installing Node.js separately.
