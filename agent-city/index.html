@@ -1463,7 +1463,7 @@ async function runTask(raw) {
   const text = String(raw || '').trim().slice(0, 300);
   if (!text) return;
   if (agentsState !== 'ready') { setAgentsState(agentsState); $('cmd-note').classList.add('shake'); setTimeout(() => $('cmd-note').classList.remove('shake'), 500); return; }
-  if (runningHere() >= 2) { flashNote('Две задачи уже в работе. Дождись одной, потом давай следующую.'); return; }
+  if (runningHere() >= 1) { flashNote('Одна задача уже в работе. Дождись её, потом давай следующую: так не упрёмся в лимиты Claude.'); return; }
   const task = {
     id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     n: nextN(), text, createdAt: new Date().toISOString(), doneAt: null,
@@ -1592,7 +1592,7 @@ async function runTask(raw) {
 // ---------- persistence ----------
 function toDoc(t) {
   const outputs = {};
-  for (const [k, v] of Object.entries(t.outputs)) outputs[k] = clip(v, 50000);
+  for (const [k, v] of Object.entries(t.outputs)) outputs[k] = clip(v, 32000); // bytes, not chars, count against the 256 KiB doc limit
   return {
     n: t.n, text: t.text, createdAt: t.createdAt, doneAt: t.doneAt, status: t.status, stage: t.stage,
     teams: t.teams, briefs: t.briefs, plan: t.plan, outputs, qa: t.qa, revised: t.revised,
@@ -1606,7 +1606,7 @@ function persist(t) {
     .then(() => db.doc('runs/' + t.id).set(body))
     .catch((e) => {
       if (e?.code === 'quota_exceeded') flashNote('База результатов заполнена: удали старые задачи.');
-      else if (e?.code === 'invalid_argument') flashNote('Результат не сохранился: у тебя нет прав на запись в этом артефакте.');
+      else if (e?.code === 'invalid_argument') flashNote('Результат не сохранился: нет прав на запись или результат слишком большой.');
       else console.warn('save failed', e);
     });
 }
@@ -1614,10 +1614,11 @@ function fromDoc(id, d) {
   const stale = d.status === 'running' && Date.now() - Date.parse(d.createdAt) > 20 * 60000;
   return {
     id, n: Number(d.n) || 0, text: String(d.text || ''), createdAt: String(d.createdAt || ''), doneAt: d.doneAt || null,
-    status: stale ? 'stopped' : String(d.status || 'stopped'), stage: Number(d.stage) || 0,
+    status: stale ? 'stopped' : (['done', 'running', 'error', 'stopped'].includes(d.status) ? d.status : 'stopped'), stage: Number(d.stage) || 0,
     teams: (Array.isArray(d.teams) ? d.teams : []).filter((x) => PRODUCTION.includes(x)),
-    briefs: d.briefs || {}, plan: String(d.plan || ''), outputs: d.outputs || {}, qa: d.qa || null,
-    revised: Array.isArray(d.revised) ? d.revised : [], analytics: d.analytics ? normAn(d.analytics) : null,
+    briefs: d.briefs || {}, plan: String(d.plan || ''), outputs: d.outputs || {},
+    qa: d.qa ? normQa(d.qa, (Array.isArray(d.teams) ? d.teams : []).filter((x) => PRODUCTION.includes(x))) : null,
+    revised: (Array.isArray(d.revised) ? d.revised : []).filter((x) => PRODUCTION.includes(x)), analytics: d.analytics ? normAn(d.analytics) : null,
     error: stale ? 'Прервано: страницу закрыли во время работы' : d.error || null,
     local: false, live: {},
   };
@@ -1680,7 +1681,12 @@ async function initAgents() {
 const feedEl = $('feed');
 const feedList = $('feed-list');
 let feedTimer = 0;
-function renderFeedSoon() { if (!feedTimer) feedTimer = setTimeout(() => { feedTimer = 0; renderFeed(); }, 120); }
+// don't swap buttons out from under a press: hold re-renders while a pointer is down on the feed
+let feedHold = false;
+feedList.addEventListener('pointerdown', () => { feedHold = true; });
+addEventListener('pointerup', () => setTimeout(() => { if (feedHold) { feedHold = false; renderFeedSoon(); } }, 0));
+addEventListener('pointercancel', () => { feedHold = false; });
+function renderFeedSoon() { if (!feedTimer) feedTimer = setTimeout(() => { feedTimer = 0; if (feedHold) return renderFeedSoon(); renderFeed(); }, 120); }
 function liveLine(t) {
   if (!t.local && t.status === 'running') return 'Идёт в другом окне';
   const live = Object.entries(t.live || {}).filter(([id]) => PRODUCTION.includes(id));
@@ -1710,7 +1716,7 @@ function cardHtml(t) {
   if (t.local && t.status === 'running') acts.push(`<button class="mini" type="button" data-act="stop" data-id="${t.id}">Стоп</button>`);
   if ((t.status === 'error' || t.status === 'stopped') && agentsState === 'ready') acts.push(`<button class="mini" type="button" data-act="retry" data-id="${t.id}">Запустить заново</button>`);
   return `<article class="task glass ${t.status === 'done' ? 'is-done' : ''}">
-    <header><span class="tid">#${t.n}</span><span class="ttl" title="${esc(t.text)}">${esc(t.text)}</span><span class="badge ${badge[0]}">${badge[1]}</span></header>
+    <header><span class="tid">#${t.n}</span><span class="ttl" title="${esc(t.text)}">${esc(t.text)}</span><span class="badge ${badge[0]}">${esc(badge[1])}</span></header>
     ${chips ? `<div class="teams-row">${chips}</div>` : ''}
     <ol class="steps" aria-label="Этапы">${steps}</ol>
     ${body}
@@ -1774,7 +1780,7 @@ function liveTick(id, task) {
 }
 
 // ---------- report viewer ----------
-let reportTask = null, reportTab = 'summary', reportTimer = 0, reportReturn = null;
+let reportTask = null, reportTab = 'summary', reportTimer = 0, reportReturn = null, lastTabsHtml = '';
 if (window.DOMPurify) {
   DOMPurify.addHook('afterSanitizeAttributes', (node) => {
     if (node.tagName === 'A') {
@@ -1854,7 +1860,8 @@ function renderReport(reset) {
   const cur = s.find((x) => x.id === reportTab);
   $('r-eyebrow').textContent = `Задача #${t.n} · ${new Date(t.createdAt).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}`;
   $('r-title').textContent = t.text;
-  $('r-tabs').innerHTML = s.map((x) => `<button class="r-tab" role="tab" type="button" data-tab="${x.id}" aria-selected="${x.id === reportTab}" style="--c:${x.color ? hex(x.color) : 'var(--ray)'}">${esc(x.name)}${x.live ? '<i class="live-dot" aria-label="пишет сейчас"></i>' : ''}</button>`).join('');
+  const tabs = s.map((x) => `<button class="r-tab" role="tab" type="button" data-tab="${x.id}" aria-selected="${x.id === reportTab}" style="--c:${x.color ? hex(x.color) : 'var(--ray)'}">${esc(x.name)}${x.live ? '<i class="live-dot" aria-label="пишет сейчас"></i>' : ''}</button>`).join('');
+  if (tabs !== lastTabsHtml) { $('r-tabs').innerHTML = tabs; lastTabsHtml = tabs; }
   const body = $('r-body');
   const nearBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 80;
   body.innerHTML = (cur.live ? '<p class="r-live"><i class="live-dot"></i>Пишется прямо сейчас</p>' : '') + renderMd(cur.md);
