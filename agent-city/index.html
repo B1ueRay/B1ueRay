@@ -195,7 +195,7 @@ button { cursor: pointer; }
 .log li { display: grid; grid-template-columns: auto 1fr; gap: 8px; color: #c9d3f2; animation: rise 0.25s ease both; }
 .log time { color: var(--muted); font-variant-numeric: tabular-nums; }
 .log b { color: color-mix(in srgb, var(--c) 70%, white); font-weight: 500; }
-.log .empty { color: var(--muted); display: block; }
+.log .empty, .works .empty { color: var(--muted); display: block; font-size: 12px; }
 .projects { display: flex; gap: 6px; flex-wrap: wrap; }
 .proj { font-size: 11.5px; padding: 5px 9px; border-radius: 7px; border: 1px dashed var(--line); color: #c9d3f2; }
 .proj b { color: var(--fg); }
@@ -224,6 +224,61 @@ button { cursor: pointer; }
 .toast b { color: var(--ok); font-family: var(--f-display); }
 .toast span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* real-agent UI */
+.feed-list { display: flex; flex-direction: column; gap: 8px; }
+.empty-card { padding: 14px; font-size: 12.5px; color: #c9d3f2; display: grid; gap: 6px; }
+.empty-card b { color: var(--fg); font-size: 13px; }
+.badge.ok { color: var(--ok); border-color: rgba(91, 228, 155, 0.4); }
+.badge.run { color: var(--busy); border-color: rgba(111, 231, 255, 0.4); }
+.badge.err { color: var(--warn); border-color: rgba(255, 181, 71, 0.4); }
+.status.err { color: var(--warn); white-space: normal; }
+.verdict { margin: 0; font-size: 12px; color: #c9d3f2; }
+.t-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.mini { border: 1px solid var(--line); background: rgba(124, 156, 236, 0.08); border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 600; color: var(--fg); white-space: nowrap; }
+.mini:hover { border-color: rgba(154, 216, 255, 0.5); }
+.mini.primary { background: linear-gradient(180deg, #6db6ff, #2f7ff0); color: #04122e; border-color: transparent; }
+.cmd-note { margin: 0; padding: 8px 12px; font-size: 12px; color: #c9d3f2; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.cmd-note:empty { display: none; }
+.cmd-note.shake { animation: shake 0.4s ease; }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.go:disabled, .sg:disabled, .cmd-row input:disabled { opacity: 0.45; cursor: not-allowed; }
+.live-pre { margin: 0; max-height: 220px; overflow: auto; background: #060a18; border: 1px solid var(--line); border-radius: 9px; padding: 10px; font-family: var(--f-mono); font-size: 11px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; color: #cfe0ff; }
+.works { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.work-btn { width: 100%; text-align: left; display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 8px 10px; border-radius: 9px; border: 1px solid transparent; background: rgba(124, 156, 236, 0.07); color: var(--fg); }
+.work-btn:hover { border-color: rgba(154, 216, 255, 0.4); }
+.work-btn b { font-size: 12.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.work-btn em { font-style: normal; font-family: var(--f-display); color: var(--ok); font-variant-numeric: tabular-nums; }
+.work-btn span { grid-column: 1 / -1; font-size: 11px; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.live-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--busy); margin-left: 6px; vertical-align: middle; animation: pulse 1s ease-in-out infinite; }
+.report { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; background: rgba(3, 6, 16, 0.74);
+  padding-top: max(16px, env(safe-area-inset-top, 0px)); padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.report-card { width: min(940px, 100%); height: min(90vh, 100%); display: grid; grid-template-rows: auto auto minmax(0, 1fr); background: #0b1230; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.r-head { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; padding: 16px 18px 12px; flex-wrap: wrap; }
+.r-titles { min-width: 0; flex: 1 1 260px; }
+.r-head h2 { margin: 0; font-family: var(--f-display); font-size: 18px; line-height: 1.25; text-wrap: balance; overflow-wrap: anywhere; }
+.r-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.r-tabs { display: flex; gap: 2px; padding: 0 12px; overflow-x: auto; border-bottom: 1px solid var(--line); scrollbar-width: none; }
+.r-tabs::-webkit-scrollbar { display: none; }
+.r-tab { border: 0; background: transparent; padding: 10px 12px; font-size: 12.5px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap; flex: 0 0 auto; }
+.r-tab[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--c); }
+.r-body { overflow: auto; padding: 18px 22px 30px; overscroll-behavior: contain; min-width: 0; }
+.r-live { display: flex; align-items: center; gap: 4px; margin: 0 0 12px; font-size: 11.5px; color: var(--busy); }
+.md { font-size: 14.5px; line-height: 1.6; color: #d9e2ff; }
+.md > * { max-width: 76ch; }
+.md h1 { font-family: var(--f-display); font-size: 20px; line-height: 1.25; margin: 0 0 14px; color: var(--fg); }
+.md h2 { font-family: var(--f-display); font-size: 17px; margin: 24px 0 8px; color: var(--fg); }
+.md h3 { font-size: 15px; margin: 18px 0 6px; color: var(--fg); }
+.md p, .md ul, .md ol { margin: 0 0 10px; }
+.md li { margin: 3px 0; }
+.md hr { border: 0; border-top: 1px solid var(--line); margin: 20px 0; }
+.md code { font-family: var(--f-mono); font-size: 12.5px; background: rgba(124, 156, 236, 0.14); padding: 1px 5px; border-radius: 4px; }
+.md pre { max-width: 100%; background: #050916; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; overflow-x: auto; }
+.md pre code { background: none; padding: 0; line-height: 1.5; }
+.md table { border-collapse: collapse; display: block; overflow-x: auto; margin: 0 0 12px; font-size: 13px; }
+.md th, .md td { border: 1px solid var(--line); padding: 6px 9px; text-align: left; }
+.md blockquote { margin: 0 0 10px; padding: 2px 0 2px 12px; border-left: 3px solid var(--warn); color: #c9d3f2; }
+.md a { color: var(--ray-hi); }
 .fallback { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); }
 
 .mobile-only { display: none; }
@@ -251,6 +306,12 @@ button { cursor: pointer; }
   .command { grid-column: 1; grid-row: 3; }
   .hint { grid-column: 1; grid-row: 2; }
   .mobile-only { display: inline-flex; }
+  .report { padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+  .report-card { height: 100%; border-radius: 0; border: 0; }
+  .r-head { padding: 12px 16px 10px; }
+  .r-head h2 { font-size: 16px; }
+  .r-body { padding: 14px 16px 26px; }
+  .md { font-size: 14px; }
   .panel { max-height: min(42vh, 100%); gap: 10px; }
   .panel:not(.open) .p-role, .panel:not(.open) .agents, .panel:not(.open) .h-agents, .panel:not(.open) .projects, .panel:not(.open) .h-projects { display: none; }
   .btn.p-toggle { display: inline-flex; padding: 6px 10px; font-size: 11px; }
@@ -274,7 +335,7 @@ button { cursor: pointer; }
       <div class="brand-mark" aria-hidden="true"></div>
       <div>
         <h1>Город агентов B1ueRay</h1>
-        <p>Штаб → команды → перепроверка → аналитика → тебе</p>
+        <p>Настоящие агенты: штаб → команды → QA → аналитика → тебе</p>
       </div>
     </div>
     <div class="metrics" role="status" aria-live="polite">
@@ -286,8 +347,6 @@ button { cursor: pointer; }
     <div class="controls">
       <button class="btn" id="b-help" type="button" aria-pressed="false" title="Как летать">? <span class="lbl-txt">Управление</span></button>
       <button class="btn" id="b-home" type="button" title="Вернуть камеру">◎ <span class="lbl-txt">Обзор</span></button>
-      <button class="btn" id="b-speed" type="button" title="Скорость времени"><span class="k">×1</span> <span class="lbl-txt">Скорость</span></button>
-      <button class="btn" id="b-auto" type="button" aria-pressed="true" title="Агенты сами берут демо-задачи">⟳ <span class="lbl-txt">Автопилот</span></button>
       <button class="btn" id="b-day" type="button" aria-pressed="false" title="День / ночь">☾ <span class="lbl-txt">Ночь</span></button>
       <button class="btn" id="b-fx" type="button" aria-pressed="true" title="Свечение и качество">✦ <span class="lbl-txt">Свечение</span></button>
       <button class="btn mobile-only" id="b-feed" type="button" aria-pressed="false">Задачи</button>
@@ -298,20 +357,41 @@ button { cursor: pointer; }
 
   <section class="feed collapsed" id="feed" aria-label="Лента задач">
     <div class="feed-head"><h2>Лента задач</h2><span id="feed-count"></span></div>
+    <div class="feed-list" id="feed-list"></div>
   </section>
 
   <aside class="panel glass" id="panel" hidden aria-label="Карточка здания"></aside>
 
   <form class="command" id="cmd-form" autocomplete="off">
+    <p class="cmd-note glass" id="cmd-note" role="status"></p>
     <div class="suggest" id="suggest"></div>
     <div class="cmd-row glass">
-      <input id="cmd" name="cmd" maxlength="140" placeholder="Дай задачу городу: например, «рилс про VELORA»" aria-label="Задача для агентов">
+      <input id="cmd" name="cmd" maxlength="300" placeholder="Что сделать? Например: «онбординг-экран для БухМета»" aria-label="Задача для агентов">
       <button class="go" type="submit">Запустить</button>
     </div>
   </form>
 </div>
 
 <div class="toast glass" id="toast" role="status"><b id="toast-score"></b><span id="toast-text"></span></div>
+
+<div class="report" id="report" hidden role="dialog" aria-modal="true" aria-labelledby="r-title">
+  <div class="report-card">
+    <header class="r-head">
+      <div class="r-titles"><p class="eyebrow" id="r-eyebrow"></p><h2 id="r-title"></h2></div>
+      <div class="r-actions">
+        <button class="mini" id="r-copy" type="button">Копировать</button>
+        <button class="mini" id="r-dl-part" type="button" hidden>Скачать раздел</button>
+        <button class="mini primary" id="r-dl" type="button" hidden>Скачать всё (.md)</button>
+        <button class="icon-btn" id="r-close" type="button" aria-label="Закрыть">×</button>
+      </div>
+    </header>
+    <nav class="r-tabs" id="r-tabs" role="tablist" aria-label="Разделы отчёта"></nav>
+    <article class="r-body md" id="r-body"></article>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 
 <script type="importmap">
 { "imports": {
@@ -336,49 +416,36 @@ const TEAMS = {
     name: 'Штаб «Луч»', short: 'Штаб', step: 1, color: 0x6fe7ff, pos: [0, 0],
     role: 'Оркестратор. Разбирает задачу, раздаёт командам и следит, чтобы никто не филонил.',
     agents: [['Луч', 'оркестратор'], ['Диспетчер', 'роутинг задач'], ['Летописец', 'ведёт протокол']],
-    lines: ['Разбираю задачу: «{t}»', 'Раскидал по командам: {teams}', 'Ставлю дедлайн. Шучу, дедлайн был вчера', 'Записал в протокол, чтоб потом не отмазались'],
   },
   dev: {
     name: 'Разработка', short: 'Разработка', step: 2, color: 0x4da3ff, pos: [-28, 0],
     role: 'Фронт, бэк, базы и деплой. Здесь живут VELORA и БухМет.',
-    keywords: ['код', 'сайт', 'апп', 'прилож', 'бот', 'баг', 'api', 'бэк', 'фронт', 'next', 'баз', 'лендинг', 'фич', 'авториз', 'деплой', 'сервер', 'игр'],
     agents: [['Фронт', 'React / Next.js'], ['Бэк', 'API и Postgres'], ['Девопс', 'Docker и деплой'], ['Джун', 'пишет тесты и ноет']],
-    lines: ['Поднял ветку feature/{slug}', 'Пишу компонент, пока никто не смотрит', 'Тесты зелёные. Подозрительно', 'Задеплоил на стейдж', 'Джун опять сломал линтер, чиню', 'Миграция базы прошла без слёз'],
-    result: ['Код: прототип собран и задеплоен на стейдж', 'Код: фича готова, покрыта тестами', 'Код: API и интерфейс склеены, всё летает'],
   },
   design: {
     name: 'Дизайн', short: 'Дизайн', step: 2, color: 0xb48cff, pos: [-14, -28],
     role: 'Интерфейсы, бренд и анимации. Двигают пиксели, пока не станет красиво.',
-    keywords: ['дизайн', 'лого', 'макет', 'ui', 'ux', 'баннер', 'цвет', 'шрифт', 'стиль', 'лендинг', 'обложк', 'бренд', 'иконк'],
     agents: [['Арт-дир', 'визуальный стиль'], ['UI-шник', 'интерфейсы'], ['Моушн', 'анимации']],
-    lines: ['Собрал мудборд из 40 референсов', 'Двигаю кнопку на 2px. Это важно', 'Палитра: синий, ещё синий и капля синего', 'Отрисовал 3 варианта. Лучший второй, как всегда', 'Анимация на 60 fps, глаз радуется'],
-    result: ['Дизайн: 3 варианта, выбран лучший, UI-кит готов', 'Дизайн: макеты под мобилу и десктоп', 'Дизайн: стиль и анимации утверждены'],
   },
   marketing: {
     name: 'Маркетинг', short: 'Маркетинг', step: 2, color: 0xff7ad9, pos: [14, -28],
     role: 'Рилсы, посты, воронки и реклама. Делают так, чтобы про тебя узнали.',
-    keywords: ['рилс', 'пост', 'контент', 'маркет', 'реклам', 'инст', 'тикток', 'продвиж', 'текст', 'воронк', 'сторис', 'охват', 'подписчик', 'запуск'],
     agents: [['Сторисмейкер', 'рилсы и сторис'], ['Копирайтер', 'тексты и хуки'], ['Таргетолог', 'реклама и охваты']],
-    lines: ['Пишу хук на первые 2 секунды', 'Подобрал трек, который не забанят', 'Сценарий рилса: 5 сцен, 30 секунд', 'Прогноз охвата: оптимистичный', 'Убрал из текста слово «уникальный»'],
-    result: ['Контент: сценарий рилса и 3 поста', 'Контент: план публикаций на 2 недели', 'Контент: тексты, хуки и рекламные связки'],
   },
   qa: {
     name: 'Перепроверка', short: 'QA', step: 3, color: 0xffb547, pos: [28, 0],
     role: 'QA. Ищут косяки до того, как их найдёшь ты.',
     agents: [['Зануда', 'ручные проверки'], ['Автотест', 'Playwright'], ['Параноик', 'безопасность']],
-    lines: ['Прогоняю {n} проверок', 'Проверил на телефоне, ноуте и калькуляторе', 'Косяков нет. Перепроверяю ещё раз', 'Сверяю с ТЗ построчно'],
   },
   analytics: {
     name: 'AI-аналитика', short: 'Аналитика', step: 4, color: 0x5be49b, pos: [14, 28],
     role: 'Ставят каждой задаче оценку из 10 и решают, можно ли показывать боссу.',
     agents: [['Аналитик', 'оценка 0–10'], ['Скептик', 'ищет дыры в логике'], ['Цифровик', 'метрики']],
-    lines: ['Сравниваю с референсом', 'Скептик нашёл, к чему придраться', 'Считаю метрики качества', 'Риски низкие. Ну, средние'],
   },
   delivery: {
     name: 'Отправка', short: 'Отправка', step: 5, color: 0xffd38a, pos: [-14, 28],
     role: 'Упаковывают результат и отправляют боссу.',
     agents: [['Курьер', 'упаковка'], ['Почтальон', 'отправка боссу']],
-    lines: ['Упаковываю результат', 'Пишу короткое резюме для босса', 'Проверяю, что ссылки живые'],
   },
 };
 const PRODUCTION = ['dev', 'design', 'marketing'];
@@ -387,14 +454,12 @@ const PROJECTS = [
   { id: 'buhmet', name: 'БухМет', note: 'поиск собутыльников', pos: [-42, -14], color: 0xffb03a },
 ];
 const SAMPLES = [
-  'Сделай лендинг для БухМета',
-  'Рилс про VELORA в инсту',
-  'Найди баги в авторизации',
-  'Придумай логотип B1ueRay',
-  'Запуск БухМета: посты и реклама',
-  'Мобильное приложение VELORA',
-  'Обложки для рилсов',
-  'Телеграм-бот для заявок',
+  'Онбординг-экран для БухМета',
+  'Сценарий рилса про VELORA',
+  'Логотип и палитра для B1ueRay',
+  'Телеграм-бот для заявок на Node.js',
+  'План запуска БухМета на 2 недели',
+  'API для поиска людей рядом в БухМете',
 ];
 const STEP_NAMES = ['Штаб', 'Команды', 'QA', 'Аналитика', 'Отправка'];
 const BOSS = { name: 'Дом босса', pos: [42, 14], color: 0xffd36b };
@@ -765,19 +830,28 @@ function billboard() {
   grp.add(screen, frame);
   return grp;
 }
-const BB_LINES = [['РИЛС ПРО VELORA', 'охват +18К за ночь'], ['БухМет', 'найди компанию за 5 минут'], ['B1ueRay', 'агенты работают, пока ты спишь'], ['ЗАПУСК', 'посты · сторис · таргет']];
+function bbLines() {
+  let m = null;
+  try { m = tasks.find((t) => t.outputs?.marketing); } catch { /* engine not booted yet */ }
+  return [['МАРКЕТИНГ', m ? titleOf(m.outputs.marketing) : 'рилсы · посты · реклама'], ['B1ueRay', 'агенты работают по-настоящему'], ['БухМет', 'найди компанию рядом'], ['VELORA', 'Next.js · Postgres']];
+}
 function drawBillboard(i) {
   const g = billboardCanvas.getContext('2d');
   const grd = g.createLinearGradient(0, 0, 512, 256);
   grd.addColorStop(0, '#ff7ad9'); grd.addColorStop(1, '#5a3dff');
   g.fillStyle = grd; g.fillRect(0, 0, 512, 256);
   g.fillStyle = 'rgba(6,10,30,.25)'; g.fillRect(0, 170, 512, 86);
-  const [a, b] = BB_LINES[i % BB_LINES.length];
+  const L = bbLines();
+  const [a, b] = L[i % L.length];
+  g.font = '700 46px Unbounded, Manrope, sans-serif';
+  const aa = fitText(g, a, 460);
+  g.font = '600 28px Manrope, sans-serif';
+  const bb = fitText(g, b, 460);
   g.fillStyle = '#fff';
   g.font = '700 46px Unbounded, Manrope, sans-serif';
-  g.fillText(a, 28, 104);
+  g.fillText(aa, 28, 104);
   g.font = '600 28px Manrope, sans-serif';
-  g.fillText(b, 28, 222);
+  g.fillText(bb, 28, 222);
   billboardTex.needsUpdate = true;
 }
 
@@ -891,6 +965,22 @@ function drawWall(id) {
   g.textAlign = 'left';
   const scoreBox = id === 'analytics' && lastScore != null;
   const maxW = scoreBox ? 330 : 470;
+  if (b.liveText) {
+    // what the agents are typing, as it streams in
+    g.font = '500 12.5px "JetBrains Mono", ui-monospace, monospace';
+    g.fillStyle = '#cfe0ff';
+    const lines = [];
+    for (const raw of b.liveText.slice(-1400).split('\n')) {
+      let line = raw;
+      while (line.length > 62) { lines.push(line.slice(0, 62)); line = line.slice(62); }
+      lines.push(line);
+    }
+    lines.slice(-11).forEach((ln, i) => g.fillText(ln, 14, 58 + i * 18));
+    g.fillStyle = c;
+    g.fillRect(14 + Math.min(62, (lines[lines.length - 1] || '').length) * 7.5, 46 + Math.min(10, lines.length - 1) * 18, 8, 15);
+    tex.needsUpdate = true;
+    return;
+  }
   const logs = b.logs.slice(-5);
   g.font = '500 14px Manrope, sans-serif';
   if (!logs.length) { g.fillStyle = '#93a0c9'; g.fillText('Ждём задачу из штаба…', 16, 70); }
@@ -1007,7 +1097,7 @@ const boss = { delivered: 0, trophies: [], group: new THREE.Group(), flash: 0 };
   el.className = 'lbl boss';
   el.setAttribute('role', 'button');
   el.tabIndex = 0;
-  el.innerHTML = '<span class="dot"></span>Дом босса<small id="lbl-boss">доставлено 0</small>';
+  el.innerHTML = '<span class="dot"></span>Дом босса<small id="lbl-boss">готово 0</small>';
   el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); focusBuilding('boss'); } });
   labelTargets.push({ el, id: 'boss' });
   boss.label = { el, obj: new CSS2DObject(el) };
@@ -1017,18 +1107,20 @@ const boss = { delivered: 0, trophies: [], group: new THREE.Group(), flash: 0 };
   boss.anchor = new THREE.Vector3(BOSS.pos[0], 17, BOSS.pos[1]);
 }
 const trophyGeo = new THREE.TorusGeometry(2.1, 0.13, 8, 40);
-function addTrophy() {
-  boss.delivered++;
+function setTrophies(n) {
+  boss.delivered = n;
   const small = document.getElementById('lbl-boss');
-  if (small) small.textContent = `доставлено ${boss.delivered}`;
-  if (boss.trophies.length >= 14) return;
-  const k = boss.trophies.length;
-  const m = new THREE.Mesh(trophyGeo, glowMat(k % 2 ? 0xffd36b : 0xfff0c2, 0.9));
-  m.rotation.x = Math.PI / 2;
-  m.position.y = 2.6 + k * 0.85;
-  m.scale.setScalar(1 - k * 0.035);
-  boss.group.add(m);
-  boss.trophies.push(m);
+  if (small) small.textContent = `готово ${n}`;
+  while (boss.trophies.length < Math.min(14, n)) {
+    const k = boss.trophies.length;
+    const m = new THREE.Mesh(trophyGeo, glowMat(k % 2 ? 0xffd36b : 0xfff0c2, 0.9));
+    m.rotation.x = Math.PI / 2;
+    m.position.y = 2.6 + k * 0.85;
+    m.scale.setScalar(1 - k * 0.035);
+    boss.group.add(m);
+    boss.trophies.push(m);
+  }
+  while (boss.trophies.length > Math.min(14, n)) { const m = boss.trophies.pop(); boss.group.remove(m); m.material.dispose(); }
 }
 
 // score stamp over the analytics dome
@@ -1174,53 +1266,183 @@ function updateOrbs(dt) {
 }
 
 /* ================================================================
-   TASK ENGINE
+   REAL AGENTS — every step is a real Claude call on the viewer's account
+   (the `sample` capability); every run is kept in the artifact's db.
    ================================================================ */
-const tasks = [];
-let taskSeq = 0;
+let sample = null, db = null, downloads = null, perms = null;
+let agentsState = 'loading'; // loading | ready | off | denied
+const tasks = []; // newest first: runs started here + runs loaded from the store
 let lastScore = null;
-let scoreSum = 0, scoreN = 0;
+let loadedRuns = false;
 
-function route(text) {
-  const t = text.toLowerCase();
-  const hits = PRODUCTION.filter((id) => TEAMS[id].keywords.some((k) => t.includes(k)));
-  if (!hits.length) hits.push(pick(PRODUCTION));
-  return hits;
-}
+const CONTEXT = `Контекст владельца (босса):
+- VELORA — веб-приложение на Next.js 16, React 19, Prisma, PostgreSQL, Better Auth и Tailwind 4 (платформа виртуальных AI-креаторов).
+- БухМет — приложение, которое по геолокации находит людей рядом, чтобы вместе выпить.
+- B1ueRay — бренд и GitHub-профиль владельца, фирменный образ — синий луч.
+Пиши по-русски, по делу, без воды и канцелярита.`;
+
+const DELIVER = {
+  dev: 'Сдай рабочий код, а не план работ: каждый файл в отдельном блоке ```язык, путь файла — комментарием в первой строке блока. После кода коротко: как запустить и что проверить. Если задача не про код, сделай техническую часть: структуру, API, схему данных.',
+  design: 'Сдай готовую дизайн-спеку, по которой фронтендер сверстает без вопросов: палитра (HEX и роль каждого цвета), шрифты и шкала размеров, раскладка экранов схемой в блоке ```text, ключевые компоненты с состояниями, тексты кнопок и подписей.',
+  marketing: 'Сдай готовый контент: сценарий рилса по секундам (кадр, текст на экране, озвучка), 2–3 поста с хуками и хэштегами, идею для сторис и один рекламный текст. Живым языком, без слов «уникальный» и «инновационный».',
+};
+
+const ERR_COPY = {
+  rate_limited: 'Упёрлись в лимит запросов к Claude. Подожди немного и запусти снова.',
+  session_expired: 'Сессия claude.ai истекла. Перезайди и запусти снова.',
+  refused: 'Claude отказался делать эту задачу. Переформулируй её.',
+  invalid_json: 'Агент ответил не в том формате. Запусти ещё раз.',
+  empty_completion: 'Агент вернул пустой ответ. Запусти ещё раз.',
+  prompt_too_large: 'Слишком много текста для одного запроса. Сузь задачу.',
+  upstream_error: 'Связь с Claude оборвалась. Запусти ещё раз.',
+  not_granted: 'Странице не разрешили обращаться к Claude.',
+  sampling_disabled: 'Claude недоступен для этого аккаунта.',
+};
+const STOP_CODES = new Set(['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed']);
+
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function short(s, n) { s = String(s || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+function clip(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n) + '\n\n…(обрезано)' : s; }
+function titleOf(md) { const m = /^#\s+(.+)$/m.exec(md || ''); return short(m ? m[1] : md, 70); }
 function slugify(t) {
   const map = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'c', ч: 'ch', ш: 'sh', щ: 'sch', ы: 'y', э: 'e', ю: 'yu', я: 'ya' };
-  return t.toLowerCase().split('').map((c) => map[c] ?? (/[a-z0-9]/.test(c) ? c : '-')).join('').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 22) || 'task';
+  return String(t).toLowerCase().split('').map((c) => map[c] ?? (/[a-z0-9]/.test(c) ? c : '-')).join('').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 32) || 'task';
 }
-function fmtLine(tpl, task) {
-  return tpl
-    .replace('{t}', task.text.length > 34 ? task.text.slice(0, 33) + '…' : task.text)
-    .replace('{teams}', task.teams.map((id) => TEAMS[id].short).join(', '))
-    .replace('{slug}', task.slug)
-    .replace('{n}', String(task.checks))
-    .replace('{score}', task.score?.toFixed(1) ?? '');
+function clock() { return new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+function plural(n, one, few, many) { const m10 = n % 10, m100 = n % 100; return m10 === 1 && m100 !== 11 ? one : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? few : many; }
+function errorCopy(e) { return ERR_COPY[e?.code] || (e?.code ? `Ошибка: ${e.code}` : `Ошибка страницы: ${e?.message || e}`); }
+
+// ---------- prompts ----------
+function hqPrompt(text) {
+  return `Ты — Луч, оркестратор команды ИИ-агентов B1ueRay.
+${CONTEXT}
+
+Команды:
+- dev — Разработка: код, архитектура, базы, деплой.
+- design — Дизайн: интерфейсы, бренд, визуал.
+- marketing — Маркетинг: рилсы, посты, тексты, реклама.
+
+Задача от босса: «${text}»
+
+Выбери от 1 до 3 команд, которые реально нужны для этой задачи (лишних не бери), и дай каждой конкретное ТЗ на 2–4 предложения: что именно сдать.
+Ответь только JSON такого вида:
+{"plan": "1–2 предложения: как решаем", "teams": [{"id": "dev", "brief": "..."}]}`;
 }
-function clock() {
-  const d = new Date();
-  return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+function teamPrompt(id, task, fixes) {
+  const t = TEAMS[id];
+  const agents = t.agents.map(([n, r]) => `${n} (${r})`).join(', ');
+  let p = `Ты — команда «${t.name}» в B1ueRay. Агенты команды: ${agents}.
+${CONTEXT}
+
+Общая задача от босса: «${task.text}»
+План штаба: ${task.plan || '—'}
+Твоё ТЗ: ${task.briefs[id]}
+
+${DELIVER[id]}
+Формат: Markdown. Первая строка — заголовок «# <название результата>». До 700 слов текста, код не считается. Не задавай вопросов и не пиши, что ты ИИ: сделай лучший вариант сам, а допущения перечисли одной строкой в конце.`;
+  if (fixes) {
+    p += `
+
+Это доработка. Твоя прошлая версия:
+<<<
+${clip(task.outputs[id], 30000)}
+>>>
+
+Замечания перепроверки:
+${fixes.map((f) => `- ${f.problem}${f.fix ? ' → ' + f.fix : ''}`).join('\n')}
+
+Сдай полную исправленную версию целиком, в том же формате.`;
+  }
+  return p;
+}
+function resultsBlock(task, n) {
+  return task.teams.map((id) => `=== ${TEAMS[id].name} (id: ${id}) ===\n${clip(task.outputs[id], n)}`).join('\n\n');
+}
+function qaPrompt(task) {
+  return `Ты — команда «Перепроверка» (QA) в B1ueRay. Проверь результаты команд по задаче босса: «${task.text}».
+Ищи только реальные проблемы: ошибки в коде, несоответствие задаче или ТЗ, фактические ошибки, дыры, которые сломают результат. Вкусовщину и мелочи не пиши.
+
+ТЗ команд:
+${task.teams.map((id) => `- ${id}: ${task.briefs[id]}`).join('\n')}
+
+Результаты:
+${resultsBlock(task, 20000)}
+
+Ответь только JSON:
+{"verdict": "ok" или "fix", "issues": [{"team": "dev", "problem": "что не так", "fix": "что сделать"}], "report": "отчёт проверки в Markdown: 3–8 пунктов, что проверили и что нашли"}
+"fix" ставь, только если есть хотя бы одна серьёзная проблема. Не больше 3 issues; team — id команды из списка выше.`;
+}
+function analyticsPrompt(task) {
+  return `Ты — AI-аналитика B1ueRay. Оцени итог работы по задаче босса: «${task.text}».
+${CONTEXT}
+
+Результаты команд:
+${resultsBlock(task, 16000)}
+
+Отчёт перепроверки:
+${clip(task.qa?.report || '—', 4000)}
+${task.revised.length ? `После перепроверки доработаны: ${task.revised.map((id) => TEAMS[id].short).join(', ')}.` : ''}
+
+Оценивай строго и честно: 10 — можно сразу использовать без правок, 7 — хорошо, но нужна доработка, 5 и ниже — слабо.
+Ответь только JSON:
+{"score": 7.5, "verdict": "одна фраза: можно ли отдавать боссу и почему", "strengths": ["..."], "risks": ["..."], "next": ["следующий шаг"]}`;
+}
+
+function normQa(q, teams) {
+  const issues = (Array.isArray(q?.issues) ? q.issues : [])
+    .filter((i) => i && teams.includes(i.team) && i.problem)
+    .slice(0, 3)
+    .map((i) => ({ team: i.team, problem: String(i.problem).slice(0, 400), fix: String(i.fix || '').slice(0, 400) }));
+  return { verdict: q?.verdict === 'fix' && issues.length ? 'fix' : 'ok', issues, report: String(q?.report || '').slice(0, 8000) };
+}
+function normAn(a) {
+  let s = Number(a?.score);
+  if (!Number.isFinite(s)) s = 0;
+  s = Math.round(Math.max(0, Math.min(10, s)) * 10) / 10;
+  const arr = (x) => (Array.isArray(x) ? x : []).map((v) => String(v).slice(0, 300)).slice(0, 5);
+  return { score: s, verdict: String(a?.verdict || '').slice(0, 300), strengths: arr(a?.strengths), risks: arr(a?.risks), next: arr(a?.next) };
+}
+
+// ---------- one agent call ----------
+async function ask(id, task, prompt, { json = false, tier = 'default' } = {}) {
+  const b = buildings[id];
+  let last = 0;
+  const onText = ({ text }) => {
+    task.live[id] = text;
+    b.liveText = json ? null : text;
+    const now = performance.now();
+    if (now - last < 350) return;
+    last = now;
+    liveTick(id, task);
+  };
+  try {
+    const opts = { modelTier: tier, signal: task.ctl.signal, cache: false, onText };
+    if (json) return await sample.json(prompt, opts);
+    const r = await sample(prompt, opts);
+    return r.truncated ? r.text + '\n\n_Ответ обрезан по длине._' : r.text;
+  } finally {
+    delete task.live[id];
+    b.liveText = null;
+    liveTick(id, task);
+  }
 }
 
 function log(id, task, text, who) {
   const b = buildings[id];
-  const busyIdx = b.agentState.map((s, i) => (s === 'busy' ? i : -1)).filter((i) => i >= 0);
-  const agentName = who ?? b.team.agents[busyIdx.length ? pick(busyIdx) : 0][0];
-  const entry = { time: clock(), who: agentName, text, task: task?.id };
+  const entry = { time: clock(), who: who || b.team.agents[0][0], text, task: task?.id };
   b.logs.push(entry);
   if (b.logs.length > 40) b.logs.shift();
-  if (task) { task.status = `${b.team.short} · ${agentName}: ${text}`; renderTask(task); }
+  if (task) task.statusLine = `${b.team.short} · ${entry.who}: ${text}`;
+  renderFeedSoon();
   if (selected === id) { renderPanel(); drawWall(id); }
 }
 
-function setBusy(id, on, count) {
+function setBusy(id, on) {
   const b = buildings[id];
   b.busy = Math.max(0, b.busy + (on ? 1 : -1));
   const n = b.team.agents.length;
   if (on) {
-    const want = Math.min(n, count ?? Math.max(1, Math.ceil(n * 0.66)));
+    const want = Math.max(1, Math.ceil(n * 0.66));
     let made = b.agentState.filter((s) => s === 'busy').length;
     for (let i = 0; i < n && made < want; i++) if (b.agentState[i] !== 'busy') { b.agentState[i] = 'busy'; made++; }
   } else if (b.busy === 0) {
@@ -1228,198 +1450,469 @@ function setBusy(id, on, count) {
   }
   b.label.el.classList.toggle('is-busy', b.busy > 0);
   const small = document.getElementById('lbl-' + id);
-  if (small) small.textContent = b.busy > 0 ? 'в работе' : `${n} аг.`;
+  if (small) small.textContent = b.busy > 0 ? 'работает' : `${n} аг.`;
   updateMetrics();
   if (selected === id) { renderPanel(); drawWall(id); }
 }
 
-async function work(id, task, ms, lines = 2) {
-  setBusy(id, true);
-  const tpl = TEAMS[id].lines;
-  const used = new Set();
-  for (let i = 0; i < lines; i++) {
-    let line;
-    do { line = pick(tpl); } while (used.has(line) && used.size < tpl.length);
-    used.add(line);
-    log(id, task, fmtLine(line, task));
-    await wait(ms / lines);
-  }
-  setBusy(id, false);
-}
+// ---------- the pipeline ----------
+function runningHere() { return tasks.filter((t) => t.local && t.status === 'running').length; }
+function nextN() { return tasks.reduce((m, t) => Math.max(m, t.n || 0), 0) + 1; }
 
-async function runTask(text, opts = {}) {
+async function runTask(raw) {
+  const text = String(raw || '').trim().slice(0, 300);
+  if (!text) return;
+  if (agentsState !== 'ready') { setAgentsState(agentsState); $('cmd-note').classList.add('shake'); setTimeout(() => $('cmd-note').classList.remove('shake'), 500); return; }
+  if (runningHere() >= 2) { flashNote('Две задачи уже в работе. Дождись одной, потом давай следующую.'); return; }
   const task = {
-    id: ++taskSeq, text, demo: !!opts.demo, teams: route(text), slug: slugify(text),
-    stage: 0, back: false, status: 'Падает в штаб…', checks: 30 + Math.floor(Math.random() * 40),
-    score: null, result: null, startedAt: performance.now(),
+    id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    n: nextN(), text, createdAt: new Date().toISOString(), doneAt: null,
+    status: 'running', stage: 0, teams: [], briefs: {}, plan: '', outputs: {},
+    qa: null, revised: [], analytics: null, error: null,
+    local: true, live: {}, ctl: new AbortController(), busy: new Set(), back: false,
+    statusLine: 'Задача летит в штаб…',
   };
   tasks.unshift(task);
-  mountTask(task);
-  updateMetrics();
+  renderFeedSoon(); updateMetrics(); persist(task);
+  // a parallel branch that wakes up after the run ended (stop / error) must not grab a building
+  const enter = (id) => {
+    if (task.finished || task.ctl.signal.aborted) throw { code: 'cancelled', message: 'run ended' };
+    setBusy(id, true);
+    task.busy.add(id);
+  };
+  const leave = (id) => { if (task.busy.delete(id)) setBusy(id, false); };
 
-  await travel('sky', 'hq', TEAMS.hq.color);
-  await work('hq', task, 2200, 2);
+  try {
+    // 1 · HQ: real plan + briefs
+    await travel('sky', 'hq', TEAMS.hq.color);
+    enter('hq');
+    log('hq', task, `Разбираю задачу: «${short(text, 40)}»`, 'Луч');
+    const plan = await ask('hq', task, hqPrompt(text), { json: true, tier: 'quick' });
+    const picked = (Array.isArray(plan?.teams) ? plan.teams : []).filter((x) => x && PRODUCTION.includes(x.id) && typeof x.brief === 'string' && x.brief.trim());
+    const uniq = [...new Map(picked.map((x) => [x.id, x])).values()].slice(0, 3);
+    if (!uniq.length) uniq.push({ id: 'dev', brief: text });
+    task.plan = String(plan?.plan || '').slice(0, 600);
+    task.teams = uniq.map((x) => x.id);
+    for (const x of uniq) task.briefs[x.id] = x.brief.trim().slice(0, 800);
+    leave('hq');
+    buildings.hq.done++;
+    log('hq', task, `Раскидал по командам: ${task.teams.map((id) => TEAMS[id].short).join(', ')}`, 'Диспетчер');
+    task.stage = 1;
+    persist(task);
 
-  task.stage = 1; renderTask(task);
-  await Promise.all(task.teams.map(async (id) => {
-    await travel('hq', id, TEAMS[id].color);
-    await work(id, task, rand(2600, 4200), 3);
-    buildings[id].done++;
-    await travel(id, 'qa', TEAMS[id].color);
-  }));
+    // 2 · teams write the actual deliverables, in parallel
+    await Promise.all(task.teams.map(async (id) => {
+      await travel('hq', id, TEAMS[id].color);
+      enter(id);
+      log(id, task, `Взяли ТЗ: ${short(task.briefs[id], 70)}`, TEAMS[id].agents[0][0]);
+      task.outputs[id] = await ask(id, task, teamPrompt(id, task));
+      leave(id);
+      buildings[id].done++;
+      log(id, task, `Сдали: ${titleOf(task.outputs[id])}`, TEAMS[id].agents[0][0]);
+      persist(task);
+      await travel(id, 'qa', TEAMS[id].color);
+    }));
 
-  task.stage = 2; renderTask(task);
-  await work('qa', task, 2200, 2);
-  if (Math.random() < 0.35) {
-    const culprit = pick(task.teams);
-    task.back = true;
-    task.bounced = true;
-    log('qa', task, `Нашёл косяк, отправляю назад в «${TEAMS[culprit].short}»`, 'Зануда');
-    await travel('qa', culprit, TEAMS.qa.color);
-    await work(culprit, task, 1800, 1);
-    log(culprit, task, 'Починили. Больше так не будем (будем)');
-    await travel(culprit, 'qa', TEAMS[culprit].color);
-    await work('qa', task, 1200, 1);
-    task.back = false;
+    // 3 · QA reviews, sends real issues back once
+    task.stage = 2;
+    enter('qa');
+    log('qa', task, `Проверяю ${task.teams.length === 1 ? 'результат' : task.teams.length + ' результата'}`, 'Зануда');
+    task.qa = normQa(await ask('qa', task, qaPrompt(task), { json: true }), task.teams);
+    leave('qa');
+    const nIss = task.qa.issues.length;
+    log('qa', task, task.qa.verdict === 'fix' ? `Нашёл ${nIss} ${plural(nIss, 'проблему', 'проблемы', 'проблем')}, отправляю на доработку` : 'Серьёзных проблем не нашёл', 'Зануда');
+    persist(task);
+    if (task.qa.verdict === 'fix') {
+      task.back = true;
+      renderFeedSoon();
+      const byTeam = {};
+      for (const i of task.qa.issues) (byTeam[i.team] ||= []).push(i);
+      await Promise.all(Object.entries(byTeam).map(async ([id, list]) => {
+        await travel('qa', id, TEAMS.qa.color);
+        enter(id);
+        log(id, task, `Дорабатываем по замечаниям QA: ${list.length}`, TEAMS[id].agents[0][0]);
+        task.outputs[id] = await ask(id, task, teamPrompt(id, task, list));
+        leave(id);
+        task.revised.push(id);
+        log(id, task, 'Исправили и пересдали', TEAMS[id].agents[0][0]);
+        persist(task);
+        await travel(id, 'qa', TEAMS[id].color);
+      }));
+      task.back = false;
+    }
+    buildings.qa.done++;
+
+    // 4 · analytics: honest score with reasons
+    task.stage = 3;
+    await travel('qa', 'analytics', TEAMS.analytics.color);
+    enter('analytics');
+    log('analytics', task, 'Оцениваю результат', 'Аналитик');
+    task.analytics = normAn(await ask('analytics', task, analyticsPrompt(task), { json: true }));
+    leave('analytics');
+    lastScore = task.analytics.score;
+    log('analytics', task, `Оценка ${task.analytics.score.toFixed(1)}/10. ${task.analytics.verdict}`, 'Аналитик');
+    showStamp(task.analytics.score);
+    buildings.analytics.done++;
+    persist(task);
+
+    // 5 · delivery to the boss house
+    task.stage = 4;
+    await travel('analytics', 'delivery', TEAMS.delivery.color);
+    enter('delivery');
+    log('delivery', task, 'Собираю отчёт для босса', 'Курьер');
+    await wait(700);
+    leave('delivery');
+    buildings.delivery.done++;
+    await travel('delivery', 'boss', TEAMS.delivery.color);
+    boss.flash = 1;
+    task.stage = 5;
+    task.status = 'done';
+    task.doneAt = new Date().toISOString();
+    log('delivery', task, 'Отчёт лежит в Доме босса', 'Почтальон');
+    persist(task);
+    toast(task);
+  } catch (e) {
+    const code = e?.code;
+    task.status = code === 'cancelled' ? 'stopped' : 'error';
+    task.error = code === 'cancelled' ? 'Остановлено' : errorCopy(e);
+    if (STOP_CODES.has(code)) setAgentsState('denied');
+    if (!task.ctl.signal.aborted) task.ctl.abort(); // stop sibling teams still writing
+    if (code !== 'cancelled' && !e?.code) console.error(e);
+    persist(task);
+  } finally {
+    task.finished = true;
+    for (const id of [...task.busy]) leave(id);
+    task.live = {};
+    renderFeedSoon(); updateMetrics(); refreshBoss();
+    if (selected) renderPanel();
+    if (reportTask === task) renderReportSoon();
   }
-  buildings.qa.done++;
-
-  task.stage = 3; renderTask(task);
-  await travel('qa', 'analytics', TEAMS.analytics.color);
-  task.score = Math.min(9.9, rand(7.6, 9.6) + (task.bounced ? 0.2 : 0));
-  await work('analytics', task, 2000, 2);
-  lastScore = task.score;
-  log('analytics', task, `Оценка: ${task.score.toFixed(1)}/10. Можно отправлять`, 'Аналитик');
-  showStamp(task.score);
-  buildings.analytics.done++;
-
-  task.stage = 4; renderTask(task);
-  await travel('analytics', 'delivery', TEAMS.delivery.color);
-  await work('delivery', task, 1400, 1);
-  log('delivery', task, 'Лечу к боссу', 'Почтальон');
-  buildings.delivery.done++;
-  await travel('delivery', 'boss', TEAMS.delivery.color);
-  boss.flash = 1;
-  addTrophy();
-
-  task.stage = 5;
-  task.doneAt = 1000 + taskSeq + performance.now();
-  task.status = 'Отправлено боссу';
-  task.result = [...task.teams.map((id) => pick(TEAMS[id].result)), `QA: ${task.checks} проверок, критичных косяков нет`];
-  scoreSum += task.score; scoreN++;
-  buildings.hq.done++;
-  renderTask(task);
-  trimTasks();
-  updateMetrics();
-  toast(task);
-  if (selected === 'boss') renderPanel();
 }
 
-function seedDone(text, teams, score) {
-  const task = { id: ++taskSeq, text, demo: true, teams, slug: slugify(text), stage: 5, back: false, status: 'Отправлено боссу', checks: 30 + Math.floor(Math.random() * 40), score };
-  task.result = [...teams.map((id) => pick(TEAMS[id].result)), `QA: ${task.checks} проверок, критичных косяков нет`];
-  tasks.push(task);
-  mountTask(task);
-  scoreSum += score; scoreN++; lastScore = score;
-  for (const id of [...teams, 'hq', 'qa', 'analytics', 'delivery']) buildings[id].done++;
-  addTrophy();
+// ---------- persistence ----------
+function toDoc(t) {
+  const outputs = {};
+  for (const [k, v] of Object.entries(t.outputs)) outputs[k] = clip(v, 50000);
+  return {
+    n: t.n, text: t.text, createdAt: t.createdAt, doneAt: t.doneAt, status: t.status, stage: t.stage,
+    teams: t.teams, briefs: t.briefs, plan: t.plan, outputs, qa: t.qa, revised: t.revised,
+    analytics: t.analytics, error: t.error,
+  };
+}
+function persist(t) {
+  if (!db) return;
+  const body = JSON.parse(JSON.stringify(toDoc(t)));
+  t.chain = (t.chain || Promise.resolve())
+    .then(() => db.doc('runs/' + t.id).set(body))
+    .catch((e) => {
+      if (e?.code === 'quota_exceeded') flashNote('База результатов заполнена: удали старые задачи.');
+      else if (e?.code === 'invalid_argument') flashNote('Результат не сохранился: у тебя нет прав на запись в этом артефакте.');
+      else console.warn('save failed', e);
+    });
+}
+function fromDoc(id, d) {
+  const stale = d.status === 'running' && Date.now() - Date.parse(d.createdAt) > 20 * 60000;
+  return {
+    id, n: Number(d.n) || 0, text: String(d.text || ''), createdAt: String(d.createdAt || ''), doneAt: d.doneAt || null,
+    status: stale ? 'stopped' : String(d.status || 'stopped'), stage: Number(d.stage) || 0,
+    teams: (Array.isArray(d.teams) ? d.teams : []).filter((x) => PRODUCTION.includes(x)),
+    briefs: d.briefs || {}, plan: String(d.plan || ''), outputs: d.outputs || {}, qa: d.qa || null,
+    revised: Array.isArray(d.revised) ? d.revised : [], analytics: d.analytics ? normAn(d.analytics) : null,
+    error: stale ? 'Прервано: страницу закрыли во время работы' : d.error || null,
+    local: false, live: {},
+  };
+}
+function listenRuns() {
+  const timer = setTimeout(() => { if (!loadedRuns) flashNote('Не получается достучаться до базы результатов. Проверь сеть.'); }, 10000);
+  db.collection('runs').orderBy('createdAt', 'desc').limit(60).onSnapshot((snap) => {
+    if (!snap.metadata.fromCache) { loadedRuns = true; clearTimeout(timer); }
+    const seen = new Set();
+    for (const d of snap.docs) {
+      seen.add(d.id);
+      const mine = tasks.find((t) => t.id === d.id);
+      if (mine?.local) continue;
+      const t = fromDoc(d.id, d.data());
+      if (mine) Object.assign(mine, t); else tasks.push(t);
+    }
+    for (let i = tasks.length - 1; i >= 0; i--) if (!tasks[i].local && !seen.has(tasks[i].id)) tasks.splice(i, 1);
+    tasks.sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
+    lastScore = tasks.find((t) => t.analytics)?.analytics.score ?? lastScore;
+    renderFeedSoon(); updateMetrics(); refreshBoss();
+    if (selected) renderPanel();
+    if (reportTask) renderReportSoon();
+  }, (e) => { clearTimeout(timer); loadedRuns = true; flashNote('База результатов недоступна (' + (e?.code || 'ошибка') + '). Новые задачи не сохранятся.'); renderFeedSoon(); });
+}
+
+// ---------- availability ----------
+function setAgentsState(s) {
+  agentsState = s;
+  const note = $('cmd-note');
+  const off = s === 'off' || s === 'denied';
+  $('cmd').disabled = off;
+  document.querySelector('#cmd-form .go').disabled = off || s === 'loading';
+  document.querySelectorAll('#suggest .sg').forEach((b) => { b.disabled = off || s === 'loading'; });
+  if (s === 'loading') note.innerHTML = 'Подключаю агентов к Claude…';
+  else if (s === 'ready') note.innerHTML = tasks.some((t) => t.status === 'done') ? '' : 'Агенты настоящие: каждая задача — реальная работа Claude на твоём аккаунте. При первом запуске Claude спросит разрешение.';
+  else if (s === 'off') note.innerHTML = 'Агенты работают только когда страница открыта в claude.ai: здесь ей не дали доступ к Claude. Город и сохранённые результаты можно смотреть.';
+  else if (s === 'denied') note.innerHTML = 'Ты не разрешил странице обращаться к Claude, поэтому агенты стоят. ' + (perms ? '<button class="mini" id="b-perms" type="button">Открыть разрешения</button>' : 'Разрешить можно в меню артефакта → Permissions.');
+  $('b-perms')?.addEventListener('click', () => perms.manage().catch(() => flashNote('Открой меню артефакта → Permissions.')));
+  renderFeedSoon();
+}
+let noteTimer;
+function flashNote(text) {
+  const note = $('cmd-note');
+  note.textContent = text;
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(() => setAgentsState(agentsState), 6000);
+}
+async function initAgents() {
+  const c = window.claude;
+  if (!c?.use) { setAgentsState('off'); renderFeedSoon(); return; }
+  const [s, d, dl, p] = await Promise.all(['sample', 'db', 'downloads', 'permissions'].map((n) => c.use(n).catch(() => null)));
+  sample = s; db = d; downloads = dl; perms = p;
+  if (db) listenRuns(); else loadedRuns = true;
+  setAgentsState(sample ? 'ready' : 'off');
 }
 
 /* ================================================================
-   UI — feed, panel, metrics, toast
+   UI — feed, metrics, toast, report viewer
    ================================================================ */
 const feedEl = $('feed');
-function mountTask(task) {
-  const el = document.createElement('article');
-  el.className = 'task glass';
-  el.id = 'task-' + task.id;
-  el.tabIndex = 0;
-  feedEl.querySelector('.feed-head').after(el);
-  task.el = el;
-  trimCards();
-  renderTask(task);
+const feedList = $('feed-list');
+let feedTimer = 0;
+function renderFeedSoon() { if (!feedTimer) feedTimer = setTimeout(() => { feedTimer = 0; renderFeed(); }, 120); }
+function liveLine(t) {
+  if (!t.local && t.status === 'running') return 'Идёт в другом окне';
+  const live = Object.entries(t.live || {}).filter(([id]) => PRODUCTION.includes(id));
+  if (live.length) return live.map(([id, text]) => `${TEAMS[id].short} пишет: ${text.length.toLocaleString('ru-RU')} знаков`).join(' · ');
+  return t.statusLine || 'В работе';
 }
-function trimCards() {
-  const cards = [...feedEl.querySelectorAll('.task')];
-  while (cards.length > 6) {
-    const old = cards.slice().reverse();
-    const victim = old.find((c) => tasks.find((t) => t.el === c)?.stage === 5);
-    if (!victim) break;
-    const t = tasks.find((x) => x.el === victim);
-    if (t) t.el = null;
-    victim.remove();
-    cards.splice(cards.indexOf(victim), 1);
-  }
-}
-function trimTasks() {
-  trimCards();
-  while (tasks.length > 30) {
-    const i = tasks.map((t) => t.stage).lastIndexOf(5);
-    if (i < 0) break;
-    tasks.splice(i, 1);
-  }
-}
-function esc(s) { return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
-function renderTask(task) {
-  if (!task.el || !task.el.isConnected) return;
-  task.el.classList.toggle('is-done', task.stage === 5);
+function cardHtml(t) {
   const steps = STEP_NAMES.map((n, i) => {
     let cls = '';
-    if (task.stage > i) cls = 'done';
-    else if (task.stage === i) cls = task.back && i === 2 ? 'back' : 'now';
+    if (t.stage > i || t.status === 'done') cls = 'done';
+    else if (t.stage === i && t.status === 'running') cls = t.back && i === 2 ? 'back' : 'now';
     return `<li class="${cls}">${n}</li>`;
   }).join('');
-  const chips = task.teams.map((id) => `<span class="tchip" style="--c:${hex(TEAMS[id].color)}">${TEAMS[id].short}</span>`).join('');
-  const result = task.result
-    ? `<div class="result"><div class="score"><b>${task.score.toFixed(1)}</b><span>из 10 · оценка AI-аналитики</span></div><ul>${task.result.map((r) => `<li>${esc(r)}</li>`).join('')}</ul></div>`
-    : '';
-  task.el.innerHTML = `
-    <header><span class="tid">#${task.id}</span><span class="ttl" title="${esc(task.text)}">${esc(task.text)}</span><span class="badge ${task.demo ? '' : 'you'}">${task.demo ? 'демо' : 'твоя'}</span></header>
-    <div class="teams-row">${chips}</div>
+  const chips = t.teams.map((id) => `<span class="tchip" style="--c:${hex(TEAMS[id].color)}">${TEAMS[id].short}${t.revised.includes(id) ? ' · v2' : ''}</span>`).join('');
+  const badge = { done: ['ok', 'готово'], running: ['run', 'в работе'], error: ['err', 'ошибка'], stopped: ['err', 'стоп'] }[t.status] || ['', t.status];
+  let body;
+  if (t.status === 'done') {
+    body = `<div class="result"><div class="score"><b>${t.analytics ? t.analytics.score.toFixed(1) : '—'}</b><span>из 10 · AI-аналитика</span></div>${t.analytics?.verdict ? `<p class="verdict">${esc(t.analytics.verdict)}</p>` : ''}</div>`;
+  } else if (t.status === 'running') {
+    body = `<p class="status">${esc(liveLine(t))}</p>`;
+  } else {
+    body = `<p class="status err">${esc(t.error || 'Остановлено')}</p>`;
+  }
+  const acts = [];
+  const hasAny = t.plan || Object.keys(t.outputs).length || Object.keys(t.live || {}).length;
+  if (hasAny) acts.push(`<button class="mini ${t.status === 'done' ? 'primary' : ''}" type="button" data-act="open" data-id="${t.id}">${t.status === 'done' ? 'Открыть результат' : t.status === 'running' ? 'Смотреть, что пишут' : 'Что успели сделать'}</button>`);
+  if (t.local && t.status === 'running') acts.push(`<button class="mini" type="button" data-act="stop" data-id="${t.id}">Стоп</button>`);
+  if ((t.status === 'error' || t.status === 'stopped') && agentsState === 'ready') acts.push(`<button class="mini" type="button" data-act="retry" data-id="${t.id}">Запустить заново</button>`);
+  return `<article class="task glass ${t.status === 'done' ? 'is-done' : ''}">
+    <header><span class="tid">#${t.n}</span><span class="ttl" title="${esc(t.text)}">${esc(t.text)}</span><span class="badge ${badge[0]}">${badge[1]}</span></header>
+    ${chips ? `<div class="teams-row">${chips}</div>` : ''}
     <ol class="steps" aria-label="Этапы">${steps}</ol>
-    ${task.result ? '' : `<p class="status">${esc(task.status)}</p>`}
-    ${result}`;
+    ${body}
+    ${acts.length ? `<div class="t-actions">${acts.join('')}</div>` : ''}
+  </article>`;
 }
+function renderFeed() {
+  const show = tasks.slice(0, 8);
+  if (show.length) { feedList.innerHTML = show.map(cardHtml).join(''); return; }
+  if (agentsState === 'loading' || (db && !loadedRuns)) { feedList.innerHTML = '<div class="empty-card glass">Загружаю результаты…</div>'; return; }
+  feedList.innerHTML = agentsState === 'ready'
+    ? `<div class="empty-card glass"><b>Пока ни одной задачи.</b><span>Напиши внизу, что сделать, или нажми на подсказку. Штаб раздаст ТЗ, команды напишут результат, QA проверит, аналитика поставит оценку. Готовое появится здесь и в Доме босса.</span></div>`
+    : `<div class="empty-card glass"><b>Сохранённых результатов нет.</b><span>Задачи запускаются, когда страница открыта в claude.ai.</span></div>`;
+}
+feedList.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const t = tasks.find((x) => x.id === btn.dataset.id);
+  if (!t) return;
+  if (btn.dataset.act === 'open') openReport(t.id);
+  else if (btn.dataset.act === 'stop') t.ctl?.abort();
+  else if (btn.dataset.act === 'retry') runTask(t.text);
+});
 
 function updateMetrics() {
-  const inflight = tasks.filter((t) => t.stage < 5).length;
+  const inflight = tasks.filter((t) => t.status === 'running').length;
+  const done = tasks.filter((t) => t.status === 'done');
+  const scored = done.filter((t) => t.analytics);
   $('m-inflight').textContent = inflight;
-  $('feed-count').textContent = `${inflight} в работе`;
-  $('m-done').textContent = tasks.length - inflight;
-  $('m-score').textContent = scoreN ? (scoreSum / scoreN).toFixed(1) : '—';
+  $('feed-count').textContent = inflight ? `${inflight} в работе` : done.length ? `${done.length} готово` : '';
+  $('m-done').textContent = done.length;
+  $('m-score').textContent = scored.length ? (scored.reduce((a, t) => a + t.analytics.score, 0) / scored.length).toFixed(1) : '—';
   const total = Object.values(buildings).reduce((a, b) => a + b.team.agents.length, 0);
   const busy = Object.values(buildings).reduce((a, b) => a + b.agentState.filter((s) => s === 'busy').length, 0);
   $('m-agents').textContent = `${busy}/${total}`;
 }
+function refreshBoss() {
+  setTrophies(tasks.filter((t) => t.status === 'done').length);
+  if (selected === 'boss') renderPanel();
+}
 
 let toastTimer;
 function toast(task) {
-  $('toast-score').textContent = task.score.toFixed(1);
-  $('toast-text').textContent = `«${task.text}» готово и отправлено`;
+  $('toast-score').textContent = task.analytics ? task.analytics.score.toFixed(1) : '✓';
+  $('toast-text').textContent = `«${task.text}» готово. Отчёт в Доме босса`;
   $('toast').style.top = (document.querySelector('.top').getBoundingClientRect().bottom + 10) + 'px';
   $('toast').classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => $('toast').classList.remove('show'), 3800);
+  toastTimer = setTimeout(() => $('toast').classList.remove('show'), 4200);
 }
+
+function liveTick(id, task) {
+  renderFeedSoon();
+  if (selected === id) {
+    drawWall(id);
+    const pre = $('p-live');
+    if (pre && task.live[id] != null) { pre.textContent = task.live[id].slice(-1600); pre.scrollTop = pre.scrollHeight; }
+    else renderPanel();
+  }
+  if (reportTask === task) renderReportSoon();
+}
+
+// ---------- report viewer ----------
+let reportTask = null, reportTab = 'summary', reportTimer = 0, reportReturn = null;
+if (window.DOMPurify) {
+  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    if (node.tagName === 'A') {
+      const h = node.getAttribute('href') || '';
+      if (!/^https:\/\//i.test(h)) node.removeAttribute('href');
+      else { node.setAttribute('target', '_blank'); node.setAttribute('rel', 'noopener noreferrer'); }
+    }
+  });
+}
+function renderMd(md) {
+  if (window.marked && window.DOMPurify) {
+    return DOMPurify.sanitize(marked.parse(String(md || ''), { gfm: true }), { FORBID_TAGS: ['img', 'style', 'iframe', 'form', 'input', 'video', 'audio'], FORBID_ATTR: ['style'] });
+  }
+  return `<pre>${esc(md)}</pre>`;
+}
+function listMd(title, arr) { return arr?.length ? `\n### ${title}\n${arr.map((x) => `- ${x}`).join('\n')}\n` : ''; }
+function summaryMd(t) {
+  const st = { done: 'готово', running: 'в работе', error: 'ошибка', stopped: 'остановлено' }[t.status] || t.status;
+  let md = `**Задача:** ${t.text}\n\n**Статус:** ${st}`;
+  if (t.analytics) md += ` · **Оценка AI-аналитики:** ${t.analytics.score.toFixed(1)}/10`;
+  if (t.teams.length) md += `\n\n**Команды:** ${t.teams.map((id) => TEAMS[id].name + (t.revised.includes(id) ? ' (доработано после QA)' : '')).join(', ')}`;
+  if (t.error) md += `\n\n> ${t.error}`;
+  if (t.analytics) md += `\n\n${t.analytics.verdict}\n` + listMd('Сильные стороны', t.analytics.strengths) + listMd('Риски', t.analytics.risks) + listMd('Что дальше', t.analytics.next);
+  if (t.teams.length) md += `\n### Что сдали\n${t.teams.map((id) => `- **${TEAMS[id].short}:** ${t.outputs[id] ? titleOf(t.outputs[id]) : 'ещё в работе'}`).join('\n')}\n`;
+  return md;
+}
+function planMd(t) {
+  return `${t.plan || '_Штаб ещё составляет план._'}\n\n${t.teams.map((id) => `### ТЗ для команды «${TEAMS[id].name}»\n${t.briefs[id] || ''}`).join('\n\n')}`;
+}
+function qaMd(t) {
+  const q = t.qa;
+  let md = `**Вердикт:** ${q.verdict === 'fix' ? 'нужна доработка' : 'серьёзных проблем нет'}\n`;
+  if (q.issues.length) md += `\n### Замечания\n${q.issues.map((i) => `- **${TEAMS[i.team]?.short || i.team}:** ${i.problem}${i.fix ? ` → ${i.fix}` : ''}`).join('\n')}\n`;
+  if (t.revised.length) md += `\nДоработали после проверки: ${t.revised.map((id) => TEAMS[id].short).join(', ')}.\n`;
+  if (q.report) md += `\n### Отчёт проверки\n${q.report}`;
+  return md;
+}
+function analyticsMd(t) {
+  const a = t.analytics;
+  return `## ${a.score.toFixed(1)} / 10\n\n${a.verdict}\n` + listMd('Сильные стороны', a.strengths) + listMd('Риски', a.risks) + listMd('Что дальше', a.next);
+}
+function sections(t) {
+  const s = [{ id: 'summary', name: 'Итог', md: summaryMd(t) }];
+  if (t.plan || t.teams.length || t.live.hq != null) s.push({ id: 'hq', name: 'План штаба', md: t.plan || t.teams.length ? planMd(t) : '_Штаб составляет план…_', live: t.live.hq != null, color: TEAMS.hq.color });
+  for (const id of t.teams) {
+    const live = t.live[id] != null;
+    s.push({ id, name: TEAMS[id].short + (t.revised.includes(id) ? ' · v2' : ''), md: live ? t.live[id] : t.outputs[id] || '_Команда ещё не начала._', live, color: TEAMS[id].color, file: !!t.outputs[id] });
+  }
+  if (t.qa || t.live.qa != null) s.push({ id: 'qa', name: 'Перепроверка', md: t.qa ? qaMd(t) : '_QA проверяет результаты…_', live: t.live.qa != null, color: TEAMS.qa.color });
+  if (t.analytics || t.live.analytics != null) s.push({ id: 'analytics', name: 'AI-аналитика', md: t.analytics ? analyticsMd(t) : '_Аналитика оценивает…_', live: t.live.analytics != null, color: TEAMS.analytics.color });
+  return s;
+}
+function fullMd(t) {
+  const s = sections(t);
+  return `# Задача #${t.n}: ${t.text}\n\n_${new Date(t.createdAt).toLocaleString('ru-RU')} · Город агентов B1ueRay_\n\n` + s.map((x) => `## ${x.name}\n\n${x.md}`).join('\n\n---\n\n') + '\n';
+}
+function openReport(id, tab) {
+  const t = tasks.find((x) => x.id === id);
+  if (!t) return;
+  reportReturn = document.activeElement;
+  reportTask = t;
+  reportTab = tab || (t.status === 'done' ? 'summary' : Object.keys(t.live).find((k) => PRODUCTION.includes(k)) || 'summary');
+  $('report').hidden = false;
+  renderReport(true);
+  $('r-close').focus({ preventScroll: true });
+}
+function closeReport() {
+  $('report').hidden = true;
+  reportTask = null;
+  reportReturn?.focus?.({ preventScroll: true });
+}
+function renderReportSoon() { if (!reportTimer) reportTimer = setTimeout(() => { reportTimer = 0; if (reportTask) renderReport(false); }, 300); }
+function renderReport(reset) {
+  const t = reportTask;
+  const s = sections(t);
+  if (!s.find((x) => x.id === reportTab)) reportTab = 'summary';
+  const cur = s.find((x) => x.id === reportTab);
+  $('r-eyebrow').textContent = `Задача #${t.n} · ${new Date(t.createdAt).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}`;
+  $('r-title').textContent = t.text;
+  $('r-tabs').innerHTML = s.map((x) => `<button class="r-tab" role="tab" type="button" data-tab="${x.id}" aria-selected="${x.id === reportTab}" style="--c:${x.color ? hex(x.color) : 'var(--ray)'}">${esc(x.name)}${x.live ? '<i class="live-dot" aria-label="пишет сейчас"></i>' : ''}</button>`).join('');
+  const body = $('r-body');
+  const nearBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 80;
+  body.innerHTML = (cur.live ? '<p class="r-live"><i class="live-dot"></i>Пишется прямо сейчас</p>' : '') + renderMd(cur.md);
+  if (reset) body.scrollTop = 0;
+  else if (cur.live && nearBottom) body.scrollTop = body.scrollHeight;
+  $('r-dl-part').hidden = !downloads || !cur.file;
+  $('r-dl').hidden = !downloads;
+}
+$('r-tabs').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-tab]');
+  if (!b || !reportTask) return;
+  reportTab = b.dataset.tab;
+  renderReport(true);
+});
+$('r-close').onclick = closeReport;
+$('report').addEventListener('click', (e) => { if (e.target === $('report')) closeReport(); });
+async function saveFile(filename, data) {
+  try { await downloads.save({ filename, data }); }
+  catch (e) { if (e?.code !== 'declined') flashNote(e?.code === 'host_unavailable' ? 'Это приложение не умеет сохранять файлы. Открой страницу в браузере.' : 'Файл не сохранился: ' + (e?.code || 'ошибка')); }
+}
+$('r-dl').onclick = () => { const t = reportTask; if (t) saveFile(`b1ueray-${t.n}-${slugify(t.text)}.md`, fullMd(t)); };
+$('r-dl-part').onclick = () => { const t = reportTask; const cur = t && sections(t).find((x) => x.id === reportTab); if (cur) saveFile(`b1ueray-${t.n}-${cur.id}.md`, cur.md); };
+$('r-copy').onclick = async () => {
+  const t = reportTask; const cur = t && sections(t).find((x) => x.id === reportTab);
+  if (!cur) return;
+  try { await navigator.clipboard.writeText(cur.md); $('r-copy').textContent = 'Скопировано'; }
+  catch { const r = document.createRange(); r.selectNodeContents($('r-body')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); $('r-copy').textContent = 'Выделено: Ctrl+C'; }
+  setTimeout(() => { $('r-copy').textContent = 'Копировать'; }, 1800);
+};
 
 let selected = null;
 let panelOpen = false;
 const panel = $('panel');
+function workItem(t, tab) {
+  const score = t.analytics ? `<em>${t.analytics.score.toFixed(1)}</em>` : `<em>${t.status === 'running' ? '…' : '—'}</em>`;
+  const sub = t.status === 'done' ? t.teams.map((id) => TEAMS[id].short).join(' · ') + ' → QA → аналитика' : t.status === 'running' ? 'в работе' : t.error || 'остановлено';
+  return `<li><button class="work-btn" type="button" data-open="${t.id}" data-tab="${tab || ''}"><b title="${esc(t.text)}">#${t.n} ${esc(t.text)}</b>${score}<span>${esc(sub)}</span></button></li>`;
+}
 function renderBossPanel() {
-  const done = tasks.filter((t) => t.stage === 5).sort((a, b) => (b.doneAt ?? b.id) - (a.doneAt ?? a.id));
-  const inbound = tasks.length - done.length;
-  const items = done.slice(0, 8).map((t) => `<li><b title="${esc(t.text)}">${esc(t.text)}</b><em>${t.score.toFixed(1)}</em><span>${t.teams.map((id) => TEAMS[id].short).join(' · ')} → QA → аналитика</span></li>`).join('');
+  const done = tasks.filter((t) => t.status === 'done');
+  const inbound = tasks.filter((t) => t.status === 'running').length;
+  const scored = done.filter((t) => t.analytics);
+  const avg = scored.length ? (scored.reduce((a, t) => a + t.analytics.score, 0) / scored.length).toFixed(1) : '—';
   panel.innerHTML = `
     <div class="p-head"><div><p class="eyebrow">Это ты</p><h2 style="color:${hex(BOSS.color)}">${BOSS.name}</h2></div><button class="icon-btn" id="p-close" type="button" aria-label="Закрыть и вернуться к обзору">×</button></div>
-    <p class="p-role">Сюда прилетает только то, что прошло перепроверку и получило оценку AI-аналитики. Каждое кольцо на башне — одна доставленная задача.</p>
+    <p class="p-role">Здесь лежат все результаты агентов. Открой задачу: внутри план штаба, работа каждой команды, отчёт QA и оценка аналитики. Любой раздел можно скопировать или скачать файлом.</p>
     <div class="p-stats">
-      <div class="p-stat"><b>${boss.delivered}</b><span>доставлено</span></div>
-      <div class="p-stat"><b>${scoreN ? (scoreSum / scoreN).toFixed(1) : '—'}</b><span>ср. оценка</span></div>
-      <div class="p-stat"><b>${inbound}</b><span>в пути</span></div>
+      <div class="p-stat"><b>${done.length}</b><span>готово</span></div>
+      <div class="p-stat"><b>${avg}</b><span>ср. оценка</span></div>
+      <div class="p-stat"><b>${inbound}</b><span>в работе</span></div>
     </div>
-    <h3>Входящие</h3><ul class="inbox">${items || '<li><span>Пока пусто. Дай городу задачу внизу.</span></li>'}</ul>`;
+    <h3>Входящие</h3><ul class="works">${tasks.slice(0, 30).map((t) => workItem(t)).join('') || '<li class="empty">Пока пусто. Дай городу задачу внизу.</li>'}</ul>`;
   $('p-close').onclick = () => unfocus();
 }
+panel.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-open]');
+  if (b) openReport(b.dataset.open, b.dataset.tab || undefined);
+});
 function renderPanel() {
   if (!selected) return;
   const keep = document.activeElement && panel.contains(document.activeElement) ? document.activeElement.id : null;
@@ -1439,17 +1932,27 @@ function renderTeamPanel() {
   const projects = selected === 'dev'
     ? `<h3 class="h-projects">Проекты в работе</h3><div class="projects">${PROJECTS.map((p) => `<span class="proj"><b>${p.name}</b> · ${p.note}</span>`).join('')}</div>`
     : '';
+  const liveTask = tasks.find((x) => x.live && x.live[selected] != null);
+  const liveText = liveTask?.live[selected];
+  const live = liveTask
+    ? `<h3>Сейчас пишут · задача #${liveTask.n}</h3>${PRODUCTION.includes(selected) ? `<pre class="live-pre" id="p-live">${esc(String(liveText).slice(-1600))}</pre>` : '<p class="p-role">Думают над ответом…</p>'}<div class="t-actions"><button class="mini" type="button" data-open="${liveTask.id}" data-tab="${PRODUCTION.includes(selected) ? selected : ''}">Открыть целиком</button></div>`
+    : '';
+  const mine = tasks.filter((x) => (PRODUCTION.includes(selected) ? x.outputs[selected] : selected === 'qa' ? x.qa : selected === 'analytics' ? x.analytics : selected === 'hq' ? x.plan : x.status === 'done')).slice(0, 12);
+  const tabFor = PRODUCTION.includes(selected) || selected === 'qa' || selected === 'analytics' ? selected : selected === 'hq' ? 'hq' : 'summary';
+  const works = `<h3>Работы команды</h3><ul class="works">${mine.map((x) => workItem(x, tabFor)).join('') || '<li class="empty">Команда ещё ничего не сдала.</li>'}</ul>`;
   panel.innerHTML = `
     <div class="p-head"><div><p class="eyebrow">Команда · этап ${t.step} из 5</p><h2 style="color:${c}">${t.name}</h2></div><button class="btn p-toggle" id="p-toggle" type="button" aria-expanded="${panelOpen}">${panelOpen ? 'Свернуть' : 'Агенты'}</button><button class="icon-btn" id="p-close" type="button" aria-label="Закрыть и вернуться к обзору">×</button></div>
     <p class="p-role">${t.role}</p>
     <div class="p-stats">
       <div class="p-stat"><b>${b.busy > 0 ? 'в работе' : 'свободна'}</b><span>статус</span></div>
       <div class="p-stat"><b>${busyN}/${t.agents.length}</b><span>заняты</span></div>
-      <div class="p-stat"><b>${b.done}</b><span>задач сделано</span></div>
+      <div class="p-stat"><b>${mine.length}</b><span>работ</span></div>
     </div>
+    ${live}
+    ${works}
     ${projects}
     <h3 class="h-agents">Агенты</h3><ul class="agents">${agents}</ul>
-    <h3>Живой лог</h3><ol class="log" aria-live="polite">${logs || '<li><span class="empty">Пока тихо. Дай городу задачу внизу.</span></li>'}</ol>`;
+    <h3>Лог</h3><ol class="log" aria-live="polite">${logs || '<li><span class="empty">Пока тихо. Дай городу задачу внизу.</span></li>'}</ol>`;
   $('p-close').onclick = () => unfocus();
   $('p-toggle').onclick = () => { panelOpen = !panelOpen; panel.classList.toggle('open', panelOpen); renderPanel(); };
 }
@@ -1605,7 +2108,9 @@ const FLY_CODES = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'KeyQ', 'KeyE', 'KeyR
 const keys = new Set();
 let shiftHeld = false;
 addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !$('report').hidden) { closeReport(); return; }
   if (e.key === 'Escape' && selected) { unfocus(); return; }
+  if (!$('report').hidden) return;
   if (e.target.closest?.('input, textarea, [contenteditable]')) return;
   shiftHeld = e.shiftKey;
   if (!FLY_CODES.has(e.code) || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -1657,6 +2162,7 @@ $('cmd-form').addEventListener('submit', (e) => {
   e.preventDefault();
   const v = $('cmd').value.trim();
   if (!v) { $('cmd').focus(); return; }
+  if (agentsState !== 'ready') { runTask(v); return; }
   runTask(v);
   $('cmd').value = '';
   $('cmd').blur();
@@ -1671,13 +2177,6 @@ SAMPLES.slice(0, 6).forEach((s) => {
 
 $('b-help').onclick = () => setHelp($('hint').classList.contains('gone'));
 $('b-home').onclick = () => (selected ? unfocus() : flyTo(HOME.pos, HOME.target));
-const SPEEDS = [1, 2, 4];
-$('b-speed').onclick = () => {
-  speed = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length];
-  $('b-speed').querySelector('.k').textContent = '×' + speed;
-};
-let autopilot = true;
-$('b-auto').onclick = () => { autopilot = !autopilot; $('b-auto').setAttribute('aria-pressed', String(autopilot)); };
 let night = true;
 $('b-day').onclick = () => {
   night = !night;
@@ -1742,7 +2241,7 @@ addEventListener('resize', onResize);
 const clk = new THREE.Clock();
 let dayMix = 0; // 0 night → 1 day
 let insideMix = 0;
-let bbTimer = 0, bbIdx = 0, autoTimer = 6;
+let bbTimer = 0, bbIdx = 0;
 let warmFrames = 0; // first frame renders every interior once so the first fly-in doesn't stutter on shader compiles
 const tmpCol = new THREE.Color();
 
@@ -1827,12 +2326,6 @@ function animate() {
   bbTimer += dt;
   if (bbTimer > 3.2) { bbTimer = 0; drawBillboard(++bbIdx); }
 
-  // autopilot demo tasks
-  autoTimer -= dt * speed;
-  if (autopilot && autoTimer <= 0) {
-    autoTimer = rand(12, 20);
-    if (tasks.filter((x) => x.stage < 5).length < 2) runTask(pick(SAMPLES), { demo: true });
-  }
 
   // camera
   if (fly) {
@@ -1860,14 +2353,12 @@ updateMetrics();
 animate();
 document.fonts?.ready.then(() => { drawBillboard(bbIdx); if (selected && selected !== 'boss') drawWall(selected); });
 
-// open in a living state: two finished tasks in the boss inbox, two moving through the city
-seedDone('Обложки для рилсов', ['design', 'marketing'], 8.8);
-seedDone('Починить логин в VELORA', ['dev'], 9.2);
-updateMetrics();
-runTask('Сделай лендинг для БухМета', { demo: true });
-setTimeout(() => runTask('Рилс про VELORA в инсту', { demo: true }), 2600);
+// start empty and honest: show stored runs, wait for a real task
+setAgentsState('loading');
+renderFeed();
+initAgents();
 
-window.__city = { runTask, focusBuilding, unfocus, buildings, tasks, boss };
+window.__city = { runTask, focusBuilding, unfocus, buildings, tasks, boss, openReport };
 window.__nav = { camera, controls, flying: () => !!fly };
 </script>
 </body>
