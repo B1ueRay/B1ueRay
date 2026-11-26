@@ -226,6 +226,7 @@ button { cursor: pointer; }
 
 /* real-agent UI */
 .feed-list { display: flex; flex-direction: column; gap: 8px; }
+.task.queued { opacity: 0.85; border-style: dashed; }
 .empty-card { padding: 14px; font-size: 12.5px; color: #c9d3f2; display: grid; gap: 6px; }
 .empty-card b { color: var(--fg); font-size: 13px; }
 .badge.ok { color: var(--ok); border-color: rgba(91, 228, 155, 0.4); }
@@ -1459,11 +1460,27 @@ function setBusy(id, on) {
 function runningHere() { return tasks.filter((t) => t.local && t.status === 'running').length; }
 function nextN() { return tasks.reduce((m, t) => Math.max(m, t.n || 0), 0) + 1; }
 
-async function runTask(raw) {
+// ---------- queue: tasks you hand over run one after another, no babysitting ----------
+const PAST_TASKS = ['Сделай лендинг для БухМета', 'Рилс про VELORA в инсту', 'Обложки для рилсов', 'Починить логин в VELORA'];
+const queue = [];
+let queuePaused = false;
+let qSeq = 0;
+function enqueue(text) {
+  if (queue.some((q) => q.text === text)) return;
+  queue.push({ id: 'q' + (++qSeq), text });
+  flashNote(`Поставил в очередь: «${short(text, 40)}». Агенты возьмут её сами, как освободятся.`);
+  renderFeedSoon(); updateMetrics();
+}
+function drainQueue() {
+  if (queuePaused || agentsState !== 'ready' || runningHere() || !queue.length) return;
+  const next = queue.shift();
+  runTask(next.text, true);
+}
+async function runTask(raw, fromQueue = false) {
   const text = String(raw || '').trim().slice(0, 300);
   if (!text) return;
   if (agentsState !== 'ready') { setAgentsState(agentsState); $('cmd-note').classList.add('shake'); setTimeout(() => $('cmd-note').classList.remove('shake'), 500); return; }
-  if (runningHere() >= 1) { flashNote('Одна задача уже в работе. Дождись её, потом давай следующую: так не упрёмся в лимиты Claude.'); return; }
+  if (runningHere() >= 1 || (queue.length && !fromQueue)) { enqueue(text); return; }
   const task = {
     id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     n: nextN(), text, createdAt: new Date().toISOString(), doneAt: null,
@@ -1576,6 +1593,7 @@ async function runTask(raw) {
     task.status = code === 'cancelled' ? 'stopped' : 'error';
     task.error = code === 'cancelled' ? 'Остановлено' : errorCopy(e);
     if (STOP_CODES.has(code)) setAgentsState('denied');
+    if (code === 'rate_limited' && queue.length) { queuePaused = true; flashNote('Упёрлись в лимит Claude: очередь на паузе. Нажми «Продолжить очередь», когда лимит отпустит.'); }
     if (!task.ctl.signal.aborted) task.ctl.abort(); // stop sibling teams still writing
     if (code !== 'cancelled' && !e?.code) console.error(e);
     persist(task);
@@ -1586,6 +1604,7 @@ async function runTask(raw) {
     renderFeedSoon(); updateMetrics(); refreshBoss();
     if (selected) renderPanel();
     if (reportTask === task) renderReportSoon();
+    setTimeout(drainQueue, 1500);
   }
 }
 
@@ -1723,17 +1742,34 @@ function cardHtml(t) {
     ${acts.length ? `<div class="t-actions">${acts.join('')}</div>` : ''}
   </article>`;
 }
+function queueHtml() {
+  if (!queue.length) return '';
+  const head = queuePaused
+    ? `<div class="empty-card glass"><b>Очередь на паузе</b><span>Claude упёрся в лимит. Продолжу, когда скажешь.</span><div class="t-actions"><button class="mini primary" type="button" data-act="resume">Продолжить очередь</button><button class="mini" type="button" data-act="qclear">Очистить</button></div></div>`
+    : '';
+  return head + queue.map((q, i) => `<article class="task glass queued">
+    <header><span class="tid">${i + 1}</span><span class="ttl" title="${esc(q.text)}">${esc(q.text)}</span><span class="badge">в очереди</span></header>
+    <div class="t-actions"><button class="mini" type="button" data-act="unqueue" data-q="${q.id}">Убрать</button></div>
+  </article>`).join('');
+}
 function renderFeed() {
   const show = tasks.slice(0, 8);
-  if (show.length) { feedList.innerHTML = show.map(cardHtml).join(''); return; }
+  const running = show.filter((t) => t.status === 'running');
+  const rest = show.filter((t) => t.status !== 'running');
+  if (show.length || queue.length) { feedList.innerHTML = running.map(cardHtml).join('') + queueHtml() + rest.map(cardHtml).join(''); return; }
   if (agentsState === 'loading' || (db && !loadedRuns)) { feedList.innerHTML = '<div class="empty-card glass">Загружаю результаты…</div>'; return; }
   feedList.innerHTML = agentsState === 'ready'
-    ? `<div class="empty-card glass"><b>Пока ни одной задачи.</b><span>Напиши внизу, что сделать, или нажми на подсказку. Штаб раздаст ТЗ, команды напишут результат, QA проверит, аналитика поставит оценку. Готовое появится здесь и в Доме босса.</span></div>`
+    ? `<div class="empty-card glass"><b>Пока ни одной задачи.</b><span>Напиши внизу, что сделать, или нажми на подсказку. Штаб раздаст ТЗ, команды напишут результат, QA проверит, аналитика поставит оценку. Готовое появится здесь и в Доме босса.</span><span>Прошлые 4 задачи были демо. Агенты могут сделать их по-настоящему, одну за другой: это около 25 запросов к Claude на твоём аккаунте.</span><div class="t-actions"><button class="mini primary" type="button" data-act="past">Вернуть прошлые задачи</button></div></div>`
     : `<div class="empty-card glass"><b>Сохранённых результатов нет.</b><span>Задачи запускаются, когда страница открыта в claude.ai.</span></div>`;
 }
 feedList.addEventListener('click', (e) => {
   const btn = e.target.closest('[data-act]');
   if (!btn) return;
+  const act = btn.dataset.act;
+  if (act === 'past') { PAST_TASKS.forEach((x, i) => (i === 0 && !runningHere() ? runTask(x, true) : enqueue(x))); flashNote('Агенты взялись за 4 прошлые задачи. Идут по очереди, можешь просто смотреть.'); return; }
+  if (act === 'unqueue') { const i = queue.findIndex((q) => q.id === btn.dataset.q); if (i >= 0) queue.splice(i, 1); renderFeedSoon(); updateMetrics(); return; }
+  if (act === 'resume') { queuePaused = false; drainQueue(); renderFeedSoon(); return; }
+  if (act === 'qclear') { queue.length = 0; queuePaused = false; renderFeedSoon(); updateMetrics(); return; }
   const t = tasks.find((x) => x.id === btn.dataset.id);
   if (!t) return;
   if (btn.dataset.act === 'open') openReport(t.id);
@@ -1746,7 +1782,7 @@ function updateMetrics() {
   const done = tasks.filter((t) => t.status === 'done');
   const scored = done.filter((t) => t.analytics);
   $('m-inflight').textContent = inflight;
-  $('feed-count').textContent = inflight ? `${inflight} в работе` : done.length ? `${done.length} готово` : '';
+  $('feed-count').textContent = [inflight ? `${inflight} в работе` : '', queue.length ? `${queue.length} в очереди` : '', !inflight && !queue.length && done.length ? `${done.length} готово` : ''].filter(Boolean).join(' · ');
   $('m-done').textContent = done.length;
   $('m-score').textContent = scored.length ? (scored.reduce((a, t) => a + t.analytics.score, 0) / scored.length).toFixed(1) : '—';
   const total = Object.values(buildings).reduce((a, b) => a + b.team.agents.length, 0);
