@@ -461,6 +461,7 @@ function say(text, emotion = 'happy', opts = {}) {
 // ---------------- появление / прятки ----------------
 async function appear({ kuku = true } = {}) {
   if (state.visible || state.seq) return;
+  scene.revive();
   state.seq = true;
   state.pendingHide = false;
   try {
@@ -581,6 +582,9 @@ function welcomeBack(min) {
 
 async function hide() {
   if (!state.visible || state.seq) return;
+  endWait(); // спрятался — вопрос из памяти больше не ждёт ответа
+  clearTimeout(streak.deadTimer);
+  scene.revive(); // на нитке вверх — не лёжа
   state.seq = true;
   state.hiding = true;
   state.pendingHide = false;
@@ -662,6 +666,7 @@ function schedulePeek() {
 
 async function peek() {
   if (state.visible || state.seq || !cfg.peekWhileHidden) return;
+  scene.revive();
   state.seq = true;
   let clicked = false;
   try {
@@ -941,6 +946,10 @@ function send(text, withScreen = false) {
   text = (text || '').trim();
   if (!text && !withScreen) return;
   endWait();
+  // «мёртвый» не отвечает лёжа: любое общее дело сбрасывает серию тычков
+  clearTimeout(streak.deadTimer);
+  streak.n = 0;
+  scene.revive();
   touch();
   ensureShown();
   voice.stop();
@@ -1601,8 +1610,6 @@ function poke(part = 'face') {
     note('тебя затыкали — ты притворился мёртвым');
     return say(...pick(sleepyMood() ? POKE_FLOP_SLEEPY : POKE_FLOP));
   }
-  if (n === 3) return say(...pick(POKE_ANNOYED));
-  if (n === 5) return say(...pick(POKE_ANGRY));
   // [15] юбилей не теряется: прозвучит на ближайшем тычке без своей реплики
   if (!Array.isArray(day.ms)) day.ms = [];
   const marks = Object.keys(POKE_MILESTONES).map(Number);
@@ -1612,6 +1619,8 @@ function poke(part = 'face') {
     saveDay();
     return say(...POKE_MILESTONES[due]);
   }
+  if (n === 3) return say(...pick(POKE_ANNOYED));
+  if (n === 5) return say(...pick(POKE_ANGRY));
   if (n === 1) return say(...firstPoke(part));
   const q = POKE_QUIET[n] || POKE_QUIET[7];
   const [t, emo] = q[Math.floor(Math.random() * q.length)];
@@ -1623,7 +1632,8 @@ function poke(part = 'face') {
 function armRevive() {
   clearTimeout(streak.deadTimer);
   streak.deadTimer = setTimeout(() => {
-    if (scene.dead || !state.visible) return;
+    // говорит/отвечает/в сценке — «фух, воскрес» не затирает облачко
+    if (scene.dead || !state.visible || voice.active || (reply && !reply.done) || state.seq) return;
     streak.n = 0;
     showBubble(pick(POKE_REVIVE), { micro: true });
     scene.setEmotion('embarrassed', 1.5);
@@ -2021,7 +2031,7 @@ function positionBubble() {
   t.style.maxHeight = `${Math.max(1, Math.floor(karaoke.availRef / lh)) * lh}px`;
   karaokeScroll(t);
   els.bubble.style.setProperty('--tail', `${Math.max(18, Math.min(bw - 18, h.x - left))}px`);
-  els.status.style.left = `${h.x}px`;
+  els.status.style.left = `${Math.max(70, Math.min(window.innerWidth - 70, h.x))}px`; // лёжа голова у края — плашка не вылезает
   els.status.style.top = `${h.y + 6}px`;
 }
 

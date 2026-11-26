@@ -354,6 +354,7 @@ function note(t) {
 // ---------------- появление ----------------
 async function appear() {
   if (state.visible || state.seq) return;
+  scene.revive();
   state.seq = true;
   try {
     await scene.descend();
@@ -1209,6 +1210,10 @@ async function send(text, photo) {
   text = (text || '').trim();
   if (!text && !photo) return;
   endWait();
+  // «мёртвый» не отвечает лёжа: любое общее дело сбрасывает серию тычков
+  clearTimeout(streak.deadTimer);
+  streak.n = 0;
+  scene.revive();
   touch();
   unlockAudio();
   if (sampleDead) {
@@ -1526,6 +1531,7 @@ els.forgetBtn.addEventListener('click', () => {
   memEpoch += 1;
   turns = [];
   // вопрос из памяти и всё, что о нём знает контекст, — тоже стираем
+  endWait(); // и ожидание ответа на стёртый вопрос
   cb.asked = cb.sent = null;
   clearTimeout(cb.phTimer);
   state.events = [];
@@ -1761,8 +1767,6 @@ function poke(wasSleeping = state.sleeping, part = 'face') {
     note('тебя затыкали — ты притворился мёртвым');
     return say(...pick(sleepyMood() ? POKE_FLOP_SLEEPY : POKE_FLOP));
   }
-  if (n === 3) return say(...pick(POKE_ANNOYED));
-  if (n === 5) return say(...pick(POKE_ANGRY));
   // [15] юбилей не теряется: прозвучит на ближайшем тычке без своей реплики
   if (!Array.isArray(day.ms)) day.ms = [];
   const marks = Object.keys(POKE_MILESTONES).map(Number);
@@ -1772,6 +1776,8 @@ function poke(wasSleeping = state.sleeping, part = 'face') {
     saveDay();
     return say(...POKE_MILESTONES[due]);
   }
+  if (n === 3) return say(...pick(POKE_ANNOYED));
+  if (n === 5) return say(...pick(POKE_ANGRY));
   if (n === 1) return say(...firstPoke(part));
   const q = POKE_QUIET[n] || POKE_QUIET[7];
   const [t, emo] = rnd(q);
@@ -1783,7 +1789,8 @@ function poke(wasSleeping = state.sleeping, part = 'face') {
 function armRevive() {
   clearTimeout(streak.deadTimer);
   streak.deadTimer = setTimeout(() => {
-    if (scene.dead || !state.visible) return;
+    // говорит/отвечает/в сценке — «фух, воскрес» не затирает облачко
+    if (scene.dead || !state.visible || voice.active || state.busy || state.seq) return;
     streak.n = 0;
     showBubble(pick(POKE_REVIVE), { micro: true });
     scene.setEmotion('embarrassed', 1.5);
@@ -1887,7 +1894,7 @@ function positionBubble() {
   els.bubbleText.style.maxHeight = `${Math.max(60, h.y - 70)}px`;
   els.bubbleText.classList.toggle('clip', els.bubbleText.scrollHeight > els.bubbleText.clientHeight + 2);
   els.bubble.style.setProperty('--tail', `${Math.max(18, Math.min(bw - 18, h.x - left))}px`);
-  els.status.style.left = `${h.x}px`;
+  els.status.style.left = `${Math.max(70, Math.min(window.innerWidth - 70, h.x))}px`; // лёжа голова у края — плашка не вылезает
   els.status.style.top = `${h.y + 6}px`;
 }
 let lastT = 0;

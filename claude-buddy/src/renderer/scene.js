@@ -949,13 +949,15 @@ export class BuddyScene {
   }
 
   revive() {
-    if (!this.dead) return;
+    // сбрасываем и «скрытый» остаток (dead=false, пока он не сидит), а пружинку — только если реально лежал
+    const lying = this.dead;
     this.deadUntil = 0;
-    this.squashT = 0.1;
+    if (lying) this.squashT = 0.1;
   }
 
   get dead() {
-    return this.time < this.deadUntil;
+    // на нитке/в полёте не лежим (остаток «смерти» после прятания не тащим)
+    return this.mode === 'sitting' && this.time < this.deadUntil;
   }
 
   shakeTree() {
