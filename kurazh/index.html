@@ -779,6 +779,129 @@
   .tls small { display: block; color: var(--muted); font-size: 12px; }
   .amt small { display: block; font: 500 11px var(--sans); color: var(--muted); margin-top: 3px; }
   .dev .inp { font-size: 16px; }
+  /* unread count on the Inbox tab: drawn from data-badge, so the tab's text and label stay "Inbox" */
+  .tab[data-badge]::after { content: attr(data-badge); position: absolute; top: 6px; left: calc(50% + 5px); min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+    background: var(--gold) var(--nap-dark); color: var(--ink); font: 800 10.5px/18px var(--sans); letter-spacing: 0; text-align: center; box-shadow: 0 0 0 2px #070807; pointer-events: none; }
+  /* pull to refresh: only a spinner moves, the snapped feed stays put */
+  .ptr { position: absolute; top: calc(var(--st) + 50px); left: 50%; z-index: 7; width: 34px; height: 34px; margin-left: -17px; border-radius: 50%; display: grid; place-items: center; pointer-events: none;
+    background: var(--glass) var(--nap); border: 1px solid var(--line2); color: var(--gold2); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    opacity: 0; transform: translateY(-16px) scale(.6); transition: opacity .2s, transform .25s cubic-bezier(.2,.8,.2,1); }
+  .ptr.pull { transition: none; }
+  .ptr.busy { opacity: 1; transform: none; }
+  .ptr.busy svg { animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  /* toasts on the feed sit just above the comment bar, in the column left of the rail */
+  #toasts.low { top: auto; bottom: var(--tb, 120px); left: 12px; right: 70px; }
+  #toasts.low .toast { animation-name: rise; }
+  #toasts.low .toast.out { transform: translateY(8px); }
+
+  /* Inbox: Chats | Activity, the pinned Kurazh Money chat, a thread per dare, messages to streamers */
+  .ib-seg { margin: 16px 0 6px; }
+  .ib-seg button { height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+  .ib-n { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; font: 800 10.5px/18px var(--sans); font-style: normal; background: var(--gold); color: var(--ink); }
+  .ib-list { display: grid; grid-template-columns: minmax(0, 1fr); margin: 0 -16px; }
+  .ib-row { position: relative; display: flex; gap: 12px; align-items: center; width: 100%; min-height: 74px; padding: 10px 16px; text-align: left; }
+  .ib-row + .ib-row::before { content: ""; position: absolute; top: 0; left: 78px; right: 16px; height: 1px; background: var(--line); }
+  .ib-row:active { background: var(--s1); }
+  .ib-row .grow { flex: 1; min-width: 0; }
+  .ib-row .t { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 15px; line-height: 1.25; }
+  .ib-row .t > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ib-row .t.dare > span { font: italic 600 17px/1.2 var(--serif); }
+  .ib-row .t svg { flex: none; color: var(--gold2); }
+  .ib-row .p { margin-top: 3px; font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ib-row .p .money { font-size: 14px; }
+  .ib-row .side { flex: none; align-self: stretch; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 8px; min-width: 40px; font-size: 11.5px; color: var(--muted); }
+  .ib-row .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--gold2); }
+  .ib-row.unread .t { font-weight: 800; color: var(--van); }
+  .ib-row.unread .p { color: var(--cash); font-weight: 600; }
+  .ib-row.unread .side { color: var(--gold2); font-weight: 700; }
+  .ib-ava { position: relative; flex: none; width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; font: 600 22px/1 var(--serif); color: var(--van); box-shadow: inset 0 0 0 1px var(--line2); }
+  .ib-ava.money { background: var(--gold) var(--nap-dark); color: var(--ink); box-shadow: inset 0 0 0 1px rgba(0,0,0,.25), 0 0 0 1px var(--line2); }
+  .ib-ava.sm { width: 30px; height: 30px; font-size: 14px; }
+  .ib-ava .tg { position: absolute; right: -3px; bottom: -3px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--s3); color: var(--gold2); box-shadow: 0 0 0 2px var(--bg); }
+  .ib-sec { margin: 18px 0 2px; }
+  .ib-empty { padding: 26px 12px; }
+  .ib-act .ib-ava { width: 44px; height: 44px; font-size: 19px; }
+  .ib-act .ib-row { align-items: flex-start; }
+  .ib-act .ib-row + .ib-row::before { left: 72px; }
+  .ib-act .h { margin-top: 3px; font-size: 12px; color: var(--muted); line-height: 1.35; }
+  .ib-act .ib-row .p { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; color: var(--cash); }
+  .ib-act .ib-ava.k { background: var(--s2); color: var(--gold2); }
+  .ib-act .ib-ava.k.ok { color: var(--ok); }
+  .ib-act .ib-ava.k.bad { color: var(--bad); }
+  /* thread pages inside #push */
+  .push-foot { flex: none; padding: 8px 12px calc(10px + var(--sb)); border-top: 1px solid var(--line); background: var(--s1) var(--nap);
+    margin-bottom: max(0px, calc(var(--kb, 0px) - var(--nav) - var(--sb))); }
+  .push-foot .wbtns .btn { height: 46px; padding: 0 12px; font-size: 14px; white-space: nowrap; }
+  body:not(.is-watch):not(.is-live) .push-foot { padding-bottom: 10px; }
+  .ib-sum { position: sticky; top: -6px; z-index: 3; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 20px; gap: 6px; align-items: center; width: 100%; min-height: 58px;
+    margin: -6px 0 4px; padding: 9px 8px 9px 12px; border-radius: 0 0 16px 16px; text-align: left; background: var(--green) var(--nap); border: 1px solid var(--line2); border-top: 0;
+    box-shadow: var(--felt), 0 10px 18px rgba(0,0,0,.38); }
+  .ib-sum > span { min-width: 0; }
+  .ib-sum b { display: block; font: 600 18px/1.05 var(--serif); font-variant-numeric: lining-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ib-sum small { display: block; margin-top: 3px; font-size: 10.5px; color: var(--cash); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ib-sum svg { color: var(--gold2); }
+  .th-intro { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; padding: 14px 8px 4px; color: var(--muted); font-size: 12.5px; }
+  .th-intro .ib-ava { width: 64px; height: 64px; font-size: 28px; }
+  .th-intro b { font: 600 22px/1.15 var(--serif); color: var(--van); }
+  .th-intro .linkb { min-height: 44px; }
+  .th-day { display: flex; align-items: center; gap: 10px; margin: 18px 0 6px; font-size: 10.5px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .th-day::before, .th-day::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .th-day.new { color: var(--gold2); } .th-day.new::before, .th-day.new::after { background: var(--line2); }
+  .bub { display: flex; gap: 8px; align-items: flex-end; max-width: 90%; margin-top: 8px; }
+  .bub .bb { flex: 1; min-width: 0; display: block; padding: 10px 12px 9px; border-radius: 18px 18px 18px 6px; text-align: left; background: var(--s1) var(--nap); border: 1px solid var(--line); box-shadow: var(--felt); color: var(--van); }
+  .bub button.bb:active { filter: brightness(1.15); }
+  .bub .bl { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--cash); }
+  .bub .bl svg { color: var(--gold2); }
+  .bub .ba { margin-top: 5px; font: 600 27px/1.05 var(--serif); font-variant-numeric: lining-nums tabular-nums; letter-spacing: .01em; }
+  .bub .ba.in { color: var(--gold2); } .bub .ba.hold { color: var(--cash); } .bub .ba.out { color: var(--van); } .bub .ba.bad { color: var(--bad); }
+  .bub .bt { margin-top: 4px; font: italic 500 16px/1.3 var(--serif); color: var(--van); overflow-wrap: anywhere; }
+  .bub .bs { margin-top: 4px; font-size: 12px; color: var(--muted); line-height: 1.35; overflow-wrap: anywhere; }
+  .bub .bm { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 7px; font-size: 11px; color: var(--muted); }
+  .bub .bm .rcpt { display: inline-flex; align-items: center; gap: 4px; color: var(--gold2); font-weight: 700; }
+  .bub.txt .bb { font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+  .bub.txt .bm { margin-top: 3px; justify-content: flex-end; }
+  .bub.me { margin-left: auto; flex-direction: row-reverse; }
+  .bub.me .bb { background-color: var(--green); border-color: var(--line2); border-radius: 18px 18px 6px 18px; }
+  .bub.typing .bb { color: var(--muted); font-style: italic; }
+  .th-sys { display: table; margin: 10px auto 0; max-width: 92%; padding: 6px 12px; border-radius: 12px; background: rgba(236,226,207,.05); border: 1px solid var(--line); font-size: 12px; color: var(--cash); text-align: center; overflow-wrap: anywhere; }
+  .th-sys b { color: var(--van); }
+  .th-note { margin-top: 14px; text-align: center; font-size: 11.5px; color: var(--muted); }
+  .th-head { display: flex; gap: 12px; align-items: center; margin-top: 4px; }
+  .th-head .grow { flex: 1; min-width: 0; }
+  .th-head .tt { font: italic 600 22px/1.15 var(--serif); overflow-wrap: anywhere; }
+  .th-head small { display: block; margin-top: 4px; font-size: 12.5px; color: var(--cash); }
+  .th-head .avb { flex: none; width: 50px; height: 50px; border-radius: 50%; }
+  .steps4 { list-style: none; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 18px -4px 0; padding: 14px 0 12px; border-radius: 16px; background: var(--s1) var(--nap); border: 1px solid var(--line); box-shadow: var(--felt); }
+  .steps4 li { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0 2px; text-align: center; font-size: 11.5px; font-weight: 700; color: var(--muted); }
+  .steps4 li + li::before { content: ""; position: absolute; top: 11px; right: 50%; width: 100%; height: 2px; background: var(--s3); }
+  .steps4 i { position: relative; z-index: 1; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--muted); background: var(--s1); color: var(--ink); }
+  .steps4 .done i { background: var(--gold); border-color: var(--gold); }
+  .steps4 li.done::before, .steps4 li.now::before { background: var(--gold); }
+  .steps4 .now { color: var(--van); }
+  .steps4 .now i { border-color: var(--gold2); background: var(--s1); box-shadow: 0 0 0 4px rgba(184,151,90,.22); }
+  .steps4 .now i::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--gold2); }
+  .steps4 .now.end i { background: var(--gold); border-color: var(--gold); }
+  .steps4 .now.end i::after { display: none; }
+  .steps4 .now.rel i { background: var(--ok); border-color: var(--ok); }
+  .steps4 .skip { opacity: .4; }
+  .steps4 small { display: block; min-height: 15px; font: 600 14px/1.05 var(--serif); font-variant-numeric: lining-nums; color: var(--gold2); }
+  .steps4 .skip small { color: var(--muted); font: 600 10.5px/1.4 var(--sans); }
+  .th-now { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 34px; margin-top: 10px; font-size: 13px; color: var(--cash); text-align: center; }
+  .th-now .timer { font-size: 15px; }
+  .dm-form { display: flex; gap: 8px; align-items: center; }
+  .dm-form input { flex: 1; min-width: 0; height: 44px; padding: 0 14px; border-radius: 14px; border: 1px solid var(--line); background: var(--s2) var(--nap); color: var(--van); outline: none; font-size: 16px; }
+  .dm-form input:focus { border-color: var(--line2); }
+  .dm-form button { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--green) var(--nap); }
+  .dm-hint { display: flex; gap: 6px; align-items: center; min-height: 18px; margin-top: 6px; font-size: 11.5px; color: var(--muted); }
+  .dm-hint.bad { color: var(--bad); }
+  .pf-acts.adult { grid-template-columns: 1fr 48px; }
+  .pf-acts.adult .pf-msg { grid-column: 1 / -1; order: 3; }
+  .pf-acts .pf-msg { font-size: 14px; }
+  .bub .ba, .bub .bt, .bub .bs { display: block; }
+  .ib-act .ib-row .t > span { white-space: normal; }
+  .ib-act .h { display: block; }
+  .ib-row .p { display: block; }
   .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; overflow-wrap: anywhere; }
   /* velour finish: every surface carries the same soft nap, nothing reflects (kept last so it layers over the shorthands above) */
   .sheet, .tabbar, .row, .stat, .acct, .rolecard, .btn, .chip, .toast, .icard, .bn, .say input, .say .mic, .inp, .x, .backb, .iconb, .pill, .say.open, .dz-form, .unclean, .dz-back, .moneycard, .pf-live { background-image: var(--nap); }
@@ -799,6 +922,7 @@
         <button class="pill balance" data-tab="wallet" aria-label="Balance"><b data-bal class="num">0</b></button>
       </div>
       <div class="feed" id="feed"></div>
+      <div class="ptr" id="ptr" aria-hidden="true"></div>
       <div class="feed-empty" id="feed-empty" hidden></div>
     </section>
 
@@ -826,9 +950,13 @@
     </section>
 
     <section class="screen" id="scr-inbox" aria-labelledby="in-h">
-      <div class="page">
+      <div class="page" id="inbox">
         <h1 id="in-h">Inbox</h1>
-        <div class="empty" id="inbox-soon"></div>
+        <div class="seg ib-seg" id="ib-seg" role="tablist" aria-label="Inbox">
+          <button role="tab" id="ib-t-chats" data-ib="chats" aria-controls="ib-list" aria-selected="true" class="on">Chats</button>
+          <button role="tab" id="ib-t-activity" data-ib="activity" aria-controls="ib-list" aria-selected="false">Activity</button>
+        </div>
+        <div id="ib-list" role="tabpanel" aria-labelledby="ib-t-chats"></div>
       </div>
     </section>
 
@@ -892,6 +1020,7 @@
   <div class="push" id="push" role="dialog" aria-modal="true" aria-labelledby="push-title" aria-hidden="true" inert>
     <div class="push-bar"><button class="navb" id="push-back" aria-label="Back"></button><h2 id="push-title"></h2><span id="push-act"></span></div>
     <div class="push-body" id="push-body"></div>
+    <div class="push-foot" id="push-foot" hidden></div>
   </div>
   <nav class="tabbar" id="tabbar" aria-label="Main"></nav>
 
@@ -1053,6 +1182,7 @@ const defaults = () => ({
   tx: [],
   backs: [], follows: [], payouts: [], notify: [],
   role: null, ledger: [], credits: [], courage: [], passLog: [], modQueue: [], blocked: [], reports: [],
+  inbox: null, activity: [], dms: {}, // inbox: read markers only; activity: up to 100 notes; dms: up to 50 messages per streamer
   settings: { sound: true, vibro: true, adult: false, demoAudience: true, camPrimed: false, voice: false },
   stats: { proposed: 0, backed: 0, won: 0, refunded: 0, streams: 0, liveSec: 0, daresDone: 0, earnedTotal: 0 },
 });
@@ -1064,7 +1194,11 @@ function load() {
     S = saved ? { ...d, ...saved, settings: { ...d.settings, ...saved.settings }, stats: { ...d.stats, ...saved.stats } } : d;
   } catch { S = d; }
   for (const p of S.payouts) if (p.status === 'pending' && Date.now() - p.t > 8000) { p.status = 'paid'; p.paidAt = p.paidAt || p.t + 6000; }
-  for (const k of ['ledger', 'credits', 'courage', 'passLog', 'modQueue', 'blocked', 'reports', 'follows', 'notify', 'backs']) if (!Array.isArray(S[k])) S[k] = [];
+  for (const k of ['ledger', 'credits', 'courage', 'passLog', 'modQueue', 'blocked', 'reports', 'follows', 'notify', 'backs', 'activity']) if (!Array.isArray(S[k])) S[k] = [];
+  if (!S.dms || typeof S.dms !== 'object' || Array.isArray(S.dms)) S.dms = {};
+  // Read markers (timestamps). History from before the inbox existed starts out read.
+  if (!S.inbox || typeof S.inbox !== 'object') { const now = Date.now(); S.inbox = { money: now, activity: now, since: now, th: {} }; }
+  if (!S.inbox.th || typeof S.inbox.th !== 'object') S.inbox.th = {};
   if (S.earnings > 0 && !S.ledger.length) { // balances from before the ledger existed
     S.ledger.push({ id: uid(), kind: 'dare', t: Date.now(), text: 'Earlier stream earnings', callers: 0, pot: S.earnings, fee: 0, net: S.earnings, deducted: 0, paidOut: 0, status: 'available', availableAt: Date.now() });
   }
@@ -1320,7 +1454,7 @@ function buzz(p) { if (S.settings.vibro && navigator.vibrate) { try { navigator.
 function toast(msg, kind = '') {
   const el = document.createElement('div');
   el.className = 'toast ' + kind; el.textContent = msg;
-  const box = $('#toasts'); box.appendChild(el);
+  const box = $('#toasts'); placeToasts(box); box.appendChild(el);
   while (box.children.length > 2) box.firstChild.remove();
   const hide = () => { if (el.classList.contains('out')) return; el.classList.add('out'); setTimeout(() => el.remove(), 300); };
   el.addEventListener('click', hide); // tap to dismiss
@@ -1338,6 +1472,36 @@ function goldDust(n = 28) {
   }
 }
 
+// On the feed (and a watched room) toasts sit just above the comment bar, left of the rail; everywhere else at the top.
+function placeToasts(box) {
+  let say = null;
+  try {
+    if ((cur === 'feed' || cur === 'watch') && !anySheet() && !pushOpen()) say = $('.say.open') || (cur === 'watch' ? $('#watch .card .say') : cardOf(curStream())?.querySelector('.say'));
+  } catch { say = null; } // called before the app finished booting
+  const r = say?.getBoundingClientRect(), app = $('#app').getBoundingClientRect();
+  if (!r || !r.height || r.top <= app.top) { box.classList.remove('low'); return; }
+  box.classList.add('low'); box.style.setProperty('--tb', Math.round(app.bottom - r.top + 10) + 'px');
+}
+
+/* ═════════ activity notes: what toasts used to say and then lose, kept for the Inbox's Activity list ═════════
+   note(kind, data) never shows anything itself; the toast stays where it was. At most 100 entries. */
+const NOTE = {
+  start: { ic: 'target', tone: '', link: 'stream', title: (n) => `${n.name} is taking your dare`, help: 'Watch it live. You vote when the time is up.' },
+  counted: { ic: 'check', tone: 'ok', link: 'receipt', title: (n) => `Your dare counted · ${money2(n.amt || 0)} charged`, help: 'The hold went to the Taker. Tap for the receipt.' },
+  failed: { ic: 'undo', tone: '', link: 'receipt', title: (n) => `Hold released · ${money2(n.amt || 0)}`, help: 'The dare didn’t count or wasn’t taken, so nothing was charged.' },
+  live: { ic: 'bell', tone: '', link: 'stream', title: (n) => `${n.name} is live`, help: 'You follow them or turned on live alerts. Tap to watch.' },
+  credits: { ic: 'gift', tone: 'ok', link: 'receipt', title: (n) => `+${money2(n.amt || 0)} Kurazh credits`, help: 'Used before your card on your next stake. They expire in 60 days.' },
+  earn: { ic: 'coins', tone: 'ok', link: 'receipt', title: (n) => `${money2(n.amt || 0)} of earnings available`, help: 'Ready to withdraw to your card, no fee.' },
+  kyc: { ic: 'shield', tone: 'ok', link: 'profile', title: () => 'Identity verified', help: 'You can now back dares, go live, withdraw and enter 18+.' },
+};
+function note(kind, data = {}) {
+  if (!NOTE[kind] || !S) return null;
+  const n = { id: uid(), t: Date.now(), kind, ...data };
+  S.activity.unshift(n); S.activity.length = Math.min(S.activity.length, 100); save();
+  try { refreshBadge(); if (cur === 'inbox') renderInbox(false); if (pushCtx?.kind === 'dare' && pushCtx.id === n.did) refreshPush(); } catch { /* the inbox is not up yet */ }
+  return n;
+}
+
 /* ═════════ money core ═════════ */
 function addTx(amount, title, kind = 'hold') {
   S.tx.unshift({ id: uid(), t: Date.now(), amount, title, kind });
@@ -1352,6 +1516,7 @@ function refreshBalance() {
   $$('[data-bal]').forEach((e) => (e.innerHTML = h ? `${ico('lock', 13)}${money(h)} held` : c ? `${ico('card', 14)}•• ${c.last4}` : `${ico('card', 14)}Add card`));
   if (cur === 'wallet') renderWallet();
   if (cur === 'profile') renderProfile(false);
+  refreshBadge();
 }
 
 /* ═════════ card holds: freeze now, charge only if the dare counts ═════════ */
@@ -1380,6 +1545,7 @@ function addCredit(amount, info) {
   addTx(amount, `Kurazh credits · ${info.streamer} passed on “${info.text}”`, 'credit');
   track('decline_bonus', { amount, kind: 'credits' }); save();
   toast(`+${money2(amount)} Kurazh credits · ${info.streamer} passed on “${info.text}”. They go toward your next stake`, 'gold');
+  note('credits', { amt: amount, name: info.streamer, text: info.text, sid: info.streamId, did: info.dareId, rc: `credit:${c.id}` });
   return c;
 }
 function useCredits(amount) {
@@ -1407,7 +1573,7 @@ function addLedger(row) {
 }
 function ledgerTick() {
   let ch = false;
-  for (const r of S.ledger) if (r.kind === 'dare' && r.status === 'pending' && Date.now() >= r.availableAt) { r.status = 'available'; ch = true; }
+  for (const r of S.ledger) if (r.kind === 'dare' && r.status === 'pending' && Date.now() >= r.availableAt) { r.status = 'available'; ch = true; note('earn', { amt: rowLeft(r), text: r.text, rc: `earn:${r.id}` }); }
   for (const p of S.payouts) if (p.status === 'pending' && Date.now() - p.t >= 6000) { p.status = 'paid'; p.paidAt = Date.now(); ch = true; }
   if (ch) { save(); if (cur === 'wallet') renderWallet(); }
 }
@@ -1633,7 +1799,7 @@ function startDare(st, d) {
   st.active = { d, phase: 'doing', t: d.time, total: d.time, yes: 0, no: 0, myVote: null };
   pushChat(st, { sys: true, text: `${st.name} takes on “${d.text}” · pot ${money(d.pool)}` });
   if (st === curStream() && cur === 'feed') takerSay(st, pick(TAKER_LINES.take)(d), { chat: false });
-  if (d.my > 0) { toast(`${st.name} is doing your dare`, 'gold'); buzz([40, 60, 40]); sfx('dare-accept'); }
+  if (d.my > 0) { toast(`${st.name} is doing your dare`, 'gold'); buzz([40, 60, 40]); sfx('dare-accept'); note('start', { sid: st.id, name: st.name, text: d.text, did: d.id }); }
 }
 // Simulated Takers follow the same Courage rules as real ones: free passes first, then a capped decline fee paid to backers as credits.
 function declineDare(st, d) {
@@ -1663,11 +1829,13 @@ function settle(d, success, st, why) {
     if (card > 0) addTx(-card, `Charged · “${d.text}” → ${st.name} · ${cl}`, 'charge');
     const paid = [card > 0 ? `${money2(card)} charged to ${cl}` : '', cred > 0 ? `${money2(cred)} of credits used` : ''].filter(Boolean).join(' + ');
     toast(`${paid} · ${firstName(st.name)} received ${money2(sum * (1 - FEE))}`, 'ok'); sfx('charge');
+    note('counted', { sid: st.id, name: st.name, text: d.text, did: d.id, amt: sum, rc: `hold:${mine[0].id}` });
     track('hold_captured', { amount: sum });
   } else {
     S.stats.refunded++;
     if (card > 0) addTx(card, `Released · “${d.text}” (${why})`, 'release');
     toast(`${money2(sum)} hold released · nothing charged${cred > 0 ? ` · ${money2(cred)} credits returned` : ''}`); sfx('release');
+    note('failed', { sid: st.id, name: st.name, text: d.text, did: d.id, amt: sum, why, rc: `hold:${mine[0].id}` });
     track('hold_released', { amount: sum });
   }
   save(); refreshBalance();
@@ -1910,6 +2078,7 @@ const onScreen = new Set();
 function buildFeed() {
   const forYou = streams.filter((s) => (feedCat === 'all' ? s.cat !== 'adult' : s.cat === feedCat)
     && (!feedThemes.length || (s.themes || []).some((t) => feedThemes.includes(t))) && (!feedMax || (s.minDare || 0) <= feedMax) && (!feedBold || s.courage >= 80));
+  if (feedOrder) forYou.sort((a, b) => feedOrder.indexOf(a.id) - feedOrder.indexOf(b.id));
   feedList = feedTab === 'following' ? streams.filter((s) => S.follows.includes(s.id) && (s.cat !== 'adult' || adultOn())) : forYou;
   const n = filterCount();
   $('#fbtn').innerHTML = `${ico('sliders', 17)}Filters${n ? `<b>${n}</b>` : ''}`; $('#fbtn').classList.toggle('on', !!n);
@@ -2005,7 +2174,7 @@ function gestureStart(e) {
   if (tg.closest('button, a, input, textarea, select, form, label, .rail, .banner, .rgate, .unmute')) return;
   const card = tg.closest('.card'); if (!card) return;
   const st = stOfCard(card); if (!st) return;
-  Object.assign(G, { on: true, card, st, x0: t.clientX, y0: t.clientY, x: t.clientX, y: t.clientY, t0: performance.now(), axis: null, lpDone: false, W: innerWidth });
+  Object.assign(G, { on: true, card, st, box: e.currentTarget, x0: t.clientX, y0: t.clientY, x: t.clientX, y: t.clientY, t0: performance.now(), axis: null, lpDone: false, W: innerWidth });
   clearTimeout(G.lp);
   G.lp = setTimeout(() => {
     if (!G.on || G.axis) return;
@@ -2017,7 +2186,12 @@ function gestureMove(e) {
   const t = e.touches[0]; G.x = t.clientX; G.y = t.clientY;
   const dx = G.x - G.x0, dy = G.y - G.y0;
   if (Math.hypot(dx, dy) > 8) clearTimeout(G.lp);
+  // Pull to refresh (For you, scrolled to the top): from the first pixel down, keep the snapped feed still.
+  const ptrOk = G.box === feedEl && feedTab === 'foryou' && feedEl.scrollTop <= 0 && dy > 0 && dy >= Math.abs(dx);
+  if ((!G.axis && ptrOk) || G.axis === 'ptr') { if (e.cancelable) e.preventDefault(); }
+  if (G.axis === 'ptr') { ptrMove(dy); return; }
   if (!G.axis && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+    if (ptrOk && dy > 10) { G.axis = 'ptr'; clearTimeout(tapT); lastTap = null; ptrMove(dy); return; }
     G.axis = Math.abs(dx) > 1.3 * Math.abs(dy) && dx < 0 && !gated(G.st) ? 'x' : 'y';
     if (G.axis === 'x') { openProfile(G.st, { drag: true }); G.pw = pushEl.offsetWidth || G.W; }
     else { G.on = false; return; } // vertical: scroll-snap owns the rest of this touch
@@ -2032,6 +2206,7 @@ function gestureEnd(e) {
   if (!G.on) return;
   G.on = false;
   if (G.lpDone) { if (e.cancelable) e.preventDefault(); return; } // the menu is open: swallow the click this touch would make
+  if (G.axis === 'ptr') { if (e.cancelable) e.preventDefault(); ptrEnd(G.y - G.y0); return; }
   if (G.axis === 'x') {
     G.drag = false;
     const dx = G.x - G.x0, v = -dx / Math.max(1, performance.now() - G.t0);
@@ -2057,25 +2232,54 @@ function gestureEnd(e) {
 }
 for (const box of [feedEl, $('#watch')]) {
   box.addEventListener('touchstart', gestureStart, { passive: true });
-  box.addEventListener('touchmove', gestureMove, { passive: true });
+  box.addEventListener('touchmove', gestureMove, { passive: false }); // not passive: pull to refresh holds the feed still
   box.addEventListener('touchend', gestureEnd, { passive: false });
-  box.addEventListener('touchcancel', () => { clearTimeout(G.lp); if (G.axis === 'x' && G.on) { G.drag = false; pushEl.classList.remove('dragging'); pushEl.style.transform = ''; closePush(); } G.on = false; });
+  box.addEventListener('touchcancel', () => { clearTimeout(G.lp); if (G.axis === 'ptr') ptrEnd(0); if (G.axis === 'x' && G.on) { G.drag = false; pushEl.classList.remove('dragging'); pushEl.style.transform = ''; closePush(); } G.on = false; });
   box.addEventListener('contextmenu', (e) => { if (e.target.closest('.card') && !e.target.closest('input, textarea')) e.preventDefault(); });
+}
+// Pull to refresh: only the spinner under the header follows the finger; at 70 px the For you list reshuffles.
+const PTR = { on: false, busy: false, at: 70 };
+const reduceMotion = () => !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+function ptrMove(dy) {
+  const el = $('#ptr'), p = Math.min(1, dy / PTR.at);
+  if (PTR.busy) return;
+  if (!PTR.on) { PTR.on = true; el.innerHTML = ico('spin', 18); el.classList.add('pull'); }
+  el.style.opacity = String(Math.min(1, 0.2 + p));
+  el.style.transform = reduceMotion() ? 'none' : `translateY(${Math.round(-16 + 16 * p)}px) rotate(${Math.round(p * 270)}deg) scale(${0.6 + 0.4 * p})`;
+  el.setAttribute('aria-hidden', 'true');
+}
+function ptrEnd(dy) {
+  const el = $('#ptr');
+  if (!PTR.on) return;
+  PTR.on = false; el.classList.remove('pull'); el.style.opacity = ''; el.style.transform = '';
+  if (dy >= PTR.at && !PTR.busy) refreshFeed();
+}
+let feedOrder = null; // For you order after a refresh (ids); null keeps the default order
+function refreshFeed() {
+  if (PTR.busy) return;
+  const el = $('#ptr'); PTR.busy = true; el.innerHTML = ico('spin', 18); el.classList.add('busy');
+  sfx('tap'); buzz(10); track('feed_refresh');
+  setTimeout(() => {
+    const ids = streams.map((x) => x.id), old = feedList.map((x) => x.id).join();
+    for (let k = 0; k < 4; k++) { feedOrder = [...ids].sort(() => Math.random() - 0.5); if (streams.filter((x) => feedList.includes(x)).sort((a, b) => feedOrder.indexOf(a.id) - feedOrder.indexOf(b.id)).map((x) => x.id).join() !== old) break; }
+    if (feedTab === 'foryou') buildFeed();
+    el.classList.remove('busy'); PTR.busy = false;
+  }, reduceMotion() ? 350 : 750);
 }
 /* ═════════ push layer: one overlay that slides in from the right, for profiles and settings ═════════
    A visible back button (standalone mode has no system back), swipe right from anywhere but the 24 px edges, and the browser's back
    button when Kurazh is the top page. Inside the artifact iframe it never touches the parent page's history. */
 const pushEl = $('#push'), pushBody = $('#push-body');
-let pushCtx = null, pushHist = false, pushFrom = null;
+let pushCtx = null, pushHist = false, pushFrom = null, pushStack = [];
 const pushOpen = () => pushEl.classList.contains('open');
 const topLevel = (() => { try { return window.top === window; } catch { return false; } })();
-function openPush(ctx, html, { drag = false } = {}) {
+// stack: true keeps what the layer showed, so Back returns to it (a profile opened from a chat, a chat opened from a profile)
+function openPush(ctx, html, { drag = false, stack = false } = {}) {
   const was = pushOpen();
   if (!was) pushFrom = document.activeElement;
-  pushCtx = ctx;
-  $('#push-title').textContent = ctx.title || '';
-  $('#push-act').innerHTML = ctx.act || '';
-  pushBody.innerHTML = html; pushBody.scrollTop = 0;
+  if (!was || !stack) pushStack = [];
+  else if (pushCtx) pushStack.push(pushCtx);
+  swapPush(ctx, html);
   pushEl.inert = false; pushEl.removeAttribute('aria-hidden');
   if (drag) { pushEl.classList.add('dragging'); pushEl.style.transform = 'translateX(100%)'; }
   pushEl.classList.add('open');
@@ -2092,7 +2296,8 @@ function closePush(fromPop) {
   if (!pushOpen()) return;
   pushEl.classList.remove('open', 'dragging'); pushEl.style.transform = '';
   pushEl.inert = true; pushEl.setAttribute('aria-hidden', 'true'); $('.screens').inert = false;
-  pushCtx = null;
+  pushCtx = null; pushStack = [];
+  $('#push-foot').hidden = true; $('#push-foot').innerHTML = '';
   if (pushHist) { pushHist = false; if (!fromPop) { try { history.back(); } catch { /* ignore */ } } }
   const f = pushFrom; pushFrom = null;
   if (f && f.isConnected && typeof f.focus === 'function' && !f.closest('#push')) f.focus({ preventScroll: true });
@@ -2103,11 +2308,29 @@ function refreshPush() {
   const y = pushBody.scrollTop;
   if (pushCtx.kind === 'streamer') { const st = streamOf(pushCtx.id); if (st) pushBody.innerHTML = profileHTML(st); }
   else if (pushCtx.kind === 'settings') pushBody.innerHTML = settingsHTML();
+  else if (THREADS.has(pushCtx.kind)) { refreshThread(true); return; }
   pushBody.scrollTop = y;
 }
+// Replace what the layer shows without touching history or the back stack.
+function swapPush(ctx, html) {
+  pushCtx = ctx;
+  $('#push-title').textContent = ctx.title || '';
+  $('#push-act').innerHTML = ctx.act || '';
+  const foot = $('#push-foot'); foot.innerHTML = ctx.foot || ''; foot.hidden = !ctx.foot;
+  pushBody.innerHTML = html; pushBody.scrollTop = 0;
+}
+// Back: one step down the stack, or close the layer.
+function pushBack() {
+  const prev = pushStack.pop();
+  if (!prev) { closePush(); return; }
+  if (prev.kind === 'streamer') { const st = streamOf(prev.id); if (st) { openProfile(st, { keep: true }); return; } }
+  else if (prev.kind === 'dm') { openDm(streamOf(prev.id), { keep: true }); return; }
+  else if (THREADS.has(prev.kind)) { openThread(prev.kind, prev.id, { keep: true }); return; }
+  closePush();
+}
 window.addEventListener('popstate', () => { if (pushOpen()) closePush(true); });
-$('#push-back').addEventListener('click', () => { closePush(); sfx('tap'); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && pushOpen() && !anySheet()) closePush(); });
+$('#push-back').addEventListener('click', () => { pushBack(); sfx('tap'); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && pushOpen() && !anySheet()) pushBack(); });
 // swipe right anywhere on the layer (except the screen edges) to go back
 const PG = { on: false };
 pushEl.addEventListener('touchstart', (e) => {
@@ -2135,13 +2358,14 @@ function pushDragEnd() {
   PG.on = false; if (PG.axis !== 'x') return;
   const dx = PG.x - PG.x0, v = dx / Math.max(1, performance.now() - PG.t0);
   pushEl.classList.remove('dragging'); pushEl.style.transform = '';
-  if (dx > 0.3 * PG.W || (v > 0.5 && dx > 40)) { closePush(); sfx('tap'); }
+  if (dx > 0.3 * PG.W || (v > 0.5 && dx > 40)) { pushBack(); sfx('tap'); }
 }
 pushEl.addEventListener('touchend', pushDragEnd);
 pushEl.addEventListener('touchcancel', pushDragEnd);
 pushEl.addEventListener('click', (e) => {
   if (!pushCtx) return;
   if (pushCtx.kind === 'settings') { onMeClick(e); return; }
+  if (THREADS.has(pushCtx.kind)) { onThreadClick(e); return; }
   const b = e.target.closest('[data-pf]'); if (!b || b.disabled) return;
   const st = streamOf(pushCtx.id); if (!st) return;
   const pf = b.dataset.pf;
@@ -2152,7 +2376,9 @@ pushEl.addEventListener('click', (e) => {
     refreshPush(); sfx('tap'); buzz(10);
     toast(on ? `Live alerts on for ${firstName(st.name)}` : `Live alerts off for ${firstName(st.name)}`);
     track('live_alert', { on });
-  } else if (pf === 'watch') { closePush(); if (st.real) showWatch(); else goToStream(st.id); }
+  } else if (pf === 'dm') openDm(st, { stack: true });
+  else if (pf === 'unblock') { unblockDm(st); refreshPush(); }
+  else if (pf === 'watch') { closePush(); if (st.real) showWatch(); else goToStream(st.id); }
   else if (pf === 'dares') { closePush(); if (st.real) showWatch(); else goToStream(st.id, true); }
 });
 
@@ -2181,14 +2407,18 @@ function demoOf(st) {
 const palOf = (st) => [/^#[0-9a-f]{3,8}$/i.test(st?.pal?.[0] || '') ? st.pal[0] : '#1e221d', /^#[0-9a-f]{3,8}$/i.test(st?.pal?.[1] || '') ? st.pal[1] : '#070807'];
 function profileHTML(st) {
   const real = isReal(st), fol = S.follows.includes(st.id), bell = S.notify.includes(st.id), who = esc(firstName(st.name)), dm = demoOf(st), r = st.rules || {};
+  const adult = st.cat === 'adult', blocked = !!S.dms[st.id]?.blocked;
   const types = typesOf(st).map((t) => TAGS[t] || t), top = st.active?.d || topDare(st), [p0, p1] = palOf(st);
   const tile = (t) => `<div class="pf-tile" style="background:radial-gradient(circle at ${t.x}% ${t.y}%, ${hexA(t.g, 0.55)}, transparent 55%),radial-gradient(circle at ${100 - t.x}% 88%, ${hexA(t.g, 0.22)}, transparent 50%),linear-gradient(160deg,${p0},${p1})"><span class="tp">${money(t.pot)}</span><span class="tt">${esc(t.title)}</span><span class="tm">${t.days} d ago · ${money(t.pot)} pot</span></div>`;
   return `<div class="pf-head"><div class="pf-ava on">${avaHTML(st)}<span class="live">LIVE</span></div>
       <div class="pf-id"><h1>${esc(st.name)}</h1><small>${st.cat === 'adult' ? '<span class="adult">18+</span>' : ''}${ico('pin', 13)}${esc(real ? `Room ${st.code}` : st.city)}${CATS[st.cat] && st.cat !== 'adult' ? ` · ${esc(CATS[st.cat])}` : ''}</small><small><span class="gold">${courageTxt(st.courage)}</span></small></div></div>
     <div class="pf-counts"><div><b data-k="fol">${compact(dm.followers + (fol ? 1 : 0))}</b><span>Followers</span></div><div><b>${compact(dm.following)}</b><span>Following</span></div><div><b>${compact(dm.dares)}</b><span>Dares done</span></div></div>
     <span class="pf-demo">Demo counts</span>
-    <div class="pf-acts ${real ? 'solo' : ''}">${real ? '' : `<button class="btn ${fol ? 'ghost on' : 'gold'}" data-pf="follow" aria-pressed="${fol}">${ico(fol ? 'check' : 'plus', 17)}${fol ? 'Following' : 'Follow'}</button>`}
-      <button class="btn ghost" disabled aria-label="Message ${esc(st.name)}, coming soon">${ico('chat', 17)}Message<small>soon</small></button>
+    <div class="pf-acts ${real ? 'solo' : adult ? 'adult' : ''}">${real ? '' : `<button class="btn ${fol ? 'ghost on' : 'gold'}" data-pf="follow" aria-pressed="${fol}">${ico(fol ? 'check' : 'plus', 17)}${fol ? 'Following' : 'Follow'}</button>`}
+      ${real ? `<button class="btn ghost pf-msg" disabled>${ico('chat', 17)}Messages are off in shared rooms</button>`
+        : adult ? `<button class="btn ghost pf-msg" disabled>${ico('chat', 17)}Messages are off in 18+</button>`
+        : blocked ? `<button class="btn ghost" data-pf="unblock" aria-label="Unblock ${esc(st.name)}">${ico('block', 17)}Unblock</button>`
+        : `<button class="btn ghost" data-pf="dm" aria-label="Message ${esc(st.name)}">${ico('chat', 17)}Message</button>`}
       ${real ? '' : `<button class="btn ghost pf-bell ${bell ? 'on' : ''}" data-pf="bell" aria-pressed="${bell}" aria-label="Tell me when ${who} goes live">${ico('bell', 20)}</button>`}</div>
     <button class="pf-live" data-pf="watch"><span class="live">LIVE</span><span class="grow"><b>${esc(st.title)}</b><small>Live now · ${fmt(st.viewers)} watching${top ? ` · top dare ${money(top.pool)}` : ''}</small></span>${ico('chev', 18)}</button>
     <div class="sp-tags">${tagsFull(st)}</div>
@@ -2204,9 +2434,10 @@ function profileHTML(st) {
     ${real ? `<div class="empty" style="padding:24px 12px"><div class="ring">${ico('feed', 24)}</div>No past streams on this phone yet.<div class="wbtns one"><button class="btn gold" data-pf="watch">Back to the stream</button></div></div>`
       : `<div class="pf-grid">${dm.past.map(tile).join('')}</div>`}`;
 }
-function openProfile(st, { drag = false } = {}) {
+function openProfile(st, { drag = false, stack = false, keep = false } = {}) {
   if (!st) return;
-  openPush({ kind: 'streamer', id: st.id, title: st.name }, profileHTML(st), { drag });
+  if (keep) { swapPush({ kind: 'streamer', id: st.id, title: st.name }, profileHTML(st)); return; }
+  openPush({ kind: 'streamer', id: st.id, title: st.name }, profileHTML(st), { drag, stack });
   track('profile_open', { via: drag ? 'swipe' : 'tap', real: isReal(st) });
 }
 /* ═════════ the stream menu ═════════ */
@@ -2286,6 +2517,14 @@ function scriptedReply(st, text) {
   const k = /^(hi|hey|hello|yo|привет|прив|здравствуй|хай|привіт|вітаю)(?=[\s,.!?]|$)/.test(t) ? 'hi' : /(dare|can you|could you|сделай|можешь|зроби|можеш|давай)/.test(t) ? 'dare' : /\?$/.test(t) ? 'q' : 'any';
   return pick(L[k]);
 }
+// One line from the simulated Taker: Claude when this runs inside a Claude viewer, otherwise the scripted replies. Always filtered.
+async function aiLine(prompt, st, text) {
+  let reply = null;
+  try { reply = await window.KurazhVoice?.ask(prompt); } catch { reply = null; }
+  if (reply) { reply = reply.replace(/^["“”']+|["“”']+$/g, '').replace(/\*[^*]*\*/g, '').replace(/\s+/g, ' ').trim().slice(0, 220); if (!Safety.scan(reply, modeOf(st.cat)).ok) reply = null; }
+  if (!reply) { await new Promise((r) => setTimeout(r, 700 + Math.random() * 700)); reply = scriptedReply(st, text); }
+  return reply;
+}
 let replyBusy = false, replyAt = 0;
 async function takerReply(st, text) {
   if (st.real || replyBusy || Date.now() - replyAt < 2500) return; // one reply at a time, no flooding
@@ -2302,10 +2541,7 @@ ${recent}
 The viewer ${S.user.nick} just said to you: "${text}"
 
 Reply as ${firstName(st.name)} speaking out loud on stream: one or two short, natural sentences, at most 30 words, warm and in character, in the same language the viewer used. If they suggest a dare, react to it and tell them to add it in Dares with a stake. Never agree to anything dangerous, illegal, explicit, involving minors, or hurting others; never share contacts or personal data, never ask for money outside the app. Output only the words you say: no quotes, no stage directions, no emoji.`;
-  let reply = null;
-  try { reply = await window.KurazhVoice?.ask(prompt); } catch { reply = null; }
-  if (reply) { reply = reply.replace(/^["“”']+|["“”']+$/g, '').replace(/\*[^*]*\*/g, '').replace(/\s+/g, ' ').trim().slice(0, 220); if (!Safety.scan(reply, modeOf(st.cat)).ok) reply = null; }
-  if (!reply) { await new Promise((r) => setTimeout(r, 700 + Math.random() * 700)); reply = scriptedReply(st, text); }
+  const reply = await aiLine(prompt, st, text);
   st.chat = st.chat.filter((m) => m !== typing);
   replyBusy = false;
   takerSay(st, reply);
@@ -2754,9 +2990,369 @@ $('#scr-explore').addEventListener('click', (e) => {
   const sto = e.target.closest('[data-story]'); if (sto) { if (sto.dataset.story === 'room') showWatch(); else goToStream(sto.dataset.story); sfx('tap'); return; }
   const r = e.target.closest('[data-go]'); if (r) goToStream(r.dataset.go, true);
 });
-$('#inbox-soon').innerHTML = `<div class="ring">${ico('inbox', 24)}</div><h2 style="color:var(--van)">Coming soon</h2>
-  <span>Your money chat, a thread for every dare you back and the things you missed will land here.</span>
-  <div class="wbtns"><button class="btn ghost" data-tab="wallet">${ico('wallet', 17)}Open Wallet</button><button class="btn gold" data-tab="live">Find a stream</button></div>`;
+/* ═════════ Inbox: the pinned Kurazh Money chat, a thread per dare, messages to streamers, and Activity ═════════
+   Money messages are built at render time from S.backs, S.credits, S.ledger and S.payouts. S.inbox keeps read markers only (timestamps). */
+Object.assign(IC, {
+  tack: '<path d="M9 3.5h6l-1.2 5.2 3.2 3.1v1.7H7v-1.7l3.2-3.1z"/><path d="M12 13.5V21"/>',
+  block: '<circle cx="12" cy="12" r="8.5"/><path d="m6 6 12 12"/>',
+  spin: '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4h-4"/>',
+});
+const THREADS = new Set(['money', 'dare', 'dm']);
+const timeHM = (t) => new Date(t).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+function dayLbl(t) {
+  const d0 = dayStart(), d = new Date(t);
+  if (t >= d0) return 'Today';
+  if (t >= d0 - 864e5) return 'Yesterday';
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', ...(d.getFullYear() !== new Date().getFullYear() ? { year: 'numeric' } : {}) });
+}
+const whenShort = (t) => (t >= dayStart() ? timeHM(t) : t >= dayStart() - 864e5 ? 'Yesterday' : new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }));
+const moneyAva = (sm) => `<span class="ib-ava money ${sm ? 'sm' : ''}" aria-hidden="true">${ico('coins', sm ? 16 : 24)}</span>`;
+function threadAva(sid, name, extra = '', cls = '') {
+  const [p0, p1] = palOf(streamOf(sid) || byId(sid));
+  return `<span class="ib-ava ${cls}" style="background:linear-gradient(150deg,${p0},${p1})" aria-hidden="true">${esc(String(name || '?')[0].toUpperCase())}${extra}</span>`;
+}
+const cap1 = (t) => String(t).charAt(0).toUpperCase() + String(t).slice(1);
+const blockedSid = (sid) => !!(sid && S.dms[sid]?.blocked);
+
+// Every money event, oldest first. Ids are stable so the same event is never shown twice.
+function moneyEvents() {
+  const ev = [];
+  for (const b of S.backs) {
+    const parts = b.parts?.length ? b.parts : [{ amt: b.amount, t: b.t }], base = { text: b.text, who: b.streamer, sid: b.streamId, did: b.dareId, rc: `hold:${b.id}`, card: b.card };
+    parts.forEach((p, i) => ev.push({ ...base, id: `h${i}:${b.id}`, k: 'hold', t: p.t, amt: p.amt, first: i === 0, mine: b.mine, split: parts.length === 1 && b.credit ? [cardPart(b), b.credit] : null }));
+    if (b.credit > 0) ev.push({ ...base, id: `u:${b.id}`, k: 'used', t: parts[0].t + 1, amt: b.credit });
+    if (b.status === 'captured') ev.push({ ...base, id: `c:${b.id}`, k: 'charge', t: b.done || b.t, amt: b.amount, onCard: cardPart(b), cred: b.credit || 0 });
+    else if (b.status === 'released') ev.push({ ...base, id: `r:${b.id}`, k: 'release', t: b.done || b.t, amt: b.amount, why: b.why, cred: b.credit || 0 });
+  }
+  for (const c of S.credits) ev.push({ id: `k:${c.id}`, k: 'credit', t: c.t, amt: c.amount, text: c.text, who: c.streamer, sid: c.streamId, did: c.dareId, rc: `credit:${c.id}`, exp: c.expiresAt });
+  for (const r of S.ledger) {
+    if (r.kind === 'dare') ev.push({ id: `e:${r.id}`, k: 'earn', t: r.t, amt: r.net, text: r.text, rc: `earn:${r.id}`, pot: r.pot, fee: r.fee, status: r.status });
+    else if (r.kind === 'fee') ev.push({ id: `f:${r.id}`, k: 'fee', t: r.t, amt: r.fee, text: r.text, rc: `fee:${r.id}`, why: REASON_LBL[r.reason] || r.reason, backers: r.backers });
+  }
+  for (const p of S.payouts) ev.push({ id: `p:${p.id}`, k: 'payout', t: p.t, amt: p.amount, card: p.card, rc: `payout:${p.id}`, status: p.status });
+  return ev.sort((a, b) => a.t - b.t);
+}
+// tone: in = money coming to you (brass), hold = frozen or set aside (cashmere)
+const MK = {
+  hold: { lbl: 'Hold placed', ic: 'lock', tone: 'hold', sign: '' },
+  used: { lbl: 'Credits used', ic: 'gift', tone: 'hold', sign: '' },
+  charge: { lbl: 'Charged', ic: 'check', tone: 'out', sign: '−' },
+  release: { lbl: 'Released', ic: 'undo', tone: 'in', sign: '' },
+  credit: { lbl: 'Credits received', ic: 'gift', tone: 'in', sign: '+' },
+  earn: { lbl: 'Earnings credited', ic: 'coins', tone: 'in', sign: '+' },
+  payout: { lbl: 'Payout', ic: 'card', tone: 'in', sign: '' },
+  fee: { lbl: 'Decline fee', ic: 'undo', tone: 'bad', sign: '−' },
+};
+function evSub(e) {
+  if (e.k === 'hold') return `${e.first ? (e.mine ? 'You wrote this dare' : 'You backed it') : 'Added to your stake'} · ${esc(e.who)} · ${e.split ? `${money2(e.split[0])} on card + ${money2(e.split[1])} credits` : esc(e.card || '')}. Charged only if it counts.`;
+  if (e.k === 'used') return `Set aside from your Kurazh credits for ${esc(firstName(e.who))}’s dare`;
+  if (e.k === 'charge') return `${e.cred && e.onCard ? `${money2(e.onCard)} from ${esc(e.card)} + ${money2(e.cred)} credits` : e.cred ? 'Paid with Kurazh credits' : esc(e.card || '')} · ${esc(firstName(e.who))} received ${money2(e.amt * (1 - FEE))}`;
+  if (e.k === 'release') return `${esc(cap1(e.why || 'not counted'))} · nothing charged${e.cred ? `, ${money2(e.cred)} credits returned` : ''}`;
+  if (e.k === 'credit') return `${esc(e.who)} passed after the free passes · expires ${fmtDay(e.exp)}`;
+  if (e.k === 'earn') return `Pot ${money2(e.pot)} − ${FEE * 100}% fee ${money2(e.fee)} · ${(LEDGER_ST[e.status] || ['', ''])[1].toLowerCase()}`;
+  if (e.k === 'payout') return `To ${esc(e.card || 'your card')} · no fee · ${e.status === 'paid' ? 'paid' : 'arrives in 1–2 business days'}`;
+  if (e.k === 'fee') return `${esc(e.why || 'pass')} · paid to ${e.backers} backer${e.backers === 1 ? '' : 's'} as Kurazh credits`;
+  return '';
+}
+function bubbleHTML(e) {
+  const m = MK[e.k];
+  return `<div class="bub" data-ev="${esc(e.id)}">${moneyAva(true)}<button class="bb" data-rc="${esc(e.rc)}" aria-label="${m.lbl} ${m.sign}${money2(e.amt)}${e.text ? `, “${esc(e.text)}”` : ''}, ${timeHM(e.t)}. Open the receipt">
+    <span class="bl">${ico(m.ic, 13)}${m.lbl}</span><span class="ba ${m.tone}">${m.sign}${money2(e.amt)}</span>
+    ${e.text ? `<span class="bt">“${esc(e.text)}”</span>` : ''}<span class="bs">${evSub(e)}</span>
+    <span class="bm"><span>${timeHM(e.t)}</span><span class="rcpt">${ico('receipt', 13)}Receipt</span></span></button></div>`;
+}
+// Day separators (Today / Yesterday / date) and a "New" line before the first unread item.
+function withDays(items, render, newAfter) {
+  let day = '', html = '', marked = false;
+  for (const it of items) {
+    const d = dayLbl(it.t);
+    if (d !== day) { day = d; html += `<div class="th-day" role="separator">${d}</div>`; }
+    if (!marked && newAfter != null && it.t > newAfter) { marked = true; html += '<div class="th-day new" role="separator">New</div>'; }
+    html += render(it);
+  }
+  return html;
+}
+
+/* the pinned money chat */
+let moneySeen = null;
+function moneySumHTML() {
+  const h = heldNow(), c = creditBal(), e = earnAvail();
+  return `<button class="ib-sum" data-th="wallet" aria-label="On hold now ${money2(h)}, credits ${money2(c)}, earnings available ${money2(e)}. Open Wallet">
+    <span><b class="num">${money2(h)}</b><small>On hold now</small></span><span><b class="num">${money2(c)}</b><small>Credits</small></span><span><b class="num">${money2(e)}</b><small>Earnings ready</small></span>${ico('chev', 18)}</button>`;
+}
+function moneyThreadHTML() {
+  const ev = moneyEvents();
+  return `${moneySumHTML()}<div class="th-intro">${moneyAva()}<b>Kurazh Money</b><span>Every hold, charge, release, credit and payout lands here with its receipt. This chat is pinned and can’t be muted.</span></div>
+    ${ev.length ? withDays(ev, bubbleHTML, moneySeen) : `<div class="empty ib-empty"><div class="ring">${ico('lock', 24)}</div>No money has moved yet. Back a dare and its hold shows up here.<div class="wbtns"><button class="btn gold" data-tab="live">Find a stream</button><button class="btn ghost" data-th="wallet">${ico('wallet', 17)}Wallet</button></div></div>`}`;
+}
+
+/* one thread per dare you wrote or backed: Held → Taking → Voting → Charged or Released */
+function dareInfo(did) {
+  const bs = S.backs.filter((b) => b.dareId === did); if (!bs.length) return null;
+  const b0 = bs[bs.length - 1], st = streamOf(b0.streamId), a = st?.active?.d?.id === did ? st.active : null;
+  const amt = round2(bs.reduce((x, b) => x + b.amount, 0)), cap = bs.filter((b) => b.status === 'captured'), held = bs.some((b) => b.status === 'held');
+  const notes = S.activity.filter((n) => n.did === did), started = notes.some((n) => n.kind === 'start'), why = bs.find((b) => b.why)?.why || '';
+  const voted = cap.length > 0 || /not counted/.test(why);
+  let step = 0, end = '';
+  if (cap.length) { step = 3; end = 'charged'; } else if (!held) { step = 3; end = 'released'; } else if (a) step = a.phase === 'doing' ? 1 : 2;
+  const d = st && held ? (st.dares?.find((x) => x.id === did) || (a && a.phase === 'doing' ? a.d : null)) : null;
+  const last = Math.max(...bs.map((b) => Math.max(b.t, b.done || 0, ...(b.parts || []).map((p) => p.t))), ...notes.map((n) => n.t));
+  return { did, bs, st, a, amt, step, end, why, started: started || voted || (!end && step >= 1), voted, d, open: !!d && dareOpen(st, d), queued: !!(held && !a && st?.dares?.some((x) => x.id === did)), last,
+    text: b0.text, who: b0.streamer, sid: b0.streamId, mine: bs.some((b) => b.mine), charged: round2(cap.reduce((x, b) => x + b.amount, 0)) };
+}
+const STEP_LBL = (i) => (i.end === 'released' ? 'Released' : i.end === 'charged' ? 'Charged' : i.step === 1 ? 'Taking' : i.step === 2 ? 'Voting' : i.queued ? 'Held · queued' : 'Held');
+function stepsHTML(i) {
+  const a = i.a, yes = a && a.phase === 'voting' ? Math.round((a.yes / Math.max(1, a.yes + a.no)) * 100) : null;
+  const st = (k) => (i.end ? (k === 0 || k === 3 || (k === 1 && i.started) || (k === 2 && i.voted) ? (k === 3 ? 'now end' + (i.end === 'released' ? ' rel' : '') : 'done') : 'skip') : k < i.step ? 'done' : k === i.step ? 'now' : '');
+  const cells = [
+    ['Held', `${money(i.amt)}`],
+    ['Taking', i.step === 1 && a ? `<span data-v="t1">${mmss(a.t)}</span>` : i.end && !i.started ? 'skipped' : i.d || a ? money((a || {}).d?.pool ?? i.d.pool) : ''],
+    ['Voting', yes != null ? `<span data-v="yp">${yes}%</span>` : i.end && !i.voted ? 'skipped' : ''],
+    [i.end === 'released' ? 'Released' : i.end === 'charged' ? 'Charged' : 'Charged / Released', i.end === 'charged' ? money(i.charged) : i.end === 'released' ? money(i.amt) : ''],
+  ];
+  return `<ol class="steps4" aria-label="Where this dare stands">${cells.map(([l, v], k) => { const c = st(k); return `<li class="${c}"${c.startsWith('now') ? ' aria-current="step"' : ''}><i>${c === 'done' || c.includes('end') ? ico(i.end === 'released' && k === 3 ? 'undo' : 'check', 13) : ''}</i><span>${l}</span><small>${v}</small></li>`; }).join('')}</ol>`;
+}
+function nowHTML(i) {
+  const a = i.a, fn = esc(firstName(i.who));
+  if (i.end === 'charged') return `${ico('check', 15)}<span>Counted. ${money2(i.charged)} charged, ${fn} received ${money2(i.charged * (1 - FEE))} after the fee.</span>`;
+  if (i.end === 'released') return `${ico('undo', 15)}<span>Nothing charged · ${esc(cap1(i.why || 'released'))}. Your hold was released in full.</span>`;
+  if (a && a.phase === 'doing') return `<span class="st go">TAKING</span><span class="timer" data-v="t2">${mmss(a.t)}</span><span>left · pot <b class="money">${money(a.d.pool)}</b></span>`;
+  if (a && a.phase === 'voting') return `<span class="st vote">VOTING</span><span><span data-v="yp2">${Math.round((a.yes / Math.max(1, a.yes + a.no)) * 100)}% yes</span> · needs ${PASS * 100}%</span><span class="timer" data-v="t3">${mmss(a.t)}</span>`;
+  if (i.queued) return `<span class="st q">QUEUED</span><span>In ${fn}’s queue · pot <b class="money">${money(i.d.pool)}</b> · ${i.d.backers} backer${i.d.backers === 1 ? '' : 's'}</span>`;
+  return `${ico('clock', 15)}<span>Waiting for the result from the stream</span>`;
+}
+function dareThreadHTML(i) {
+  const items = [...moneyEvents().filter((e) => e.did === i.did), ...S.activity.filter((n) => n.did === i.did && n.kind === 'start').map((n) => ({ ...n, sys: true }))].sort((x, y) => x.t - y.t);
+  return `<div class="th-head"><button class="avb" data-th="profile" aria-label="${esc(i.who)}’s profile">${threadAva(i.sid, i.who)}</button><div class="grow"><div class="tt">“${esc(i.text)}”</div><small>${i.mine ? 'You wrote this dare' : 'You backed this dare'} · ${esc(i.who)}</small></div></div>
+    ${stepsHTML(i)}<div class="th-now" data-k="now">${nowHTML(i)}</div>
+    ${withDays(items, (e) => (e.sys ? `<p class="th-sys"><b>${esc(e.name)}</b> started your dare · ${timeHM(e.t)}</p>` : bubbleHTML(e)))}`;
+}
+const dareFootHTML = (i) => `<div class="wbtns ${i.open ? '' : 'one'}" style="grid-template-columns:${i.open ? '1fr 1fr' : '1fr'}"><button class="btn ghost" data-th="stream">${ico('feed', 17)}Open the stream</button>${i.open ? `<button class="btn gold" data-th="add">${ico('plus', 17)}Add money</button>` : ''}</div>`;
+
+/* messages to streamers: demo streamers reply through the same machinery as stream chat; everything is filtered; off in 18+ */
+const dmBusy = new Set(), dmTyping = new Set();
+function dmThreadHTML(id) {
+  const st = streamOf(id), th = S.dms[id] || { msgs: [] }, name = st?.name || 'Streamer', fn = esc(firstName(name));
+  const msg = (m) => (m.me ? `<div class="bub txt me"><div class="bb">${esc(m.text)}<span class="bm"><span>${timeHM(m.t)}</span></span></div></div>`
+    : `<div class="bub txt">${threadAva(id, name, '', 'sm')}<div class="bb">${esc(m.text)}<span class="bm"><span>${timeHM(m.t)}</span></span></div></div>`);
+  return `<div class="th-intro">${threadAva(id, name)}<b>${esc(name)}</b><span>Demo streamer. Replies come from Claude inside a Claude viewer, otherwise they’re scripted. Every message goes through the safety filter.</span><button class="linkb" data-th="profile">${ico('user', 15)}View profile</button></div>
+    ${th.msgs.length ? withDays(th.msgs, msg) : `<div class="empty ib-empty"><div class="ring">${ico('chat', 24)}</div>Say hi to ${fn}. Ideas for dares go in Dares on the stream, with a stake.<div class="wbtns one"><button class="btn ghost" data-th="stream">${ico('feed', 17)}Watch ${fn} live</button></div></div>`}
+    ${dmTyping.has(id) ? `<div class="bub txt typing">${threadAva(id, name, '', 'sm')}<div class="bb">${fn} is typing…</div></div>` : ''}
+    <p class="th-note">Keep it on Kurazh: no phone numbers, handles, payments or meetups.</p>`;
+}
+const dmFootHTML = (st) => `<form class="dm-form" id="dm-form" autocomplete="off"><input id="dm-in" maxlength="300" enterkeyhint="send" placeholder="Message ${esc(firstName(st.name))}…" aria-label="Message to ${esc(st.name)}" autocomplete="off" /><button aria-label="Send">${ico('send', 18)}</button></form>
+  <div class="dm-hint" id="dm-hint">${ico('shield', 13)}Messages go through the safety filter</div>`;
+function openDm(st, { stack = false, keep = false } = {}) {
+  if (!st) return;
+  if (st.real) { toast('Messages are off in shared rooms'); return; }
+  if (st.cat === 'adult') { toast('Messages are off in 18+', 'bad'); return; }
+  if (S.dms[st.id]?.blocked) { toast(`You blocked ${st.name}. Unblock them on their profile`, 'bad'); return; }
+  const ctx = { kind: 'dm', id: st.id, title: st.name, act: `<button class="navb" data-th="menu" aria-label="Report or block ${esc(st.name)}">${ico('dots', 22)}</button>`, foot: dmFootHTML(st) };
+  if (keep) swapPush(ctx, dmThreadHTML(st.id)); else openPush(ctx, dmThreadHTML(st.id), { stack });
+  thSig = ''; markRead(ctx); pushBody.scrollTop = pushBody.scrollHeight;
+  track('dm_open');
+}
+function addDm(id, m) {
+  const th = S.dms[id] || (S.dms[id] = { msgs: [] });
+  th.msgs.push({ id: uid(), t: Date.now(), ...m }); if (th.msgs.length > 50) th.msgs.splice(0, th.msgs.length - 50);
+  save();
+}
+function sendDm(st, inp) {
+  const text = inp.value.trim().replace(/\s+/g, ' ').slice(0, 300); if (!text || !st) return;
+  const hint = $('#dm-hint'), r = Safety.scan(text, modeOf(st.cat));
+  if (!r.ok) {
+    hint.className = 'dm-hint bad'; hint.innerHTML = `${ico('x', 13)}Not sent · ${esc(r.cat)}. ${esc(r.hint || 'Keep it friendly and on Kurazh.')}`;
+    toast(`Message hidden by the filter: ${r.cat}`, 'bad'); sfx('blocked'); track('dm_blocked', { category: r.cat }); return;
+  }
+  hint.className = 'dm-hint'; hint.innerHTML = `${ico('shield', 13)}Messages go through the safety filter`;
+  addDm(st.id, { me: true, text }); inp.value = ''; sfx('tap'); track('dm_send');
+  refreshThread(false, true);
+  dmReply(st, text);
+}
+async function dmReply(st, text) {
+  if (dmBusy.has(st.id)) return;
+  dmBusy.add(st.id);
+  const here = () => pushOpen() && pushCtx?.kind === 'dm' && pushCtx.id === st.id;
+  const tt = setTimeout(() => { dmTyping.add(st.id); if (here()) refreshThread(false, true); }, 500);
+  const p = personaOf(st), hist = (S.dms[st.id]?.msgs || []).slice(-8).map((m) => `${m.me ? S.user.nick : st.name}: ${m.text}`).join('\n');
+  const prompt = `You are ${st.name}, a fictional demo streamer on Kurazh, a live app where viewers write dares and back them with money, and streamers decide what to do. You are ${p.vibe}. You stream from ${st.city}: "${st.title}".
+The viewer ${S.user.nick} is messaging you privately in the Kurazh inbox (not on stream). The conversation so far:
+${hist}
+
+Reply as ${firstName(st.name)}: one or two short, friendly sentences, at most 30 words, in the same language the viewer used. If they suggest a dare, tell them to add it in Dares on your stream with a stake. Keep everything on Kurazh: never share contacts, social handles or locations, never agree to meet, never ask for money or gifts, nothing explicit, dangerous or illegal. Output only the message text: no quotes, no emoji.`;
+  const reply = await aiLine(prompt, st, text);
+  clearTimeout(tt); dmBusy.delete(st.id); dmTyping.delete(st.id);
+  if (S.dms[st.id] && !S.dms[st.id].blocked) addDm(st.id, { me: false, text: reply });
+  if (here()) { refreshThread(false, true); markRead(pushCtx); } else if (cur === 'inbox') renderInbox(false);
+}
+function dmMenu(st) {
+  const fn = esc(firstName(st.name));
+  const body = openSheet(`${sheetHead(esc(st.name), 'Chat options')}<div class="menu" style="margin-top:14px">
+    <button data-dm="profile">${ico('user', 20)}<span class="grow">View profile</span>${ico('chev', 16)}</button>
+    <button data-dm="report">${ico('flag', 20)}<span class="grow">Report<small>Moderators review the conversation</small></span>${ico('chev', 16)}</button>
+    <button data-dm="block" style="color:var(--bad)">${ico('block', 20)}<span class="grow">Block ${fn}<small>Hides this chat. No replies or live alerts from ${fn}</small></span></button></div>`, { type: 'dm-menu', id: st.id });
+  body.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-dm]'); if (!b) return;
+    if (b.dataset.dm === 'profile') { closeSheet(); openProfile(st, { stack: true }); } else if (b.dataset.dm === 'report') openReport(st); else blockDm(st);
+  });
+}
+function blockDm(st) {
+  const th = S.dms[st.id] || (S.dms[st.id] = { msgs: [] }); th.blocked = true; save();
+  closeSheet(); closePush(); toast(`${st.name} is blocked. Their chat is hidden`, 'ok'); sfx('tap'); track('dm_block');
+  if (cur === 'inbox') renderInbox(); refreshBadge();
+}
+function unblockDm(st) { const th = S.dms[st.id]; if (th) { delete th.blocked; save(); } toast(`${st.name} is unblocked`); sfx('tap'); }
+
+/* opening, refreshing and reading threads */
+let thSig = '', thFoot = '';
+function markRead(ctx) {
+  if (!ctx) return;
+  if (ctx.kind === 'money') S.inbox.money = Date.now();
+  else if (ctx.kind === 'dare') S.inbox.th[ctx.id] = Date.now();
+  else if (ctx.kind === 'dm') S.inbox.th['dm:' + ctx.id] = Date.now();
+  save(); refreshBadge();
+}
+function openThread(kind, id, { keep = false, stack = false } = {}) {
+  let ctx, html;
+  if (kind === 'money') { moneySeen = S.inbox.money; ctx = { kind, title: 'Kurazh Money' }; html = moneyThreadHTML(); }
+  else if (kind === 'dare') { const i = dareInfo(id); if (!i) return; ctx = { kind, id, title: `“${i.text}”`, foot: dareFootHTML(i) }; html = dareThreadHTML(i); thFoot = ctx.foot; }
+  else return;
+  if (keep) swapPush(ctx, html); else openPush(ctx, html, { stack });
+  thSig = ''; markRead(ctx);
+  if (kind === 'money') pushBody.scrollTop = pushBody.scrollHeight;
+  if (cur === 'inbox') renderInbox(false);
+  track('inbox_thread', { kind });
+}
+// Re-render the open thread. Ticking numbers (timers, vote share) update in place; anything else re-renders, keeping the scroll.
+function refreshThread(force, toBottom) {
+  const c = pushCtx; if (!c || !THREADS.has(c.kind) || !pushOpen()) return;
+  let html, foot = null;
+  if (c.kind === 'money') html = moneyThreadHTML();
+  else if (c.kind === 'dare') { const i = dareInfo(c.id); if (!i) { closePush(); return; } html = dareThreadHTML(i); foot = dareFootHTML(i); }
+  else html = dmThreadHTML(c.id);
+  const sig = html.replace(/(data-v="\w+">)[^<]*/g, '$1');
+  if (!force && sig === thSig) {
+    const tpl = document.createElement('template'); tpl.innerHTML = html;
+    const nv = tpl.content.querySelectorAll('[data-v]'), ov = pushBody.querySelectorAll('[data-v]');
+    if (nv.length === ov.length) { ov.forEach((e, k) => { if (e.textContent !== nv[k].textContent) e.textContent = nv[k].textContent; }); return; }
+  }
+  const atBottom = pushBody.scrollHeight - pushBody.scrollTop - pushBody.clientHeight < 80, y = pushBody.scrollTop;
+  thSig = sig; pushBody.innerHTML = html;
+  pushBody.scrollTop = toBottom || (c.kind !== 'dare' && atBottom) ? pushBody.scrollHeight : y;
+  if (foot != null && foot !== thFoot) { thFoot = foot; $('#push-foot').innerHTML = foot; }
+  if (!force) markRead(c);
+}
+function addMoney(did) {
+  const i = dareInfo(did);
+  if (!i || !i.open) { toast('That dare has already finished, so nothing was held'); refreshThread(true); return; }
+  backDare(i.st, i.d, CUR.back[1], () => { refreshThread(true); updateCard(i.st, true); });
+}
+function onThreadClick(e) {
+  const t = e.target, c = pushCtx;
+  const rc = t.closest('[data-rc]'); if (rc) { const [k, id] = rc.dataset.rc.split(':'); openReceipt(k, id); return; }
+  const b = t.closest('[data-th]'); if (!b || b.disabled) return;
+  const a = b.dataset.th, sid = c.kind === 'dm' ? c.id : c.kind === 'dare' ? dareInfo(c.id)?.sid : null;
+  if (a === 'wallet') { show('wallet'); sfx('tap'); }
+  else if (a === 'stream' && sid) { closePush(); goToStream(sid); }
+  else if (a === 'add') addMoney(c.id);
+  else if (a === 'menu') { const st = streamOf(c.id); if (st) dmMenu(st); }
+  else if (a === 'profile' && sid) { const st = streamOf(sid); if (st) openProfile(st, { stack: true }); else toast('That live room has ended or you left it'); }
+}
+pushEl.addEventListener('submit', (e) => {
+  if (e.target.id !== 'dm-form') return;
+  e.preventDefault(); if (pushCtx?.kind === 'dm') sendDm(streamOf(pushCtx.id), $('#dm-in'));
+});
+document.addEventListener('mousedown', (e) => { if (e.target.closest('#dm-form button')) e.preventDefault(); }); // Send keeps the keyboard up
+
+/* the Inbox screen: Chats | Activity */
+let ibSeg = 'chats', ibHTML = '', actSeen = 0;
+const activityList = () => S.activity.filter((n) => !blockedSid(n.sid));
+const activityUnread = () => activityList().filter((n) => n.t > S.inbox.activity).length;
+const moneyUnread = () => { const m = S.inbox.money; return moneyEvents().filter((e) => e.t > m).length; };
+const inboxUnread = () => moneyUnread() + activityUnread();
+function refreshBadge() {
+  if (!S?.inbox) return;
+  // an open money chat or Activity list stays read while you look at it
+  if (pushOpen() && pushCtx?.kind === 'money') S.inbox.money = Date.now();
+  if (cur === 'inbox' && ibSeg === 'activity' && !pushOpen()) S.inbox.activity = Date.now();
+  const n = inboxUnread(), b = $('#tabbar [data-tab="inbox"]'), d = $('#ib-unread');
+  if (!b) return;
+  const v = n > 9 ? '9+' : String(n);
+  if (n) { if (b.dataset.badge !== v) b.dataset.badge = v; } else if (b.dataset.badge) delete b.dataset.badge;
+  if (d) d.textContent = n ? `${v} unread` : '';
+}
+function chatItems() {
+  const items = [], seen = new Set();
+  for (const b of S.backs) { if (seen.has(b.dareId)) continue; seen.add(b.dareId); const i = dareInfo(b.dareId); if (i) items.push({ kind: 'dare', id: b.dareId, i, t: i.last }); }
+  for (const [sid, th] of Object.entries(S.dms)) if (!th.blocked && th.msgs?.length) items.push({ kind: 'dm', id: sid, th, t: th.msgs[th.msgs.length - 1].t });
+  return items.sort((a, b) => b.t - a.t);
+}
+const readAt = (key) => Math.max(S.inbox.th[key] || 0, S.inbox.since || 0);
+function chatsHTML() {
+  const ev = moneyEvents(), last = ev[ev.length - 1], un = ev.filter((e) => e.t > S.inbox.money).length;
+  const side = (t, u) => `<span class="side"><span>${t ? whenShort(t) : ''}</span>${u ? '<span class="dot"></span>' : ''}</span>`;
+  const pinned = `<button class="ib-row ${un ? 'unread' : ''}" data-open="money" aria-label="Kurazh Money, pinned${un ? `, ${un} unread` : ''}${last ? `. Latest: ${MK[last.k].lbl} ${money2(last.amt)}` : ''}">
+    ${moneyAva()}<span class="grow"><span class="t"><span>Kurazh Money</span>${ico('tack', 14)}</span><span class="p">${last ? `${MK[last.k].lbl} · <span class="money">${MK[last.k].sign}${money2(last.amt)}</span>${last.text ? ` · “${esc(last.text)}”` : ''}` : 'Holds, charges and payouts land here'}</span></span>${side(last?.t, un)}</button>`;
+  const items = chatItems();
+  const rows = items.map((x) => {
+    if (x.kind === 'dare') {
+      const { i } = x, u = i.last > readAt(i.did);
+      return `<button class="ib-row ${u ? 'unread' : ''}" data-open="dare" data-id="${esc(i.did)}" aria-label="Dare “${esc(i.text)}” with ${esc(i.who)}: ${STEP_LBL(i)}, ${money(i.amt)}${u ? ', unread' : ''}">
+        ${threadAva(i.sid, i.who, `<span class="tg">${ico('target', 12)}</span>`)}<span class="grow"><span class="t dare"><span>“${esc(i.text)}”</span></span><span class="p">${STEP_LBL(i)} · <span class="money">${money(i.amt)}</span> · ${esc(i.who)}</span></span>${side(x.t, u)}</button>`;
+    }
+    const st = streamOf(x.id), m = x.th.msgs[x.th.msgs.length - 1], lastThem = [...x.th.msgs].reverse().find((y) => !y.me), u = !!lastThem && lastThem.t > readAt('dm:' + x.id), name = st?.name || 'Streamer';
+    return `<button class="ib-row ${u ? 'unread' : ''}" data-open="dm" data-id="${esc(x.id)}" aria-label="Chat with ${esc(name)}${u ? ', unread' : ''}">
+      ${threadAva(x.id, name)}<span class="grow"><span class="t"><span>${esc(name)}</span></span><span class="p">${m.me ? 'You: ' : ''}${esc(m.text)}</span></span>${side(x.t, u)}</button>`;
+  }).join('');
+  return `<div class="ib-list">${pinned}${rows}</div>${items.length ? '' : `<div class="empty ib-empty"><div class="ring">${ico('chat', 24)}</div>No dare threads or messages yet. Back a dare and its thread shows up here, or message a streamer from their profile.<div class="wbtns"><button class="btn gold" data-tab="live">Find a stream</button><button class="btn ghost" data-tab="explore">Hot dares</button></div></div>`}`;
+}
+function noteRow(n) {
+  const k = NOTE[n.kind], st = n.sid ? streamOf(n.sid) || byId(n.sid) : null, u = n.t > actSeen;
+  const ava = ['start', 'counted', 'failed', 'live'].includes(n.kind) && n.name ? threadAva(n.sid, n.name, `<span class="tg">${ico(k.ic, 12)}</span>`) : `<span class="ib-ava k ${k.tone}" aria-hidden="true">${ico(k.ic, 20)}</span>`;
+  const detail = n.text ? `“${esc(n.text)}”${n.name && n.kind !== 'start' ? ` · ${esc(n.name)}` : ''}` : n.kind === 'live' && st ? esc(st.title) : '';
+  return `<button class="ib-row ${u ? 'unread' : ''}" data-note="${esc(n.id)}">${ava}<span class="grow"><span class="t"><span>${esc(k.title(n))}</span></span>${detail ? `<span class="p">${detail}</span>` : ''}<span class="h">${k.help}</span></span><span class="side"><span>${whenShort(n.t)}</span>${u ? '<span class="dot"></span>' : ''}</span></button>`;
+}
+function activityHTML() {
+  const list = activityList(), d0 = dayStart(), today = list.filter((n) => n.t >= d0), earlier = list.filter((n) => n.t < d0);
+  if (!list.length) return `<div class="empty ib-empty"><div class="ring">${ico('bell', 24)}</div>Nothing here yet. When a dare you back starts or counts, a streamer you follow goes live, or credits and earnings arrive, it shows up here.<div class="wbtns"><button class="btn gold" data-tab="explore">Find streamers</button><button class="btn ghost" data-tab="live">Watch live</button></div></div>`;
+  return `<div class="ib-act">${today.length ? `<h3 class="ib-sec">Today</h3><div class="ib-list">${today.map(noteRow).join('')}</div>` : ''}${earlier.length ? `<h3 class="ib-sec">Earlier</h3><div class="ib-list">${earlier.map(noteRow).join('')}</div>` : ''}</div>`;
+}
+function setIbSeg(k) {
+  if (k === 'activity' && (ibSeg !== 'activity' || cur !== 'inbox')) { actSeen = S.inbox.activity; S.inbox.activity = Date.now(); save(); }
+  ibSeg = k; renderInbox(true); refreshBadge();
+}
+function renderInbox(force = true) {
+  if (!S?.inbox) return;
+  const ua = activityUnread();
+  $$('#ib-seg [data-ib]').forEach((b) => { const on = b.dataset.ib === ibSeg; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
+  const at = `Activity${ua && ibSeg !== 'activity' ? `<i class="ib-n" aria-hidden="true">${ua > 9 ? '9+' : ua}</i><span class="sr-only">, ${ua} new</span>` : ''}`;
+  const tb = $('#ib-t-activity'); if (tb.innerHTML !== at) tb.innerHTML = at;
+  const html = ibSeg === 'chats' ? chatsHTML() : activityHTML();
+  if (!force && html === ibHTML) return;
+  ibHTML = html; const l = $('#ib-list'); l.innerHTML = html; l.setAttribute('aria-labelledby', ibSeg === 'chats' ? 'ib-t-chats' : 'ib-t-activity');
+}
+function openNote(n) {
+  const k = NOTE[n.kind]; if (!k) return;
+  if (k.link === 'stream' && n.sid) goToStream(n.sid);
+  else if (k.link === 'receipt' && n.rc) { const [a, b] = n.rc.split(':'); openReceipt(a, b); }
+  else if (k.link === 'profile') show('profile');
+  track('activity_open', { kind: n.kind });
+}
+$('#scr-inbox').addEventListener('click', (e) => {
+  const sg = e.target.closest('[data-ib]'); if (sg) { if (sg.dataset.ib !== ibSeg) { setIbSeg(sg.dataset.ib); sfx('tap'); } return; }
+  const o = e.target.closest('[data-open]');
+  if (o) { if (o.dataset.open === 'dm') openDm(streamOf(o.dataset.id)); else openThread(o.dataset.open, o.dataset.id); return; }
+  const n = e.target.closest('[data-note]'); if (n) { const x = S.activity.find((a) => a.id === n.dataset.note); if (x) openNote(x); }
+});
+// Simulated live alerts: when the app opens, streamers you follow or have the bell on are live (all demo streams are). At most one alert per streamer every 3 hours.
+function liveAlerts() {
+  const since = Date.now() - 3 * 36e5;
+  for (const id of [...new Set([...S.follows, ...S.notify])]) {
+    const st = byId(id); if (!st || blockedSid(id) || (st.cat === 'adult' && !adultOn())) continue;
+    if (S.activity.some((n) => n.kind === 'live' && n.sid === id && n.t > since)) continue;
+    note('live', { sid: id, name: st.name, bell: S.notify.includes(id) });
+  }
+}
 function goToStream(id, sheet) {
   if (String(id).startsWith('room:')) { if (Room.R?.id === id) showWatch(); else toast('That live room has ended or you left it'); return; }
   const st = byId(id); if (!st) return;
@@ -3662,7 +4258,7 @@ function applyState(s) {
   if (s.active && s.active.id) {
     const d = mk(s.active), ph = ['doing', 'voting', 'result'].includes(s.active.phase) ? s.active.phase : 'doing';
     R.active = { d, phase: ph, t: Math.max(0, s.active.t | 0), total: Math.max(1, s.active.total | 0), yes: s.active.yes | 0, no: s.active.no | 0, myVote: Room.myVotes[d.id] ?? null, success: !!s.active.success, stopped: !!s.active.stopped };
-    if ((!prev || prev.d.id !== d.id) && ph === 'doing' && myBacks(d.id).length) { toast(`${R.name} is doing your dare`, 'gold'); sfx('dare-accept'); buzz([40, 60, 40]); }
+    if ((!prev || prev.d.id !== d.id) && ph === 'doing' && myBacks(d.id).length) { toast(`${R.name} is doing your dare`, 'gold'); sfx('dare-accept'); buzz([40, 60, 40]); note('start', { sid: R.id, name: R.name, text: d.text, did: d.id }); }
     if (prev && prev.d.id === d.id && prev.phase === 'doing' && ph === 'voting') { sfx('countdown', { final: true }); buzz(30); }
   } else R.active = null;
   for (const e of Array.isArray(s.settled) ? s.settled : []) processSettled(e);
@@ -3797,7 +4393,7 @@ function frame(ts) {
   lastFrame = ts; const t = ts / 1000;
   if (L.on && !L.camOk) drawScene($('#cam-fake'), L.fake, t); // also feeds the cover stream real viewers see, so it never pauses
   // Viewer scenes pause behind a sheet and during a sideways drag.
-  if (anySheet() || G.drag || pushOpen()) return;
+  if (anySheet() || G.drag || PTR.on || pushOpen()) return;
   if (cur === 'feed') { const card = feedEl.children[curIdx]; const st = curStream(); if (card && st) drawScene(card.querySelector('canvas'), st, t); }
   else if (cur === 'live' && !L.on) drawScene($('#prev-canvas'), prevScene, t);
   if (cur === 'watch' && Room.R && !Room.hasVideo) { const cv = $('#watch canvas'); if (cv) drawScene(cv, Room.R, t); }
@@ -3811,9 +4407,9 @@ const TABS = [['live', 'feed', 'Live'], ['explore', 'compass', 'Explore'], null,
 const TAB_SCREEN = { live: 'feed', golive: 'live' };
 const SCREEN_TAB = { feed: 'live', watch: 'live', live: 'golive', wallet: 'profile' };
 function renderTabs() {
-  $('#tabbar').innerHTML = TABS.map((t) => (t ? `<button class="tab" data-tab="${t[0]}" aria-label="${t[2]}">${ico(t[1], 23)}<span aria-hidden="true">${t[2]}</span></button>`
-    : '<button class="tab-go" data-tab="golive" aria-label="Go live"><span aria-hidden="true"></span>Go live</button>')).join('');
-  markTabs();
+  $('#tabbar').innerHTML = TABS.map((t) => (t ? `<button class="tab" data-tab="${t[0]}" aria-label="${t[2]}"${t[0] === 'inbox' ? ' aria-describedby="ib-unread"' : ''}>${ico(t[1], 23)}<span aria-hidden="true">${t[2]}</span></button>`
+    : '<button class="tab-go" data-tab="golive" aria-label="Go live"><span aria-hidden="true"></span>Go live</button>')).join('') + '<span id="ib-unread" hidden></span>';
+  markTabs(); refreshBadge();
 }
 function markTabs() {
   const on = SCREEN_TAB[cur] || cur;
@@ -3831,6 +4427,7 @@ function show(tab) {
   document.body.classList.toggle('feedish', tab === 'feed' || tab === 'watch');
   if (tab !== 'feed' && tab !== 'watch') { setClean(false); $$('form.say.open').forEach((f) => sayOpen(f, false)); }
   if (tab === 'explore') renderExplore();
+  if (tab === 'inbox') { if (ibSeg === 'activity') { actSeen = S.inbox.activity; S.inbox.activity = Date.now(); save(); } renderInbox(true); refreshBadge(); }
   if (tab === 'wallet') renderWallet();
   if (tab === 'profile') renderProfile();
   if (tab === 'live' && !L.on) renderSetup();
@@ -3838,6 +4435,7 @@ function show(tab) {
   if (tab === 'watch') { updateCard(Room.R, true); renderChat(Room.R); }
   const scr = $('#scr-' + tab); if (scr && !['feed', 'watch', 'live'].includes(tab)) scr.scrollTop = 0;
   renderRoomMini(); pageView(tab);
+  placeToasts($('#toasts')); // a toast still showing moves with the screen
 }
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-tab]'); if (!b) return;
@@ -3950,7 +4548,7 @@ function completeSignIn(method) {
 }
 // Everything that happens once someone is in: views, analytics identity, a pending ?watch link.
 function afterAuth() {
-  refreshViews(); refreshBalance(); identify();
+  refreshViews(); refreshBalance(); identify(); liveAlerts();
   if (pendingWatch) { const c = pendingWatch; pendingWatch = ''; setTimeout(() => joinRoom(c), 50); }
 }
 const DEMO_GOOGLE = [{ name: 'Bohdan Kravets', email: 'bohdan.demo@example.com' }, { name: 'Olena Marchenko', email: 'olena.demo@example.com' }];
@@ -4222,6 +4820,7 @@ function renderAuth() {
           row.classList.remove('busy'); row.classList.add('done'); sfx('countdown', { n: 4 - k });
         }
         S.verified = true; S.verifiedAt = Date.now(); S.kyc = { doc: A.doc, country: A.docCountry }; save(); sfx('win'); track('kyc_complete'); identify();
+        note('kyc');
         setTimeout(() => go('done'), 450);
       };
       break;
@@ -4444,6 +5043,9 @@ setInterval(() => {
   if (cur === 'feed') for (let i = Math.max(0, curIdx - 1); i <= Math.min(feedList.length - 1, curIdx + 1); i++) updateCard(feedList[i]); // only the card on screen and its neighbours
   if (cur === 'explore') renderHot();
   if (cur === 'profile') renderProfile(false);
+  if (pushCtx && THREADS.has(pushCtx.kind)) refreshThread();
+  if (cur === 'inbox' && !pushOpen()) renderInbox(false);
+  refreshBadge();
   if (cur === 'watch' && Room.R) renderRoomStatus();
   renderDaresSheet();
   ledgerTick();
@@ -4464,7 +5066,8 @@ pageView(cur);
 if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
 window.Kurazh = { Safety, BANK, UNSAFE, ADULT_UNSAFE, S: () => S, streams, L, money, settle, byId, updateCard,
   Room, joinRoom, leaveRoom, takerDecline, previewFee, liveRules, courageOf, myCourage, creditBal, earnAvail, earnPending, openReceipt, onGoogleIdentity, decodeJwt, setRole, show, cfg, toast,
-  openProfile, closePush, openSettings, demoOf, searchStreams };
+  openProfile, closePush, openSettings, demoOf, searchStreams,
+  note, moneyEvents, dareInfo, inboxUnread, renderInbox, openThread, openDm, liveAlerts, refreshFeed: () => refreshFeed() };
 </script>
 </body>
 </html>
