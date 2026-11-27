@@ -2010,11 +2010,19 @@ function userBack() {
 }
 
 // ---------------- главный цикл ----------------
+// облачко и статус убраны и уже погасли — невидимое не двигаем: иначе каждый кадр layout + пересчёт стилей
+let bubbleOffAt = 0;
+function bubbleIdle() {
+  if (els.bubble.classList.contains('on') || els.status.classList.contains('on')) bubbleOffAt = 0;
+  else if (!bubbleOffAt) bubbleOffAt = performance.now();
+  else if (performance.now() - bubbleOffAt > 400) return (karaoke.availRef = null), true;
+  return false;
+}
 function positionBubble() {
   const h = scene.headScreen();
   const show = h.visible && (state.visible || scene.mode === 'peeking' || scene.mode === 'hanging' || scene.mode === 'descending');
   els.bubble.classList.toggle('hidden', !show);
-  if (!show) return;
+  if (!show || bubbleIdle()) return;
   const bw = els.bubble.offsetWidth;
   const left = Math.max(8, Math.min(window.innerWidth - bw - 8, h.x - bw / 2));
   els.bubble.style.left = `${left}px`;

@@ -1881,11 +1881,19 @@ function trackWiggle(x, y, dx, dy) {
 }
 
 // ---------------- главный цикл ----------------
+// облачко и статус убраны и уже погасли — невидимое не двигаем: иначе каждый кадр layout + пересчёт стилей
+let bubbleOffAt = 0;
+function bubbleIdle() {
+  if (els.bubble.classList.contains('on') || els.status.classList.contains('on')) bubbleOffAt = 0;
+  else if (!bubbleOffAt) bubbleOffAt = performance.now();
+  else if (performance.now() - bubbleOffAt > 400) return true;
+  return false;
+}
 function positionBubble() {
   const h = scene.headScreen();
   const show = h.visible;
   els.bubble.classList.toggle('hidden', !show);
-  if (!show) return;
+  if (!show || bubbleIdle()) return;
   const W = els.canvas.clientWidth;
   const bw = els.bubble.offsetWidth;
   const left = Math.max(12, Math.min(W - bw - 12, h.x - bw / 2));
@@ -1902,7 +1910,7 @@ function loop(now) {
   const dt = lastT ? Math.min(0.1, (now - lastT) / 1000) : 1 / 60;
   // в простое — 30 к/с, батарейку бережём
   const lively = scene.lively || voice.active || down || state.busy;
-  if (lively || now - lastT >= 30) {
+  if (lively || now - lastT >= (state.sleeping ? 45 : 30)) {
     lastT = now;
     const lip = voice.update(dt);
     scene.setLip(lip.open, lip.round);

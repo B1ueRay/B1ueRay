@@ -644,7 +644,8 @@ export class BuddyScene {
   // tilt: один уголок вверх, другой вниз (кривая ухмылка); wave: рот-волнушка, ph — её фаза
   updateMouth(open, smile, width, offsetX, tilt = 0, wave = 0, ph = 0) {
     if (wave < 0.02) ph = 0;
-    const key = `${open.toFixed(3)}|${smile.toFixed(3)}|${width.toFixed(3)}|${offsetX.toFixed(3)}|${tilt.toFixed(3)}|${wave.toFixed(3)}|${ph.toFixed(2)}`;
+    // ключ с шагом 0.01 (≈0.2 css px) — хвосты затухания эмоций не пересобирают рот сотни раз в минуту
+    const key = `${open.toFixed(2)}|${smile.toFixed(2)}|${width.toFixed(2)}|${offsetX.toFixed(3)}|${tilt.toFixed(2)}|${wave.toFixed(2)}|${ph.toFixed(2)}`;
     if (key === this.mouthKey) return;
     this.mouthKey = key;
     const w = 0.18 * width;

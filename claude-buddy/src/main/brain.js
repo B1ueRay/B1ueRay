@@ -198,7 +198,8 @@ class Brain {
         { type: 'text', text: this.memoryBlock(cfg), cache_control: { type: 'ephemeral', ttl: '1h' } },
       ],
       // авто-кэш последнего блока: старые реплики и скриншоты читаются по цене кэша
-      cache_control: { type: 'ephemeral', ttl: '1h' }, // бадди болтает с паузами: час, а не 5 минут
+      // хвост разговора — 5 минут (запись 1.25x, а не 2x); system/память выше держат час, их и читаем после паузы
+      cache_control: { type: 'ephemeral' },
       // набор инструментов всегда один и тот же: его смена посреди разговора ломает кэш и thinking-блоки.
       // Если экран выключен, main просто вернёт ошибку из look_at_screen.
       tools: TOOLS,
