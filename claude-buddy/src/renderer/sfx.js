@@ -1,0 +1,165 @@
+// Мультяшные звуки, синтезированные на лету (WebAudio) — никаких файлов.
+// Тихие (общая громкость ~0.2), выключаются вместе с «Без звука».
+
+const PENTA = [523.25, 587.33, 659.25, 783.99, 880, 1046.5];
+
+export class Sfx {
+  constructor() {
+    this.ctx = null;
+    this.master = null;
+    this.muted = false;
+    this.volume = 0.22;
+  }
+
+  setMuted(m) {
+    this.muted = Boolean(m);
+    // глушим и то, что уже звучит (например, вжух джетпака)
+    if (this.ctx && this.master) this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume, this.ctx.currentTime, 0.02);
+  }
+
+  ready() {
+    if (this.muted) return false;
+    try {
+      if (!this.ctx) {
+        this.ctx = new AudioContext();
+        this.master = this.ctx.createGain();
+        this.master.gain.value = this.volume;
+        this.master.connect(this.ctx.destination);
+      }
+      if (this.ctx.state !== 'running') {
+        // приостановлен/прерван: будим, но звуки сейчас не ставим — иначе все грянут разом при возобновлении
+        this.ctx.resume().catch(() => {});
+        return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // тон с огибающей: freqs — точки [время, частота]
+  tone(type, freqs, dur, peak = 0.3) {
+    if (!this.ready()) return;
+    const t0 = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freqs[0][1], t0);
+    for (const [t, f] of freqs.slice(1)) osc.frequency.exponentialRampToValueAtTime(f, t0 + t);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(peak, t0 + Math.min(0.02, dur / 4));
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(g).connect(this.master);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+  }
+
+  boing() {
+    this.tone('sine', [[0, 140], [0.08, 420], [0.33, 220]], 0.36, 0.32);
+  }
+
+  pop(pitch = 1) {
+    this.tone('sine', [[0, 500 * pitch], [0.06, 1100 * pitch]], 0.09, 0.25);
+  }
+
+  tink() {
+    this.tone('triangle', [[0, 2200], [0.04, 2100]], 0.06, 0.15);
+  }
+
+  squeak() {
+    this.tone('square', [[0, 900], [0.05, 1500], [0.12, 1100]], 0.13, 0.08);
+  }
+
+  blip() {
+    const f = PENTA[Math.floor(Math.random() * PENTA.length)];
+    this.tone('triangle', [[0, f], [0.15, f * 0.99]], 0.18, 0.14);
+  }
+
+  // короткий шумовой "выдох" (пф, ах) — тот же кольцевой буфер, что и у джетпака
+  breath(freq, q, dur, peak) {
+    if (!this.ready()) return;
+    const ctx = this.ctx;
+    const t0 = ctx.currentTime;
+    this.ensureNoise();
+    const src = ctx.createBufferSource();
+    src.buffer = this.noise;
+    src.loop = true;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.Q.value = q;
+    bp.frequency.value = freq;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(peak, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(bp).connect(g).connect(this.master);
+    src.start(t0);
+    src.stop(t0 + dur + 0.05);
+  }
+
+  ensureNoise() {
+    if (this.noise) return;
+    this.noise = this.ctx.createBuffer(1, this.ctx.sampleRate, this.ctx.sampleRate);
+    const d = this.noise.getChannelData(0);
+    for (let i = 0; i < d.length; i += 1) d[i] = Math.random() * 2 - 1;
+  }
+
+  // ---- междометия к смене эмоции ----
+  giggle() {
+    [[900, 1150], [1000, 1250], [950, 1200]].forEach(([a, b], i) => {
+      setTimeout(() => this.tone('triangle', [[0, a], [0.07, b]], 0.08, 0.14), i * 110);
+    });
+  }
+
+  gasp() {
+    this.breath(1800, 1.2, 0.16, 0.1);
+    this.tone('sine', [[0, 400], [0.12, 900]], 0.14, 0.06);
+  }
+
+  hmm() {
+    this.tone('sine', [[0, 262], [0.17, 250], [0.35, 238]], 0.38, 0.09);
+  }
+
+  aww(kind) {
+    if (kind === 'love') this.tone('sine', [[0, 660], [0.3, 880]], 0.32, 0.09);
+    else this.tone('sine', [[0, 700], [0.4, 450]], 0.42, 0.09);
+  }
+
+  huff() {
+    this.breath(600, 0.9, 0.14, 0.13);
+  }
+
+  eep() {
+    this.tone('square', [[0, 1200], [0.1, 900]], 0.11, 0.05);
+  }
+
+  heh() {
+    this.tone('triangle', [[0, 700], [0.06, 690]], 0.07, 0.1);
+    setTimeout(() => this.tone('triangle', [[0, 600], [0.06, 590]], 0.07, 0.1), 110);
+  }
+
+  // шипение джетпака: шум через полосовой фильтр с "проходом" частоты
+  whoosh(sec = 1) {
+    if (!this.ready()) return;
+    const ctx = this.ctx;
+    const t0 = ctx.currentTime;
+    this.ensureNoise(); // один секундный буфер шума на всё время, крутится по кругу
+    const src = ctx.createBufferSource();
+    src.buffer = this.noise;
+    src.loop = true;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.Q.value = 0.8;
+    bp.frequency.setValueAtTime(400, t0);
+    bp.frequency.exponentialRampToValueAtTime(1600, t0 + sec * 0.3);
+    bp.frequency.exponentialRampToValueAtTime(500, t0 + sec);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.15, t0 + 0.15);
+    g.gain.setValueAtTime(0.15, t0 + sec * 0.85);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + sec);
+    src.connect(bp).connect(g).connect(this.master);
+    src.start(t0);
+    src.stop(t0 + sec + 0.05);
+  }
+}
