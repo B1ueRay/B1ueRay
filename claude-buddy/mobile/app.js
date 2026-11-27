@@ -89,8 +89,17 @@ function markSaid(key) {
   saidAt.delete(key);
   saidAt.set(key, Date.now());
   while (saidAt.size > 300) saidAt.delete(saidAt.keys().next().value);
+  // журнал до 300 записей не переписываем на каждую фразу: раз в 5 с и при уходе со страницы
+  if (!saidTimer) saidTimer = setTimeout(flushSaid, 5000);
+}
+let saidTimer = 0;
+function flushSaid() {
+  clearTimeout(saidTimer);
+  saidTimer = 0;
   lsSet('buddy.said', Object.fromEntries(saidAt));
 }
+window.addEventListener('pagehide', flushSaid);
+document.addEventListener('visibilitychange', () => document.hidden && saidTimer && flushSaid());
 // "мешок" без повторов: фраза не вернётся, пока не прозвучат остальные, и не пойдёт дважды подряд.
 // [15] Из мешка берём то, что давно не звучало (в том числе из других списков); quietMs — строго:
 // всё звучало за quietMs → null, и болтовня от скуки лучше промолчит, чем повторится
